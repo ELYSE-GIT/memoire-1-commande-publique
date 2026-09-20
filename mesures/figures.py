@@ -40,6 +40,12 @@ import matplotlib
 
 # Backend sans fenetre : le script tourne aussi bien en local que dans une chaine automatisee.
 matplotlib.use("Agg")
+
+# Sans ce sel fixe, matplotlib tire au hasard les identifiants internes du SVG a chaque execution :
+# deux figures identiques produisent alors deux fichiers entierement differents, et git affiche des
+# milliers de lignes modifiees pour rien. Avec un sel fixe et sans date dans les metadonnees, un
+# fichier ne change que si la figure a reellement change.
+matplotlib.rcParams["svg.hashsalt"] = "commande-publique"
 import matplotlib.pyplot as plt  # noqa: E402
 
 RACINE = Path(__file__).resolve().parent.parent
@@ -98,8 +104,14 @@ def enregistrer(figure: Any, nom: str) -> None:
     """Enregistre en SVG (memoire) et en PNG (apercu)."""
     FIGURES.mkdir(parents=True, exist_ok=True)
     for extension in ("svg", "png"):
+        # metadata retire la date de creation, qui rendrait chaque fichier different du precedent.
+        metadonnees = {"Date": None} if extension == "svg" else {}
         figure.savefig(
-            FIGURES / f"{nom}.{extension}", dpi=200, bbox_inches="tight", facecolor="white"
+            FIGURES / f"{nom}.{extension}",
+            dpi=200,
+            bbox_inches="tight",
+            facecolor="white",
+            metadata=metadonnees,
         )
     plt.close(figure)
     print(f"  {nom}.svg et {nom}.png")
