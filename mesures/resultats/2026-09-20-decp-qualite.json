@@ -1,0 +1,89 @@
+{
+  "contexte": {
+    "date": "2026-09-20T21:21:28+00:00",
+    "machine": "Darwin arm64",
+    "processeurs": "arm",
+    "python": "3.12.9",
+    "duckdb": "1.5.5",
+    "fichier": "donnees/brut/decp.parquet",
+    "taille_octets": 247586823,
+    "taille_mo": 247.6
+  },
+  "mesures": {
+    "volume": {
+      "question": "Combien de lignes, de marches, d'acheteurs et de titulaires ?",
+      "duree_secondes": 0.2776,
+      "valeurs": {
+        "lignes": "3283035",
+        "uid_distincts": "1845800",
+        "acheteurs": "29069",
+        "titulaires": "216335"
+      }
+    },
+    "lignes_par_uid": {
+      "question": "Un identifiant de marche porte-t-il une ou plusieurs lignes ?",
+      "duree_secondes": 0.1191,
+      "valeurs": {
+        "uid_une_seule_ligne": "1420063",
+        "uid_plusieurs_lignes": "425737",
+        "maximum_lignes_pour_un_uid": "1603"
+      }
+    },
+    "origine_des_lignes_multiples": {
+      "question": "Historique des modifications, groupements d'entreprises, ou vrais doublons ?",
+      "duree_secondes": 0.5,
+      "valeurs": {
+        "multi_titulaires": "273494",
+        "doublons_residuels": "7764"
+      }
+    },
+    "lignes_actuelles": {
+      "question": "En ne gardant que l'etat actuel de chaque marche, combien reste-t-il ?",
+      "duree_secondes": 0.1171,
+      "valeurs": {
+        "lignes": "2114675",
+        "marches": "1833468"
+      }
+    },
+    "montants": {
+      "question": "Les montants sont-ils exploitables ?",
+      "duree_secondes": 0.1374,
+      "valeurs": {
+        "absents": "48596",
+        "negatifs_ou_nuls": "59588",
+        "superieurs_au_milliard": "2197",
+        "minimum": "-2676107.0",
+        "mediane": "167832.96",
+        "maximum": "99999999999.99"
+      }
+    },
+    "anomalies_du_producteur": {
+      "question": "Combien d'anomalies le producteur signale-t-il lui-meme ?",
+      "duree_secondes": 0.0192,
+      "valeurs": {
+        "suspects": "98815",
+        "aberrants": "32413"
+      }
+    },
+    "dates": {
+      "question": "Les dates de notification sont-elles plausibles ?",
+      "duree_secondes": 0.0126,
+      "valeurs": {
+        "absentes": "31812",
+        "plus_ancienne": "0001-01-01",
+        "plus_recente": "2026-09-19",
+        "avant_2015": "1441",
+        "dans_le_futur": "0"
+      }
+    },
+    "offres_recues": {
+      "question": "L'indicateur de risque principal, le nombre d'offres, est-il renseigne ?",
+      "duree_secondes": 0.0178,
+      "valeurs": {
+        "absentes": "1903309",
+        "une_seule_offre": "290752",
+        "maximum": "20300"
+      }
+    }
+  }
+}
