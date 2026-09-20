@@ -37,19 +37,49 @@ chemins de fichiers ecrits.
 
 Ces fichiers sont versionnes : ce sont les preuves des chiffres du memoire.
 
-## Rejouer le notebook d'exploration
+## Calculer les agregats descriptifs
 
 ```bash
-make notebook-decp
+make bench-decp-distributions
 ```
 
-**Ce que ca fait** : execute `analyses/01-exploration-decp.ipynb` du debut a la fin et enregistre
-les resultats dans le notebook lui-meme.
+**Ce que ca fait** : calcule sept agregats (tranches de montant, total annuel brut et nettoye,
+saisonnalite, categories d'acheteur, familles CPV, offres recues, ecritures de la nature) et ecrit
+un CSV par agregat dans `mesures/resultats/`.
 
-**Duree** : environ 5 secondes. **A quoi ca sert** : garantir que le notebook publie n'est pas
-casse, et que ses resultats correspondent bien au code qu'il affiche.
+**Duree** : moins d'une seconde. **Perimetre** : l'etat actuel de chaque marche, soit 1 833 468
+marches, et non les 3,28 millions de lignes d'historique.
 
-Pour travailler dedans plutot que le rejouer : ouvrir le fichier dans VS Code et choisir
+## Tracer les figures du memoire
+
+```bash
+make figures
+```
+
+**Ce que ca fait** : trace cinq figures dans `memoire/figures/`, en SVG pour le memoire imprime et
+en PNG pour l'apercu. Le script lit **uniquement** les CSV de `mesures/resultats/`, jamais le
+fichier Parquet.
+
+**Pourquoi cette separation** : une figure doit etre reproductible sans retelecharger 240 Mo, et
+chaque valeur affichee doit exister dans un fichier que l'on peut ouvrir et verifier. Aucun chiffre
+du memoire n'est saisi a la main.
+
+**Duree** : environ 3 secondes.
+
+## Rejouer les notebooks d'exploration
+
+```bash
+make notebooks
+```
+
+**Ce que ca fait** : execute les notebooks de `analyses/` du debut a la fin et enregistre les
+resultats dans les fichiers eux-memes.
+
+**Duree** : environ 15 secondes. **A quoi ca sert** : garantir qu'un notebook publie n'est pas
+casse, et que ses resultats correspondent bien au code qu'il affiche. Un notebook publie sans avoir
+ete execute est du code non teste.
+
+Pour travailler dedans plutot que les rejouer : ouvrir le fichier dans VS Code et choisir
 l'interpreteur `.venv` du projet.
 
 ## Les sources de donnees du projet

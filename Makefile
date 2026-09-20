@@ -86,9 +86,18 @@ donnees-decp:
 bench-decp:
 	uv run python mesures/decp_qualite.py
 
-## notebook-decp : rejoue le notebook d'exploration et enregistre ses resultats
-notebook-decp:
+## bench-decp-distributions : calcule les agregats descriptifs (CSV dans mesures/resultats)
+bench-decp-distributions:
+	uv run python mesures/decp_distributions.py
+
+## figures : trace les figures du memoire a partir des agregats mesures
+figures:
+	uv run python mesures/figures.py
+
+## notebooks : rejoue tous les notebooks d'exploration et enregistre leurs resultats
+notebooks:
 	cd analyses && uv run jupyter execute --inplace 01-exploration-decp.ipynb
+	cd analyses && uv run jupyter execute --inplace 02-statistiques-descriptives.ipynb
 
 # --- Documentation --------------------------------------------------------
 
@@ -113,4 +122,4 @@ clean-all: clean
 	rm -rf .venv donnees
 	@echo "Pour liberer la VM entierement : colima delete"
 
-.PHONY: help install hooks donnees-decp bench-decp notebook-decp lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all
+.PHONY: help install hooks donnees-decp bench-decp bench-decp-distributions figures notebooks lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all
