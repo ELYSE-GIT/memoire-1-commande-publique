@@ -5,6 +5,7 @@ description = "Plateforme open source d'intelligence sur la commande publique fr
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "duckdb>=1.5.5",
+    "matplotlib>=3.11.2",
     "pandas>=3.0.6",
 ]
 
