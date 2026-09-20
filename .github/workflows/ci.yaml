@@ -1,0 +1,55 @@
+name: CI
+
+# La chaine tourne a chaque push et a chaque pull request vers main.
+# Elle doit etre verte avant toute fusion.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  qualite:
+    name: Lint, types et tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v4
+
+      - name: Installer uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Installer les dependances verrouillees
+        run: uv sync --locked
+
+      - name: Style et pieges courants
+        run: uv run ruff check .
+
+      - name: Format
+        run: uv run ruff format --check .
+
+      - name: Types
+        run: uv run mypy .
+
+      - name: Tests et couverture
+        run: uv run pytest
+
+  secrets:
+    name: Recherche de secrets
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Recuperer tout l'historique
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

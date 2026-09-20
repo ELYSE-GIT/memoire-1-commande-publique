@@ -1,0 +1,27 @@
+# Dependabot ouvre une pull request quand une dependance sort une nouvelle version.
+# La CI verifie cette pull request avant toute fusion.
+# cooldown : on attend 7 jours avant de proposer une version toute fraiche.
+# Une version publiee depuis quelques heures peut etre instable ou compromise
+# (attaque de la chaine d'approvisionnement). Ce delai laisse le temps de la retirer.
+
+version: 2
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "ci"

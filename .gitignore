@@ -1,0 +1,25 @@
+# Environnement Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secrets et configuration locale
+.env
+.env.local
+*.key
+*.pem
+
+# Donnees et artefacts lourds (jamais dans git)
+donnees/
+*.parquet
+*.duckdb
+*.sqlite
+*.gguf
+
+# Systeme
+.DS_Store
