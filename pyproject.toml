@@ -3,7 +3,10 @@ name = "commande-publique"
 version = "0.1.0"
 description = "Plateforme open source d'intelligence sur la commande publique francaise"
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+    "duckdb>=1.5.5",
+    "pandas>=3.0.6",
+]
 
 [dependency-groups]
 # Outils de developpement uniquement. Ils ne partent jamais dans une image de production.
@@ -12,6 +15,8 @@ dev = [
     "mypy>=1.11",
     "pytest>=8.3",
     "pytest-cov>=5.0",
+    "ipykernel>=7.3.0",
+    "nbclient>=0.11.0",
 ]
 
 [tool.ruff]
@@ -35,4 +40,7 @@ pretty = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# La racine du projet est ajoutee au chemin d'import, pour que les tests puissent importer
+# `mesures.decp_qualite` sans transformer chaque dossier en paquet installable.
+pythonpath = ["."]
 addopts = "-q --cov=. --cov-report=term-missing"

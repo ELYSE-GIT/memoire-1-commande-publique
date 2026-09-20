@@ -67,6 +67,29 @@ etat:
 	@colima status || true
 	@docker compose ps || true
 
+# --- Donnees et mesures -----------------------------------------------------
+
+# Adresse du jeu consolide publie sur data.gouv.fr. Le nom du dossier contient la date de
+# publication : il change a chaque mise a jour quotidienne, d'ou la resolution par l'API.
+URL_JEU_DECP = https://www.data.gouv.fr/api/1/datasets/donnees-essentielles-de-la-commande-publique-consolidees-format-tabulaire/
+
+## donnees-decp : telecharge le jeu DECP consolide en Parquet (environ 240 Mo)
+donnees-decp:
+	@mkdir -p donnees/brut
+	@echo "Resolution de l'adresse du fichier courant..."
+	@url=$$(curl -s "$(URL_JEU_DECP)" | uv run python -c "import json,sys; d=json.load(sys.stdin); print(next(r['url'] for r in d['resources'] if r['title']=='decp.parquet'))"); \
+		echo "$$url"; \
+		curl -L --progress-bar -o donnees/brut/decp.parquet "$$url"
+	@ls -lh donnees/brut/decp.parquet
+
+## bench-decp : mesure la qualite et les performances sur le jeu DECP
+bench-decp:
+	uv run python mesures/decp_qualite.py
+
+## notebook-decp : rejoue le notebook d'exploration et enregistre ses resultats
+notebook-decp:
+	cd analyses && uv run jupyter execute --inplace 01-exploration-decp.ipynb
+
 # --- Documentation --------------------------------------------------------
 
 ## docs-txt : genere la version .txt des commandes a partir des .md
@@ -90,4 +113,4 @@ clean-all: clean
 	rm -rf .venv donnees
 	@echo "Pour liberer la VM entierement : colima delete"
 
-.PHONY: help install hooks lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all
+.PHONY: help install hooks donnees-decp bench-decp notebook-decp lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all
