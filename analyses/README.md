@@ -7,6 +7,7 @@ Exploration des donnees. C'est le brouillon du projet, et la preuve de la demarc
 | `01-exploration-decp.ipynb` | structure, doublons, montants, dates et offres du jeu DECP consolide | fait, 2026-09-20 |
 | `02-statistiques-descriptives.ipynb` | distributions, saisonnalite, acheteurs, familles CPV, normalisation | fait, 2026-09-20 |
 | `03-lecture-visuelle.ipynb` | les 15 figures commentees : ce qu'elles disent, ce qu'elles ne disent pas | fait, 2026-09-21 |
+| `04-exploration-boamp.ipynb` | BOAMP : volumetrie, avis ouverts, delais, rapprochement avec les DECP | fait, 2026-09-21 |
 
 ## Methode
 
