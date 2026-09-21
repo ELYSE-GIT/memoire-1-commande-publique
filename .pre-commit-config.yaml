@@ -15,8 +15,12 @@ repos:
         exclude: ^memoire/figures/
       - id: check-yaml
       - id: check-toml
+      # Garde-fou contre un fichier de donnees commit par accident. Les notebooks executes sont
+      # exclus : ils embarquent leurs graphiques, et c'est voulu, un notebook doit se lire sans
+      # etre relance. Ils restent surveilles a la main, quelques centaines de Ko chacun.
       - id: check-added-large-files
         args: ["--maxkb=500"]
+        exclude: ^analyses/.*\.ipynb$
       - id: check-merge-conflict
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
