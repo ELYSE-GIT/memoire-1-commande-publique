@@ -9,6 +9,7 @@ Exploration des donnees. C'est le brouillon du projet, et la preuve de la demarc
 | `03-lecture-visuelle.ipynb` | les 15 figures commentees : ce qu'elles disent, ce qu'elles ne disent pas | fait, 2026-09-21 |
 | `04-exploration-boamp.ipynb` | BOAMP : volumetrie, avis ouverts, delais, rapprochement avec les DECP | fait, 2026-09-21 |
 | `05-comment-le-projet-se-verifie.ipynb` | les tests, ce qu'ils attrapent, ce qu'ils ratent, et un echec en direct | fait, 2026-09-21 |
+| `06-api-recherche-entreprises.ipynb` | resolution des SIRET, part des PME, demonstration du biais de selection | fait, 2026-09-21 |
 
 ## Methode
 
@@ -30,4 +31,6 @@ Ils restent rejouables d'un bout a l'autre : `make notebook-decp`.
   2020, contre environ 230 milliards reels. Ecarter les montants deja signales par le producteur
   suffit a revenir dans le bon ordre de grandeur.
 - La commande publique suit le calendrier budgetaire : pics en decembre et en juillet, creux en aout.
+- 59,2 % des marches sont attribues a une PME, mesure independante qui retrouve les 60 % publies par
+  l'Etat. La meme mesure sur un echantillon mal construit donne 5 %.
 - La construction (division CPV 45) represente a elle seule plus du triple de la famille suivante.
