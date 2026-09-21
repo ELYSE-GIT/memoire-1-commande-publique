@@ -6,8 +6,13 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
+      # Les figures sont produites par mesures/figures.py. Si un hook les retouche, le fichier
+      # versionne ne correspond plus a ce que le script genere, et chaque regeneration produit
+      # une difference. Un artefact genere ne se corrige pas a la main : on corrige son script.
       - id: trailing-whitespace
+        exclude: ^memoire/figures/
       - id: end-of-file-fixer
+        exclude: ^memoire/figures/
       - id: check-yaml
       - id: check-toml
       - id: check-added-large-files
