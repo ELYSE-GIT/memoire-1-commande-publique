@@ -6,12 +6,21 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
+      # Les figures sont produites par mesures/figures.py. Si un hook les retouche, le fichier
+      # versionne ne correspond plus a ce que le script genere, et chaque regeneration produit
+      # une difference. Un artefact genere ne se corrige pas a la main : on corrige son script.
       - id: trailing-whitespace
+        exclude: ^memoire/figures/
       - id: end-of-file-fixer
+        exclude: ^memoire/figures/
       - id: check-yaml
       - id: check-toml
+      # Garde-fou contre un fichier de donnees commit par accident. Les notebooks executes sont
+      # exclus : ils embarquent leurs graphiques, et c'est voulu, un notebook doit se lire sans
+      # etre relance. Ils restent surveilles a la main, quelques centaines de Ko chacun.
       - id: check-added-large-files
         args: ["--maxkb=500"]
+        exclude: ^analyses/.*\.ipynb$
       - id: check-merge-conflict
 
   - repo: https://github.com/astral-sh/ruff-pre-commit

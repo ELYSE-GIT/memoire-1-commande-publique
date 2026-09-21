@@ -19,9 +19,14 @@ import pytest
 from mesures import figures
 from mesures.decp_distributions import AGREGATS
 
+# Toutes les colonnes utilisees par au moins un agregat. Quand une requete en reclame une nouvelle,
+# le test echoue avec le nom manquant : c'est le rappel qu'il faut l'ajouter ici.
 COLONNES = """
     uid VARCHAR, montant DOUBLE, montant_anomalie VARCHAR, dateNotification DATE,
-    offresRecues SMALLINT, acheteur_categorie VARCHAR, codeCPV VARCHAR, nature VARCHAR
+    offresRecues SMALLINT, acheteur_categorie VARCHAR, codeCPV VARCHAR, nature VARCHAR,
+    acheteur_id VARCHAR, titulaire_id VARCHAR, dureeMois SMALLINT, procedure VARCHAR,
+    formePrix VARCHAR, sousTraitanceDeclaree BOOLEAN, considerationsSociales VARCHAR,
+    acheteur_latitude DOUBLE, acheteur_longitude DOUBLE, titulaire_distance SMALLINT
 """
 
 
@@ -32,9 +37,15 @@ def con() -> duckdb.DuckDBPyConnection:
     connexion.execute(f"create table marches ({COLONNES})")
     connexion.execute("""
         insert into marches values
-            ('M1', 150000.0, null, date '2024-03-01', 3, 'Commune', '45000000', 'Marché'),
-            ('M2', 9.9e10, 'aberrant', date '2023-12-15', 1, null, '71000000', 'MARCHE'),
-            ('M3', 42000.0, null, date '2022-07-20', null, 'Département', '45210000', 'MARCHÉ')
+            ('M1', 150000.0, null, date '2024-03-01', 3, 'Commune', '45000000', 'Marché',
+             'ACH1', 'TIT1', 24, 'Appel d''offres ouvert', 'Ferme', true, 'Oui',
+             48.85, 2.35, 12),
+            ('M2', 9.9e10, 'aberrant', date '2023-12-15', 1, null, '71000000', 'MARCHE',
+             'ACH2', 'TIT2', 12, 'Procédure adaptée', 'Révisable', null, null,
+             45.75, 4.85, 340),
+            ('M3', 42000.0, null, date '2022-07-20', null, 'Département', '45210000', 'MARCHÉ',
+             'ACH3', 'TIT1', 36, null, 'Ferme', false, null,
+             43.30, 5.37, 60)
     """)
     return connexion
 
@@ -68,6 +79,8 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     """Les figures se tracent a partir de CSV minimaux, sans toucher au vrai jeu de donnees."""
     agregats = tmp_path / "resultats"
     agregats.mkdir()
+    # Un CSV minimal par agregat trace : si une figure nouvelle arrive sans son jeu de test,
+    # le test echoue en nommant le fichier manquant.
     contenus = {
         "montants-total-annuel": [
             ["annee", "marches", "total_brut_milliards", "total_nettoye_milliards"],
@@ -91,6 +104,41 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
             ["1 offre", "200"],
             ["2 a 3 offres", "300"],
         ],
+        "montants-histogramme": [["puissance_de_dix", "marches"]]
+        + [[str(p / 4), str(100 * p)] for p in range(8, 30)],
+        "concentration-titulaires": [["part_titulaires", "part_montants"]]
+        + [[str(p), str(min(100, p * 3))] for p in range(0, 101, 2)],
+        "saisonnalite-annee-mois": [["annee", "mois", "marches"]]
+        + [[str(a), str(m), str(1000 + 10 * m)] for a in (2023, 2024) for m in range(1, 13)],
+        "offre-unique-par-cpv": [
+            ["famille_cpv", "marches_renseignes", "part_offre_unique"],
+            ["72", "24615", "37.4"],
+            ["45", "100000", "18.0"],
+        ],
+        "completude-champs": [
+            ["champ", "part_renseigne"],
+            ["Montant", "98.5"],
+            ["Offres recues", "42.5"],
+        ],
+        "acheteurs-quartiles": [
+            ["categorie", "marches", "quartile_1", "mediane", "quartile_3", "bas", "haut"],
+            ["Commune", "687383", "40000", "90000", "250000", "8000", "900000"],
+            ["État", "53697", "90000", "250000", "900000", "20000", "5000000"],
+        ],
+        "geographie-acheteurs": [["latitude", "longitude", "marches"]]
+        + [[str(43 + i / 10), str(2 + i / 10), str(100 + i)] for i in range(40)],
+        "evolution-mensuelle": [["mois", "marches"]]
+        + [[f"2024-{m:02d}-01", str(10000 + 100 * m)] for m in range(1, 13)],
+        "distance-titulaires": [
+            ["tranche", "marches"],
+            ["1. moins de 10 km", "405129"],
+            ["5. plus de 500 km", "137432"],
+        ],
+        "offre-unique-par-tranche": [
+            ["tranche", "marches", "part_offre_unique", "mediane_offres"],
+            ["1. moins de 25 k", "120042", "27.1", "3.0"],
+            ["6. plus de 10 M", "9136", "16.2", "4.0"],
+        ],
     }
     for nom, lignes in contenus.items():
         with (agregats / f"{nom}.csv").open("w", newline="", encoding="utf-8") as sortie:
@@ -102,5 +150,5 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     figures.main()
 
     produites = sorted(chemin.name for chemin in sorties.glob("*.svg"))
-    assert len(produites) == 5, f"cinq figures attendues, obtenu : {produites}"
+    assert len(produites) == 15, f"quinze figures attendues, obtenu : {produites}"
     assert all((sorties / nom.replace(".svg", ".png")).exists() for nom in produites)
