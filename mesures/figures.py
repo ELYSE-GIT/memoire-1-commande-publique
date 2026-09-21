@@ -118,6 +118,20 @@ def libelle_tranche(brut: str) -> str:
     return LIBELLES_TRANCHES.get(sans_numero, sans_numero)
 
 
+def lire_date(motif: str) -> list[dict[str, str]]:
+    """Lit le plus recent des agregats dates, par exemple `2026-09-21-rapprochement.csv`.
+
+    Les mesures datees s'accumulent volontairement : on veut pouvoir comparer deux executions.
+    La figure, elle, montre toujours la derniere.
+    """
+    fichiers = sorted(AGREGATS.glob(f"*-{motif}.csv"))
+    if not fichiers:
+        message = f"aucun fichier *-{motif}.csv dans {AGREGATS}"
+        raise FileNotFoundError(message)
+    with fichiers[-1].open(encoding="utf-8") as fichier:
+        return list(csv.DictReader(fichier))
+
+
 def lire(nom: str) -> list[dict[str, str]]:
     """Lit un agregat CSV produit par decp_distributions.py."""
     with (AGREGATS / f"{nom}.csv").open(encoding="utf-8") as fichier:
@@ -734,6 +748,47 @@ def figure_offre_unique_par_tranche() -> None:
     enregistrer(figure, "15-offre-unique-par-tranche")
 
 
+def figure_rapprochement() -> None:
+    """L'entonnoir du rapprochement entre les deux sources, niveau par niveau."""
+    lignes = lire_date("rapprochement-boamp-decp")
+    libelles = [
+        "Avis analysés",
+        "Portant au moins un SIRET",
+        "Acheteur reconnu dans les DECP",
+        "Plus une fenêtre de 18 mois",
+        "Plus un objet proche",
+        "Plus le titulaire retrouvé",
+    ]
+    parts = [float(ligne["part_pourcent"]) for ligne in lignes]
+    effectifs = [int(ligne["avis"]) for ligne in lignes]
+
+    figure, axes = plt.subplots(figsize=(8.5, 3.8))
+    # Un entonnoir se lit de haut en bas : chaque barre est un sous-ensemble de la precedente.
+    # Les deux dernieres sont mises en avant : ce sont les niveaux exploitables.
+    couleurs = [SERIE_1] * 4 + [SERIE_3, SERIE_2]
+    barres = axes.barh(libelles, parts, color=couleurs, height=0.64)
+    axes.bar_label(
+        barres,
+        labels=[f"{p:.1f} %  ({n} avis)" for p, n in zip(parts, effectifs, strict=True)],
+        padding=5,
+        color=GRIS,
+        fontsize=8.5,
+    )
+    axes.invert_yaxis()
+    axes.grid(axis="y", visible=False)
+    axes.grid(axis="x", color=FILET, linewidth=0.6)
+    axes.set_xlim(0, 118)
+    soigner(axes, "Peut-on relier un avis du BOAMP à un marché des DECP ?")
+    legender(
+        figure,
+        "Mesure sur 300 avis de résultat parus au premier semestre 2025. Aucun identifiant n'est "
+        "commun aux deux sources :\nle rapprochement se construit critère par critère. En vert, le "
+        "niveau de confiance moyenne ; en couleur chaude, la confiance haute,\nquand le SIRET du "
+        "titulaire figure aussi dans l'avis. Reproductible par make bench-rapprochement.",
+    )
+    enregistrer(figure, "16-rapprochement-boamp-decp")
+
+
 def main() -> None:
     print("Figures generees depuis mesures/resultats/ :")
     figure_total_annuel()
@@ -751,6 +806,7 @@ def main() -> None:
     figure_evolution_mensuelle()
     figure_distance_titulaires()
     figure_offre_unique_par_tranche()
+    figure_rapprochement()
     print(f"\nDossier : {chemin_lisible(FIGURES)}")
 
 

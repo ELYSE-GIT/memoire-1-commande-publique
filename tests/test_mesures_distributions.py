@@ -140,6 +140,20 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
             ["6. plus de 10 M", "9136", "16.2", "4.0"],
         ],
     }
+    # L'agregat du rapprochement porte une date dans son nom : les mesures datees s'accumulent
+    # volontairement, et la figure lit la plus recente.
+    date_agregats = {
+        "2026-01-01-rapprochement-boamp-decp": [
+            ["niveau", "libelle", "avis", "part_pourcent"],
+            ["0", "avis analyses", "300", "100.0"],
+            ["0", "avis portant au moins un SIRET", "184", "61.3"],
+            ["1", "SIRET d'acheteur reconnu", "159", "53.0"],
+            ["2", "plus une fenetre de dates", "142", "47.3"],
+            ["3", "plus un objet proche", "93", "31.0"],
+            ["4", "plus le titulaire retrouve", "44", "14.7"],
+        ],
+    }
+    contenus.update(date_agregats)
     for nom, lignes in contenus.items():
         with (agregats / f"{nom}.csv").open("w", newline="", encoding="utf-8") as sortie:
             csv.writer(sortie, lineterminator="\n").writerows(lignes)
@@ -150,5 +164,5 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     figures.main()
 
     produites = sorted(chemin.name for chemin in sorties.glob("*.svg"))
-    assert len(produites) == 15, f"quinze figures attendues, obtenu : {produites}"
+    assert len(produites) == 16, f"seize figures attendues, obtenu : {produites}"
     assert all((sorties / nom.replace(".svg", ".png")).exists() for nom in produites)

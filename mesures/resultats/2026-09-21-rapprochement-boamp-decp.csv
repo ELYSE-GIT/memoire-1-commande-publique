@@ -1,0 +1,7 @@
+niveau,libelle,avis,part_pourcent
+0,avis analyses,300,100.0
+0,avis portant au moins un SIRET,184,61.3
+1,SIRET d'acheteur reconnu dans les DECP,159,53.0
+2,plus au moins un marche dans la fenetre de dates,142,47.3
+3,plus un objet de marche suffisamment proche,93,31.0
+4,plus le SIRET du titulaire retrouve dans l'avis,44,14.7

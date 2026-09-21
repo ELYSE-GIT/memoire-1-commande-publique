@@ -50,6 +50,22 @@ un CSV par agregat dans `mesures/resultats/`.
 **Duree** : moins d'une seconde. **Perimetre** : l'etat actuel de chaque marche, soit 1 833 468
 marches, et non les 3,28 millions de lignes d'historique.
 
+## Mesurer le rapprochement entre le BOAMP et les DECP
+
+```bash
+make bench-rapprochement
+```
+
+**Ce que ca fait** : recupere 300 avis de resultat du BOAMP, en extrait les SIRET, et mesure quatre
+niveaux de rapprochement avec les marches des DECP. Ecrit un CSV date dans `mesures/resultats/`.
+
+**Duree** : environ 15 secondes, dont 3 d'appels reseau. **Attention** : cette commande interroge
+une API publique. Elle est concue pour rester sous les limites d'usage, mais on ne la lance pas en
+boucle.
+
+**Resultat attendu** : un entonnoir a quatre niveaux, de 61 % d'avis portant un SIRET a 14,7 %
+rapproches avec certitude. Le detail de la decision est dans `docs/adr/0003-rapprochement-des-sources.md`.
+
 ## Tracer les figures du memoire
 
 ```bash
