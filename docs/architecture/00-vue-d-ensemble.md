@@ -86,6 +86,11 @@ Ou il s'applique deja :
 | SIRET dans trois formats d'avis differents | une expression reguliere | 19 % d'avis exploitables devient 61 % |
 | Prix atypique | ecart robuste a la mediane du groupe | 75,8 % de precision au seuil 4 |
 | Relier deux sources sans identifiant commun | quatre criteres empiles | de 0 % a 14,7 % de liens surs |
+| **Monter a l'apprentissage automatique** | dix methodes comparees a budget egal | **refuse** : aucun modele ne depasse la statistique |
+
+La derniere ligne est la plus importante du tableau, parce qu'elle montre que l'escalier sert dans
+les deux sens. Voir l'ADR 0007 : les modeles ne trouvent des valeurs extremes qu'une fois qu'on leur
+a dit de quel cote regarder, et cette connaissance vient du metier, pas des donnees.
 
 ### 3.4 Un signal n'est pas une accusation
 
@@ -120,6 +125,7 @@ lui ».
 | [0004](../adr/0004-collecte-et-couche-bronze.md) | collecte tracable, sans orchestrateur | manifeste versionne, donnee brute non versionnee |
 | [0005](../adr/0005-nettoyage-en-trois-couches.md) | bronze, argent, or, avec dbt | marquer plutot que supprimer |
 | [0006](../adr/0006-detection-par-regles.md) | detection par regles, seuils mesures | deux niveaux, jamais une accusation |
+| [0007](../adr/0007-regles-plutot-qu-un-modele.md) | rester sur les regles, apres comparaison a dix methodes | la connaissance metier, pas la puissance statistique |
 
 ---
 
@@ -137,6 +143,7 @@ projet, avec ce qu'elle a coute et ce qui l'evite.
 | **Chercher une donnee au mauvais endroit** | le SIRET semblait manquer dans 81 % des avis du BOAMP : il etait ailleurs, trois formats coexistent | verifier ou l'on cherche avant de conclure a une absence |
 | **Croire une metadonnee** | le catalogue annoncait une source abandonnee depuis un an, la donnee allait jusqu'au jour meme | une metadonnee decrit une intention, la donnee decrit un fait |
 | **Ecrire le commentaire avant de lire la sortie** | trois legendes affirmaient des tendances non verifiees, dont une fausse | lire la sortie, puis ecrire |
+| **Prendre un identifiant pour une cle unique** | `uid` identifie un marche, pas une ligne : 140 350 uid repetes, 281 404 lignes en trop, 619 montants contradictoires | verifier l'unicite avant de s'appuyer dessus, par un `count(*) - count(distinct ...)` |
 
 ### Sur la methode
 
@@ -146,6 +153,17 @@ projet, avec ce qu'elle a coute et ce qui l'evite.
 | **Mesurer la couverture sans la justesse** | un seuil plus bas rapprochait davantage, et davantage a tort | la question n'est pas « combien de liens » mais « combien de liens justes » |
 | **Oublier de redresser un echantillon stratifie** | la moyenne naive donnait 33 % la ou la bonne reponse etait 6,7 % | ponderer chaque strate par son effectif reel |
 | **Choisir une palette a l'oeil** | elle echouait a trois controles, dont la lisibilite pour un daltonien | faire valider les couleurs par un outil |
+| **Lire un score sous le hasard comme un mauvais score** | le modele obtenait 0 % : il cherchait du cote que l'etiquette ne marque jamais, et passait a 73 % une fois oriente | ouvrir les observations designees avant de conclure |
+| **Ecarter une option sur sa reputation** | Local Outlier Factor, ecarte pour cout quadratique, traite le jeu complet en 15,8 secondes | mesurer le cout avant de l'invoquer |
+| **Annoncer qu'une methode robuste gagnera** | les versions naives font un peu mieux, parce que l'etiquette est elle-meme un detecteur de montants | verifier ce que l'etiquette est capable de departager |
+
+### Sur la reproductibilite
+
+| Erreur | Ce qui s'est passe | A faire a la place |
+|---|---|---|
+| **Croire qu'une graine fixe suffit** | deux lancements identiques donnaient 100,0 % puis 74,0 % : DuckDB ne garantit aucun ordre de lignes, et le modele echantillonne par position | fixer l'ordre au chargement, sur toutes les colonnes utilisees, et le verifier en relancant |
+| **Se fier au code de sortie** | `jupyter execute` rend 0 meme quand une cellule leve une exception | relire le fichier produit, `make verif-notebooks` |
+| **Laisser un scanner lire les donnees** | gitleaks parcourait 3 Go de Parquet en 7 min 40, pour deux fausses alertes | reduire son perimetre a ce qui peut fuir, jamais sa sensibilite, et le verifier avec un secret factice |
 
 ### Sur l'ingenierie
 
@@ -172,6 +190,9 @@ projet, avec ce qu'elle a coute et ce qui l'evite.
 | Part des marches attribues a une PME | 59,2 % (officiel : 60 %) | notebook 06 |
 | Marches portant au moins un signal | 76 309, soit 3,8 % | `make transformer` |
 | Precision de la regle de prix, seuil 4 | 75,8 % (minorant) | `make bench-detection` |
+| Precision de la regle a 1 000 alertes | 96,1 % contre 65,7 % pour le meilleur modele | `make bench-modele` |
+| Methodes de detection comparees | 10, dont 7 apprises | notebook 08 |
+| Lignes dont l'uid est partage | 281 404 sur 2 054 924 | notebook 08 |
 | Avis du BOAMP relies aux DECP | 14,7 % en confiance haute | `make bench-rapprochement` |
 | Parquet contre CSV | 247,6 Mo contre 2 595,5 Mo | `make collecte-decp` |
 | Duree de la chaine complete | environ 6 secondes | `make transformer` |

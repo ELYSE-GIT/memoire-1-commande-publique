@@ -921,6 +921,63 @@ def figure_nettoyage() -> None:
     enregistrer(figure, "18-nettoyage-par-regle")
 
 
+def figure_modele_vs_regles() -> None:
+    """Ce qu'un modele non supervise apporte, et ce qu'il n'apporte pas.
+
+    Le graphique porte un resultat contre-intuitif, donc il doit etre lisible sans le texte : le
+    modele laisse a lui-meme fait **moins bien que le hasard**, et la seule chose qui le remet au
+    niveau de la regle est une information metier donnee de l'exterieur.
+
+    Une echelle logarithmique en abscisse : les budgets vont de 100 a 30 000, une echelle lineaire
+    ecraserait les trois premiers points contre l'axe.
+    """
+    donnees = lire("modele-vs-regles")
+    budgets = sorted({int(d["budget_alertes"]) for d in donnees})
+    par_methode: dict[str, list[float]] = {}
+    for ligne in donnees:
+        par_methode.setdefault(ligne["methode"], []).append(float(ligne["precision_pourcent"]))
+
+    figure, axes = plt.subplots(figsize=(9, 4.6))
+    series = (
+        ("regle", "règle de prix", SERIE_1, "o", "-"),
+        ("modele_oriente", "modèle, orienté vers les montants élevés", SERIE_3, "s", "-"),
+        ("modele", "modèle, laissé libre", SERIE_2, "^", "--"),
+        ("hasard", "hasard", SERIE_4, "d", ":"),
+    )
+    for cle, etiquette, couleur, marqueur, trait in series:
+        axes.plot(
+            budgets,
+            par_methode[cle],
+            color=couleur,
+            linewidth=2,
+            marker=marqueur,
+            markersize=7,
+            linestyle=trait,
+            label=etiquette,
+        )
+
+    axes.set_xscale("log")
+    axes.set_xticks(budgets)
+    axes.set_xticklabels([f"{b:,}".replace(",", " ") for b in budgets])
+    axes.set_ylim(-4, 105)
+    axes.set_xlabel("budget d'alertes, échelle logarithmique", color=GRIS, fontsize=8.5)
+    axes.set_ylabel("précision, en pourcentage", color=GRIS, fontsize=8.5)
+    axes.legend(loc="center left", frameon=False, fontsize=8.5, labelcolor=GRIS)
+    soigner(axes, "À budget d'alertes égal, la règle devance le modèle")
+
+    legender(
+        figure,
+        "Mesure du 29 septembre 2026 sur 2 053 765 marchés, `make bench-modele`. Isolation "
+        "Forest, 100 arbres, 256 échantillons par arbre.\nÉtiquette faible : les montants que le "
+        "producteur des données signale lui-même. Laissé libre, le modèle désigne des "
+        "montants\nanormalement BAS, que cette étiquette ne marque jamais, et sa précision tombe "
+        "sous le hasard. Orienté vers les montants\nélevés, le même modèle redevient comparable à "
+        "la règle sans la dépasser. La connaissance métier, pas la puissance\nstatistique, fait la "
+        "différence.",
+    )
+    enregistrer(figure, "19-modele-vs-regles")
+
+
 def main() -> None:
     print("Figures generees depuis mesures/resultats/ :")
     figure_total_annuel()
@@ -941,6 +998,7 @@ def main() -> None:
     figure_rapprochement()
     figure_precision_rapprochement()
     figure_nettoyage()
+    figure_modele_vs_regles()
     print(f"\nDossier : {chemin_lisible(FIGURES)}")
 
 

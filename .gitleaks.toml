@@ -1,0 +1,33 @@
+# Configuration de gitleaks.
+#
+# Pourquoi ce fichier existe. `gitleaks dir .` parcourt le systeme de fichiers et ignore le
+# `.gitignore`. Il lisait donc `donnees/`, soit 3 Go de Parquet et une base DuckDB, pour deux
+# resultats :
+#
+#   1. sept minutes et quarante secondes de scan, ce qui est inacceptable dans un hook de
+#      pre-commit et couteux en integration continue ;
+#   2. deux fausses alertes. Une suite d'octets d'un fichier binaire ressemblait a une cle AWS, et
+#      l'objet d'un marche public (« accession - Lot 4 : ... ») declenchait la regle generique.
+#
+# Ces fichiers ne sont pas versionnes : ils ne peuvent donc pas fuir par un push. Les exclure ne
+# retire aucune protection, et le scan de l'historique (`gitleaks git .`) n'est pas concerne.
+#
+#     Option envisagee              Avantage                  Limite                    Verdict
+#     tout scanner                  aucune exclusion a        7 min 40 s, deux fausses  ecarte
+#                                   justifier                 alertes recurrentes
+#     baisser la sensibilite        moins de bruit            aveugle aussi sur le      dangereux
+#     des regles generiques                                   vrai code
+#     ignorer chaque alerte par     tres cible                une empreinte a ajouter   ecarte
+#     son empreinte                                           a chaque nouvelle donnee
+#     **exclure le dossier de       rapide, et le perimetre   il faut penser a ne pas   **retenu**
+#     donnees non versionne**       exclu ne peut pas fuir    y mettre de code
+
+[extend]
+# On part des regles par defaut de gitleaks, on ne les remplace pas.
+useDefault = true
+
+[allowlist]
+description = "Donnees locales non versionnees, hors du perimetre de fuite possible"
+paths = [
+  '''^donnees/''',
+]

@@ -1,0 +1,5 @@
+etape,duree_secondes,marches,variables
+lecture des donnees,0.38,2053765,5
+entrainement du modele,0.57,2053765,5
+application du modele,3.98,2053765,5
+regle (deja calculee en SQL),0.0,2053765,1

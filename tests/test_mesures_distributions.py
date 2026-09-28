@@ -166,6 +166,24 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
         ["date_plausible", "Date de notification possible", "515", "0.024"],
         ["acheteur_siret_valide", "SIRET de l'acheteur conforme", "337", "0.016"],
     ]
+    # La figure 19 lit quatre methodes, pour six budgets. Le jeu fictif n'en garde que trois
+    # budgets, ce qui suffit a verifier que la figure se trace et que les quatre series sont
+    # trouvees : une methode manquante leverait une KeyError.
+    contenus["modele-vs-regles"] = [
+        ["budget_alertes", "methode", "precision_pourcent"],
+        ["100", "regle", "96.0"],
+        ["100", "modele", "0.0"],
+        ["100", "modele_oriente", "73.0"],
+        ["100", "hasard", "2.0"],
+        ["1000", "regle", "96.1"],
+        ["1000", "modele", "0.0"],
+        ["1000", "modele_oriente", "65.7"],
+        ["1000", "hasard", "3.1"],
+        ["10000", "regle", "73.3"],
+        ["10000", "modele", "1.7"],
+        ["10000", "modele_oriente", "70.9"],
+        ["10000", "hasard", "2.7"],
+    ]
     contenus["rapprochement-precision"] = [
         [
             "seuil_objet",
@@ -188,5 +206,5 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     figures.main()
 
     produites = sorted(chemin.name for chemin in sorties.glob("*.svg"))
-    assert len(produites) == 18, f"dix-huit figures attendues, obtenu : {produites}"
+    assert len(produites) == 19, f"dix-neuf figures attendues, obtenu : {produites}"
     assert all((sorties / nom.replace(".svg", ".png")).exists() for nom in produites)
