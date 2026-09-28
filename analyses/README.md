@@ -10,6 +10,7 @@ Exploration des donnees. C'est le brouillon du projet, et la preuve de la demarc
 | `04-exploration-boamp.ipynb` | BOAMP : volumetrie, avis ouverts, delais, rapprochement avec les DECP | fait, 2026-09-21 |
 | `05-comment-le-projet-se-verifie.ipynb` | les tests, ce qu'ils attrapent, ce qu'ils ratent, et un echec en direct | fait, 2026-09-21 |
 | `06-api-recherche-entreprises.ipynb` | resolution des SIRET, part des PME, demonstration du biais de selection | fait, 2026-09-21 |
+| `07-rapprochement-des-sources.ipynb` | relier le BOAMP aux DECP : entonnoir, reglage des parametres, justesse mesuree | fait, 2026-09-27 |
 
 ## Methode
 

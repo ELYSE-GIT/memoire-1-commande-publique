@@ -94,6 +94,10 @@ bench-decp-distributions:
 bench-rapprochement:
 	uv run python mesures/rapprochement_boamp_decp.py
 
+## bench-precision : croise les verdicts relus a la main avec le balayage des seuils
+bench-precision:
+	uv run python mesures/precision_rapprochement.py
+
 ## figures : trace les figures du memoire a partir des agregats mesures
 figures:
 	uv run python mesures/figures.py
@@ -126,4 +130,4 @@ clean-all: clean
 	rm -rf .venv donnees
 	@echo "Pour liberer la VM entierement : colima delete"
 
-.PHONY: help install hooks donnees-decp bench-decp bench-decp-distributions bench-rapprochement figures notebooks lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all
+.PHONY: help install hooks donnees-decp bench-decp bench-decp-distributions bench-rapprochement bench-precision figures notebooks lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all

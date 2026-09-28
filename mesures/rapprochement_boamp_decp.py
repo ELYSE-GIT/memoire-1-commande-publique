@@ -136,7 +136,12 @@ def charger_avis(debut: str, fin: str, nombre: int) -> list[Avis]:
     return avis
 
 
-def niveaux_de_rapprochement(con: duckdb.DuckDBPyConnection, avis: Avis) -> tuple[int, int, float]:
+def niveaux_de_rapprochement(
+    con: duckdb.DuckDBPyConnection,
+    avis: Avis,
+    jours_avant: int = JOURS_AVANT,
+    seuil_objet: float = SEUIL_OBJET,
+) -> tuple[int, int, float]:
     """Renvoie le niveau atteint, le nombre de candidats, et la meilleure similarite d'objet.
 
     Niveau 0 : aucun SIRET de l'avis n'est un acheteur connu des DECP.
@@ -171,7 +176,7 @@ def niveaux_de_rapprochement(con: duckdb.DuckDBPyConnection, avis: Avis) -> tupl
         where acheteur_id = ?
           and dateNotification between ? and ?
         """,
-        [acheteur, parution - timedelta(days=JOURS_AVANT), parution + timedelta(days=JOURS_APRES)],
+        [acheteur, parution - timedelta(days=jours_avant), parution + timedelta(days=JOURS_APRES)],
     ).fetchall()
     if not candidats:
         return 1, 0, 0.0
@@ -187,9 +192,128 @@ def niveaux_de_rapprochement(con: duckdb.DuckDBPyConnection, avis: Avis) -> tupl
 
     if par_titulaire:
         return 4, len(candidats), meilleure
-    if meilleure > SEUIL_OBJET:
+    if meilleure > seuil_objet:
         return 3, len(candidats), meilleure
     return 2, len(candidats), meilleure
+
+
+# Valeurs explorees pour le balayage. Elles encadrent le choix actuel, dans les deux sens, pour
+# pouvoir dire non seulement « nous avons choisi 18 mois et 0,6 » mais « voici ce que donnent les
+# autres valeurs, et voici pourquoi celles-ci ».
+FENETRES_MOIS = [6, 12, 18, 24, 36]
+SEUILS = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+
+
+def balayer(con: duckdb.DuckDBPyConnection, avis: list[Avis]) -> list[dict[str, float | int | str]]:
+    """Mesure le taux de rapprochement pour chaque fenetre et chaque seuil.
+
+    Le calcul est organise pour ne pas refaire le travail inutilement : pour une fenetre donnee,
+    on calcule une seule fois la meilleure similarite de chaque avis, puis on applique les six
+    seuils dessus. Sans cette precaution, il faudrait trente passages au lieu de cinq.
+    """
+    lignes: list[dict[str, float | int | str]] = []
+    for mois in FENETRES_MOIS:
+        debut = time.perf_counter()
+        # Le seuil est mis a 1.1 pour que le niveau 3 ne se declenche jamais : on veut la
+        # similarite brute de chaque avis, pas un niveau deja filtre.
+        mesures = [
+            niveaux_de_rapprochement(con, un_avis, jours_avant=mois * 30, seuil_objet=1.1)
+            for un_avis in avis
+        ]
+        duree = time.perf_counter() - debut
+        avec_candidats = [m for m in mesures if m[1] > 0]
+        for seuil in SEUILS:
+            # Niveau 4 : le titulaire concorde, quel que soit le seuil sur l'objet.
+            niveau_4 = sum(1 for m in mesures if m[0] == 4)
+            # Niveau 3 : l'objet depasse le seuil, sans que le titulaire ne concorde.
+            niveau_3 = sum(1 for m in mesures if m[0] != 4 and m[2] > seuil)
+            lignes.append(
+                {
+                    "fenetre_mois": mois,
+                    "seuil_objet": seuil,
+                    "avis": len(avis),
+                    "avec_candidats": len(avec_candidats),
+                    "confiance_haute": niveau_4,
+                    "confiance_moyenne": niveau_3,
+                    "part_rapproches": round(100 * (niveau_3 + niveau_4) / len(avis), 1),
+                    "duree_secondes": round(duree, 1),
+                }
+            )
+        print(
+            f"  fenetre {mois:>2} mois : {len(avec_candidats):>3} avis avec candidats, "
+            f"{duree:>5.1f} s"
+        )
+    return lignes
+
+
+def echantillon_a_verifier(
+    con: duckdb.DuckDBPyConnection, avis: list[Avis], par_tranche: int = 12
+) -> list[dict[str, str | float]]:
+    """Constitue un echantillon de rapprochements a relire a la main.
+
+    Un taux de rapprochement ne dit rien de sa justesse : un seuil bas rapproche davantage, et
+    rapproche davantage a tort. La seule facon de le savoir est de lire les paires.
+
+    L'echantillon est stratifie par tranche de similarite plutot que tire uniformement : on veut
+    autant d'exemples a 0,45 qu'a 0,85, precisement pour voir ou la methode commence a se tromper.
+    Un tirage uniforme donnerait surtout des cas faciles.
+    """
+    tranches = [(0.4, 0.5), (0.5, 0.6), (0.6, 0.7), (0.7, 0.8), (0.8, 1.01)]
+    retenus: list[dict[str, str | float]] = []
+
+    for un_avis in avis:
+        if not un_avis.sirets:
+            continue
+        acheteurs = con.execute(
+            "select distinct acheteur_id from marches "
+            "where acheteur_id in (select unnest(?::varchar[]))",
+            [un_avis.sirets],
+        ).fetchall()
+        if not acheteurs:
+            continue
+        acheteur = acheteurs[0][0]
+        autres = [s for s in un_avis.sirets if s != acheteur]
+        parution = date.fromisoformat(un_avis.date)
+        candidats = con.execute(
+            """
+            select objet, titulaire_id from marches
+            where acheteur_id = ? and dateNotification between ? and ?
+            """,
+            [
+                acheteur,
+                parution - timedelta(days=JOURS_AVANT),
+                parution + timedelta(days=JOURS_APRES),
+            ],
+        ).fetchall()
+        if not candidats:
+            continue
+
+        meilleur_objet, meilleur_titulaire, meilleur_score = "", None, 0.0
+        for objet, titulaire in candidats:
+            score = SequenceMatcher(None, un_avis.objet, (objet or "").lower()).ratio()
+            if score > meilleur_score:
+                meilleur_objet, meilleur_titulaire, meilleur_score = objet or "", titulaire, score
+
+        for bas, haut in tranches:
+            if bas <= meilleur_score < haut:
+                deja = sum(1 for r in retenus if r["tranche"] == f"{bas} a {haut}")
+                if deja < par_tranche:
+                    retenus.append(
+                        {
+                            "tranche": f"{bas} a {haut}",
+                            "similarite": round(meilleur_score, 3),
+                            "idweb": un_avis.idweb,
+                            "objet_boamp": un_avis.objet[:180],
+                            "objet_decp": meilleur_objet[:180],
+                            "titulaire_concorde": "oui"
+                            if meilleur_titulaire and meilleur_titulaire in autres
+                            else "non",
+                            "verdict_humain": "",
+                        }
+                    )
+                break
+
+    return sorted(retenus, key=lambda r: float(r["similarite"]))
 
 
 def main() -> None:
@@ -252,6 +376,45 @@ def main() -> None:
                 [niveau, libelles[niveau], cumul[niveau], round(100 * cumul[niveau] / total, 1)]
             )
     print(f"\nEcrit : {chemin.relative_to(RACINE)}")
+
+    print("\nBalayage des parametres :")
+    lignes_balayage = balayer(con, avis)
+    chemin_balayage = SORTIE / f"{jour}-rapprochement-balayage.csv"
+    with chemin_balayage.open("w", newline="", encoding="utf-8") as sortie:
+        ecrivain = csv.DictWriter(
+            sortie, fieldnames=list(lignes_balayage[0].keys()), lineterminator="\n"
+        )
+        ecrivain.writeheader()
+        ecrivain.writerows(lignes_balayage)
+
+    # Ce que le balayage apprend, affiche directement : le meilleur taux, et le choix retenu.
+    meilleur = max(lignes_balayage, key=lambda ligne: ligne["part_rapproches"])
+    retenu = next(
+        ligne
+        for ligne in lignes_balayage
+        if ligne["fenetre_mois"] == JOURS_AVANT // 30 and ligne["seuil_objet"] == SEUIL_OBJET
+    )
+    print(
+        f"\n  meilleur taux : {meilleur['part_rapproches']} % "
+        f"(fenetre {meilleur['fenetre_mois']} mois, seuil {meilleur['seuil_objet']})"
+    )
+    print(
+        f"  choix retenu  : {retenu['part_rapproches']} % "
+        f"(fenetre {retenu['fenetre_mois']} mois, seuil {retenu['seuil_objet']})"
+    )
+    print(f"\nEcrit : {chemin_balayage.relative_to(RACINE)}")
+
+    # Echantillon a relire : la colonne verdict_humain reste vide, elle se remplit a la main.
+    echantillon = echantillon_a_verifier(con, avis)
+    chemin_echantillon = SORTIE / f"{jour}-rapprochement-echantillon.csv"
+    with chemin_echantillon.open("w", newline="", encoding="utf-8") as sortie:
+        relecture = csv.DictWriter(
+            sortie, fieldnames=list(echantillon[0].keys()), lineterminator="\n"
+        )
+        relecture.writeheader()
+        relecture.writerows(echantillon)
+    print(f"\n{len(echantillon)} rapprochements a relire, repartis par tranche de similarite")
+    print(f"Ecrit : {chemin_echantillon.relative_to(RACINE)}")
 
 
 if __name__ == "__main__":
