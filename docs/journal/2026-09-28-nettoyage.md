@@ -113,3 +113,25 @@ Dependabot qui met les deux a jour ensemble.
 **Lecon pour le memoire** : un outil de qualite installe deux fois a deux versions differentes ne
 protege plus, il bloque. C'est une forme discrete de la meme erreur que l'environnement non
 reproductible, et elle se voit seulement quand les deux copies divergent.
+
+### La chaine d'integration ne voyait ni les paquets ni le jeu d'essai
+
+**Symptome** : les vingt tests d'integration passaient sur le Mac et echouaient tous sur le
+serveur, avec deux erreurs successives : `dbt expects 1 package(s)` puis `No files found that
+match the pattern .../bronze_fictif.parquet`.
+
+**Causes**, deux fois la meme : ce qui marche en local parce qu'il est deja la.
+
+1. Les paquets dbt sont installes une fois sur cette machine et ignores par git, a juste titre.
+   La machine d'integration part d'un depot vierge et ne les avait pas.
+2. Le jeu d'essai est un fichier Parquet, et `.gitignore` exclut tous les `.parquet` depuis la
+   phase 1. La regle protege des donnees de 250 Mo ; elle excluait aussi un fichier de test de
+   3 Ko, qui doit au contraire etre versionne.
+
+**Solutions** : le test lance lui-meme `dbt deps` avant de construire, et `.gitignore` porte une
+exception nommee pour `tests/fixtures/*.parquet`, avec le commentaire qui explique pourquoi.
+
+**Lecon pour le memoire** : une chaine d'integration ne verifie pas seulement le code, elle
+verifie **l'hypothese implicite que tout est deja installe**. Trois echecs consecutifs ont revele
+trois dependances invisibles depuis le poste de developpement : une version d'outil, des paquets,
+un fichier. Aucune n'aurait ete vue autrement.
