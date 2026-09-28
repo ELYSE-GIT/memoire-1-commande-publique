@@ -1,0 +1,34 @@
+# Projet de transformation : de la donnee brute aux tables pretes a servir.
+#
+# Trois couches, dans cet ordre, et chacune a une regle stricte :
+#   bronze  la donnee telle que la source l'a publiee. Aucune correction, aucun filtre.
+#   argent  la donnee nettoyee et normalisee. On marque les problemes, on ne supprime rien.
+#   or      les tables pretes a etre servies au site et aux analyses.
+#
+# Le nom "modele" est celui de dbt : un fichier SQL qui decrit une table a construire. Il n'a
+# aucun rapport avec un modele d'apprentissage automatique.
+
+name: "commande_publique"
+version: "0.1.0"
+profile: "commande_publique"
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+# target-path n'est plus accepte ici depuis dbt 1.12 : il se regle par la variable
+# d'environnement DBT_TARGET_PATH ou par l'option --target-path. On garde le defaut, `target`,
+# qui est ignore par git.
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  commande_publique:
+    bronze:
+      # Des vues : la couche bronze ne copie pas la donnee, elle la designe. Materialiser
+      # 3,3 millions de lignes une seconde fois n'apporterait rien et doublerait la place occupee.
+      +materialized: view
+    argent:
+      # Des tables : le nettoyage est calcule une fois, puis relu des dizaines de fois par les
+      # couches suivantes. Le recalculer a chaque interrogation serait du gaspillage.
+      +materialized: table
+    or:
+      +materialized: table

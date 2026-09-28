@@ -856,6 +856,71 @@ def figure_precision_rapprochement() -> None:
     enregistrer(figure, "17-precision-du-rapprochement")
 
 
+def figure_nettoyage() -> None:
+    """Ce que le nettoyage retire, et ce qu'il garde.
+
+    Deux panneaux : le passage d'une couche a l'autre, puis l'effet de chaque regle. Les deux
+    repondent a la meme question, a deux echelles differentes.
+    """
+    couches = lire("nettoyage-couches")
+    regles = sorted(lire("nettoyage-regles"), key=lambda r: int(r["lignes_marquees"]), reverse=True)
+
+    # Les libelles du panneau de droite sont longs : sans un espacement genereux entre les deux
+    # panneaux, ils debordent sur celui de gauche. Le defaut a ete vu en regardant la figure
+    # produite, ce qu'aucun test ne remplace.
+    figure, (gauche, droite) = plt.subplots(
+        1, 2, figsize=(12.5, 4.2), gridspec_kw={"wspace": 0.75, "width_ratios": [1, 1.5]}
+    )
+
+    noms = [c["couche"] for c in couches]
+    lignes = [int(c["lignes"]) / 1e6 for c in couches]
+    barres = gauche.bar(noms, lignes, color=[SERIE_1, SERIE_1, SERIE_3], width=0.55)
+    gauche.bar_label(barres, fmt="%.2f M", padding=4, color=ENCRE, fontsize=9, fontweight="bold")
+    for x, couche in enumerate(couches):
+        gauche.annotate(
+            f"{couche['colonnes']} colonnes",
+            xy=(x, 0),
+            xytext=(0, -26),
+            textcoords="offset points",
+            ha="center",
+            color=GRIS,
+            fontsize=8,
+        )
+    gauche.set_ylabel("millions de lignes", color=GRIS, fontsize=8.5)
+    gauche.set_ylim(0, max(lignes) * 1.18)
+    soigner(gauche, "De la donnée brute à la table servie")
+
+    # Echelle logarithmique : la regle la plus frequente marque 200 fois plus de lignes que la
+    # plus rare. En echelle lineaire, six des neuf regles seraient invisibles.
+    libelles = [r["verifie"] for r in regles]
+    marquees = [int(r["lignes_marquees"]) for r in regles]
+    barres = droite.barh(libelles, marquees, color=SERIE_2, height=0.62)
+    droite.bar_label(
+        barres,
+        labels=[f"{m:,}".replace(",", " ") for m in marquees],
+        padding=4,
+        color=GRIS,
+        fontsize=8,
+    )
+    droite.set_xscale("log")
+    droite.invert_yaxis()
+    droite.grid(axis="y", visible=False)
+    droite.grid(axis="x", color=FILET, linewidth=0.6)
+    droite.set_xlim(100, max(marquees) * 6)
+    droite.tick_params(axis="y", labelsize=8)
+    soigner(droite, "Lignes marquées par chaque règle")
+
+    legender(
+        figure,
+        "À gauche, les trois couches : la donnée brute, l'état actuel de chaque marché avec ses "
+        "problèmes marqués, puis les marchés\nexploitables pour une analyse de prix. À droite, "
+        "l'effet de chacune des neuf règles, en échelle logarithmique : la plus fréquente\nmarque "
+        "deux cents fois plus de lignes que la plus rare. Aucune ligne n'est supprimée : une ligne "
+        "marquée reste consultable avec son motif.",
+    )
+    enregistrer(figure, "18-nettoyage-par-regle")
+
+
 def main() -> None:
     print("Figures generees depuis mesures/resultats/ :")
     figure_total_annuel()
@@ -875,6 +940,7 @@ def main() -> None:
     figure_offre_unique_par_tranche()
     figure_rapprochement()
     figure_precision_rapprochement()
+    figure_nettoyage()
     print(f"\nDossier : {chemin_lisible(FIGURES)}")
 
 

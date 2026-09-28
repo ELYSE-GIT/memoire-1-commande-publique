@@ -97,6 +97,27 @@ donnees-decp:
 		curl -L --progress-bar -o donnees/brut/decp.parquet "$$url"
 	@ls -lh donnees/brut/decp.parquet
 
+# --- Transformation -------------------------------------------------------
+
+# Le chemin de la donnee brute est passe en absolu. Une vue dbt qui porterait un chemin relatif
+# ne fonctionnerait que si on l'interroge depuis le dossier de dbt : un notebook ou un script
+# lance depuis la racine echouerait. Le defaut a ete rencontre, puis corrige ici.
+CHEMIN_DECP = $(CURDIR)/donnees/bronze/decp/*/decp.parquet
+DBT = cd services/transformation && uv run dbt
+
+## transformer : construit les trois couches, bronze, argent et or
+transformer:
+	$(DBT) build --vars '{"chemin_decp": "$(CHEMIN_DECP)"}'
+
+## transformer-tester : lance uniquement les tests de donnees
+transformer-tester:
+	$(DBT) test --vars '{"chemin_decp": "$(CHEMIN_DECP)"}'
+
+## transformer-doc : genere la documentation et le graphe des dependances
+transformer-doc:
+	$(DBT) docs generate --vars '{"chemin_decp": "$(CHEMIN_DECP)"}'
+	@echo "Ouvrir : cd services/transformation && uv run dbt docs serve"
+
 ## bench-decp : mesure la qualite et les performances sur le jeu DECP
 bench-decp:
 	uv run python mesures/decp_qualite.py
@@ -108,6 +129,10 @@ bench-decp-distributions:
 ## bench-rapprochement : mesure si les avis du BOAMP peuvent etre relies aux marches des DECP
 bench-rapprochement:
 	uv run python mesures/rapprochement_boamp_decp.py
+
+## bench-nettoyage : mesure l'effet de chaque regle de nettoyage, couche par couche
+bench-nettoyage:
+	uv run python mesures/nettoyage.py
 
 ## bench-precision : croise les verdicts relus a la main avec le balayage des seuils
 bench-precision:
@@ -145,4 +170,4 @@ clean-all: clean
 	rm -rf .venv donnees
 	@echo "Pour liberer la VM entierement : colima delete"
 
-.PHONY: help install hooks collecte collecte-decp collecte-boamp collecte-etat donnees-decp bench-decp bench-decp-distributions bench-rapprochement bench-precision figures notebooks lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all
+.PHONY: help install hooks transformer transformer-tester transformer-doc collecte collecte-decp collecte-boamp collecte-etat donnees-decp bench-decp bench-decp-distributions bench-rapprochement bench-precision bench-nettoyage figures notebooks lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all

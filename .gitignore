@@ -21,5 +21,11 @@ donnees/
 *.sqlite
 *.gguf
 
+# Artefacts de dbt : compiles a chaque execution, jamais lus par un humain
+services/transformation/target/
+services/transformation/logs/
+services/transformation/dbt_packages/
+.user.yml
+
 # Systeme
 .DS_Store

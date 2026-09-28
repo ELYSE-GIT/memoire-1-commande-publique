@@ -1,0 +1,54 @@
+# Contrat de la couche or : ici, les regles bloquent.
+#
+# C'est la difference de promesse entre les deux couches. La couche argent garde tout et marque ;
+# la couche or ne contient que ce qui est exploitable, et doit donc le garantir. Un test qui
+# echoue ici arrete la chaine, et c'est voulu : mieux vaut un site qui ne se met pas a jour qu'un
+# site qui affiche des chiffres faux.
+
+version: 2
+
+models:
+  - name: or_marches
+    description: >
+      Les marches exploitables pour l'analyse des prix, prets a etre servis. Une ligne par
+      couple marche et titulaire. Les lignes ecartees restent consultables en couche argent,
+      avec le motif de leur exclusion.
+    columns:
+      - name: marche_id
+        description: Identifiant du marche.
+        tests:
+          - not_null
+
+      - name: acheteur_siret
+        description: SIRET de l'acheteur, quatorze chiffres garantis a ce stade.
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "~ '^[0-9]{14}$'"
+
+      - name: montant
+        description: Montant attribue, en euros, garanti strictement positif et sous le milliard.
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "> 0 and montant <= 1000000000"
+
+      - name: date_notification
+        description: Date de notification, garantie presente et plausible.
+        tests:
+          - not_null
+
+      - name: annee
+        description: Annee de notification, entre 2015 et l'annee en cours.
+        tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 2015"
+
+      - name: offre_unique
+        description: >
+          Le marche n'a recu qu'une seule offre. Vaut null quand l'information manque, ce qui est
+          le cas de 56 % des marches : confondre l'absence d'information avec une reponse
+          negative fausserait toute statistique de concurrence.

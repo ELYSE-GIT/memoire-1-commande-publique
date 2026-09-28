@@ -154,6 +154,18 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
         ],
     }
     contenus.update(date_agregats)
+    contenus["nettoyage-couches"] = [
+        ["couche", "table", "contenu", "lignes", "colonnes"],
+        ["bronze", "bronze_decp", "la donnee brute", "3296811", "66"],
+        ["argent", "argent_marches", "problemes marques", "2121908", "79"],
+        ["or", "or_marches", "exploitable", "1999474", "29"],
+    ]
+    contenus["nettoyage-regles"] = [
+        ["regle", "verifie", "lignes_marquees", "part_pourcent"],
+        ["montant_renseigne", "Montant présent et positif", "66984", "3.157"],
+        ["date_plausible", "Date de notification possible", "515", "0.024"],
+        ["acheteur_siret_valide", "SIRET de l'acheteur conforme", "337", "0.016"],
+    ]
     contenus["rapprochement-precision"] = [
         [
             "seuil_objet",
@@ -176,5 +188,5 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     figures.main()
 
     produites = sorted(chemin.name for chemin in sorties.glob("*.svg"))
-    assert len(produites) == 17, f"dix-sept figures attendues, obtenu : {produites}"
+    assert len(produites) == 18, f"dix-huit figures attendues, obtenu : {produites}"
     assert all((sorties / nom.replace(".svg", ".png")).exists() for nom in produites)

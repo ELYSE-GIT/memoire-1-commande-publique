@@ -1,0 +1,97 @@
+# 2026-09-28. Le nettoyage en trois couches
+
+## Objectif
+
+Passer de la donnee brute, mesuree en phase 2, a une table exploitable. Avec une contrainte tenue
+d'un bout a l'autre : **ne supprimer aucune ligne**.
+
+## Ce qui a ete fait
+
+- Projet dbt dans `services/transformation/`, trois couches, neuf regles de nettoyage commentees.
+- Contrats de donnees ecrits pour les couches argent et or, avec 18 tests de donnees.
+- `mesures/nettoyage.py` et `make bench-nettoyage` : l'effet de chaque regle, mesure.
+- Figure 18, tracee depuis ces mesures.
+- 20 tests d'integration qui executent la vraie chaine sur un jeu fictif de quinze lignes.
+- ADR 0005.
+
+## Le resultat
+
+| Couche | Lignes | Colonnes | Contenu |
+|---|---|---|---|
+| bronze | 3 296 811 | 66 | la donnee telle que la source l'a publiee |
+| argent | 2 121 908 | 79 | l'etat actuel de chaque marche, problemes marques |
+| or | 1 999 474 | 29 | les marches exploitables pour une analyse de prix |
+
+**94,2 % des lignes de la couche argent sont exploitables** pour une analyse de prix. Les 5,8 %
+restants ne disparaissent pas : ils portent le motif de leur exclusion.
+
+La normalisation de la nature du marche ramene **douze ecritures a six notions**. Le cas
+« ACCORD-CADRE » contre « ACCORD CADRE », qui resistait en phase 2, est resolu en normalisant
+aussi la ponctuation. Toujours aucun modele, toujours deux fonctions SQL.
+
+## Ce que les tests de donnees ont trouve
+
+**Six lignes sans SIRET ni nom d'acheteur**, toutes de la meme source. Des marches dont on ne sait
+pas qui les a passes.
+
+**244 codes CPV qui ne sont pas des codes** : « Travaux », « lot 2000 », « X0000000 ». Des
+acheteurs ont ecrit du texte libre dans un champ de nomenclature. La regle ne deduit desormais une
+famille que d'un code commencant reellement par deux chiffres, et marque le reste.
+
+Ces deux defauts n'etaient pas connus avant. Ils ont ete trouves parce qu'un contrat de donnees
+avait ete ecrit, pas parce qu'on les cherchait.
+
+## Difficultes rencontrees
+
+### Un contrat place a la mauvaise couche
+
+**Symptome** : le test `not_null` sur le SIRET de l'acheteur faisait echouer la chaine, en couche
+argent, avec six lignes fautives.
+
+**Cause** : le contrat contredisait la promesse de la couche. La couche argent s'engage a **tout
+garder en marquant les problemes** ; y exiger un identifiant non nul revenait a exiger qu'il n'y
+ait aucun probleme a conserver.
+
+**Solution** : avertissement en couche argent, regle stricte en couche or, ou elle bloque a juste
+titre puisque la couche or ne contient que l'exploitable.
+
+**Lecon pour le memoire** : la severite d'un test doit correspondre a ce que sa couche promet. Un
+test trop strict finit desactive, et un test desactive ne protege plus rien. C'est le mecanisme
+exact de l'echec Louvois.
+
+### Une vue avec un chemin relatif
+
+**Symptome** : la couche bronze etait interrogeable depuis dbt, mais pas depuis un notebook ni un
+script lance a la racine : `No files found that match the pattern`.
+
+**Cause** : la vue portait un chemin relatif, resolu depuis le dossier de travail du processus.
+
+**Solution** : le chemin est passe en absolu par le Makefile. La vue est desormais interrogeable
+de partout.
+
+**Lecon** : un artefact partage ne doit pas dependre de l'endroit d'ou on l'appelle.
+
+### Deux refus de l'analyse de securite, encore
+
+Le script de mesure construisait ses requetes en inserant des noms de colonnes. Corrige en ecrivant
+les neuf regles dans une seule requete complete, ce qui est au passage plus rapide : un seul
+passage sur la table au lieu de neuf.
+
+Et le test d'integration lancait `uv` sans chemin complet, laissant le PATH decider quel programme
+s'execute. Corrige par `shutil.which`, avec en prime un message clair quand l'outil manque.
+
+## Un outil adopte, pour la premiere fois
+
+Jusqu'ici, ce projet a surtout ecarte des outils : pas d'orchestrateur, pas de bibliotheque HTTP,
+pas de moteur distribue. dbt est le premier a etre retenu, et l'ADR 0005 explique pourquoi : sans
+lui, il faudrait ecrire un lanceur, un systeme de tests de donnees, une generation de documentation
+et un graphe de dependances. Plusieurs semaines pour refaire moins bien.
+
+**Lecon** : la question n'est jamais « cet outil est-il bon » mais « qu'est-ce que je devrais
+ecrire sans lui ». La reponse penche parfois du cote de l'outil, et il faut alors savoir le dire.
+
+## Prochaine etape
+
+L'ingenierie des variables : fabriquer, a partir des colonnes nettoyees, les grandeurs qui
+serviront a detecter les marches atypiques. Ecart du montant a la mediane de sa famille CPV,
+concentration des attributions par acheteur, position dans le calendrier budgetaire.

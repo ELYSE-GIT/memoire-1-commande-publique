@@ -1,0 +1,20 @@
+# Ou dbt ecrit ses resultats. Un seul environnement pour l'instant : le fichier DuckDB local.
+#
+# Le chemin est relatif au dossier depuis lequel dbt est lance, c'est-a-dire
+# services/transformation. Le fichier produit, lui, vit dans donnees/, qui n'est pas versionne.
+#
+# En phase 7, un second profil "production" pointera vers PostgreSQL. dbt saura alors executer
+# les memes modeles sur les deux moteurs, ce qui est precisement la raison de ce choix d'outil.
+
+commande_publique:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      # Le chemin est surchargeable par une variable d'environnement : les tests d'integration
+      # ecrivent ainsi dans un fichier temporaire, sans toucher a la base de travail.
+      path: "{{ env_var('CHEMIN_BASE', '../../donnees/commande_publique.duckdb') }}"
+      threads: 4
+      # Extensions chargees a l'ouverture : la lecture de Parquet et l'acces aux fichiers.
+      extensions:
+        - parquet
