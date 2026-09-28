@@ -2,6 +2,40 @@
 
 Toutes ces commandes se lancent a la racine du projet, sur le Mac.
 
+## Collecter les sources vers la couche bronze
+
+```bash
+make collecte          # les deux sources, puis l'etat du manifeste
+make collecte-decp     # le jeu DECP consolide, environ 5 s
+make collecte-boamp    # les avis du BOAMP sur une periode, quelques minutes
+make collecte-etat     # verifie que les fichiers collectes sont intacts
+```
+
+**Ce que ca fait** : depose la donnee **telle que la source l'a publiee** dans
+`donnees/bronze/<source>/<date>/`, et ecrit une entree dans `donnees/manifestes/<date>.json` avec
+l'adresse exacte, la taille et l'empreinte SHA-256.
+
+**Pourquoi un manifeste** : les sources sont republiees tous les jours. Sans trace de ce qui a ete
+telecharge, un chiffre du memoire devient inverifiable des le lendemain. Le manifeste pese quelques
+kilooctets et il est versionne ; la donnee brute, elle, ne l'est pas.
+
+**Idempotence** : relancer une collecte interrompue ne cree ni doublon ni fichier incomplet. Si le
+fichier du jour existe deja, il n'est pas retelecharge, et son empreinte est recalculee.
+
+**Resultat attendu de `make collecte-etat`** :
+
+```
+Derniere collecte : 2026-09-28
+  boamp       36.5 Mo, 2000 lignes      intact
+  decp       248.5 Mo                   intact
+```
+
+Si une ligne indique `MANQUANT OU MODIFIE`, la donnee brute a ete purgee ou alteree : relancer la
+collecte correspondante.
+
+**Attention a la place** : chaque collecte des DECP occupe 248,5 Mo. Purger les anciens instantanes
+avec `rm -rf donnees/bronze/decp/AAAA-MM-JJ`, ou tout supprimer avec `make clean-all`.
+
 ## Telecharger le jeu DECP consolide
 
 ```bash

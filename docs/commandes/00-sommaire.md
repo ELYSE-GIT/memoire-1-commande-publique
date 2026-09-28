@@ -10,7 +10,7 @@ Ne jamais modifier un fichier `.txt` a la main : il serait ecrase.
 |---|---|---|
 | [01-installation-mac.md](01-installation-mac.md) | premiere installation, ou reinstallation complete | fait |
 | [02-quotidien.md](02-quotidien.md) | chaque session de travail | fait |
-| [03-donnees.md](03-donnees.md) | collecte, transformation, qualite des donnees | phase 3 |
+| [03-donnees.md](03-donnees.md) | collecte, transformation, qualite des donnees | fait |
 | [04-modeles.md](04-modeles.md) | entrainement, evaluation, registre des modeles | phase 4 |
 | [05-ia.md](05-ia.md) | indexation, recherche, assistant | phase 5 |
 | [06-mesures.md](06-mesures.md) | toutes les commandes `make bench-*` | phase 7 |

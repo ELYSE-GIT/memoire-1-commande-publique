@@ -200,7 +200,95 @@ produisent des fichiers identiques au bit près.
 
 ---
 
-## 1.4 Les trois unités de comptage, et pourquoi elles comptent
+## 1.4 Le vocabulaire de la chaîne de traitement
+
+Les termes de cette section décrivent la fabrique : comment la donnée passe du fichier public
+jusqu'à la table qui sert le site. Ils reviennent dans tous les chapitres techniques.
+
+**Ingestion.** L'étape qui récupère la donnée à la source et la dépose telle quelle, sans la
+modifier. Elle se contente de copier et d'horodater. Toute transformation faite à l'ingestion est
+une information perdue : on ne peut plus comparer ce qu'on a reçu à ce qu'on a produit.
+
+**Instantané**, ou *snapshot*. Une copie datée de la source à un moment précis. Le jeu DECP est
+republié chaque matin : sans instantané, une mesure faite aujourd'hui ne peut plus être refaite
+demain à l'identique. Chaque instantané du projet porte sa date dans son chemin.
+
+**Manifeste.** Un fichier qui décrit ce qui a été collecté : la source, l'adresse exacte, la date,
+la taille, et une empreinte du contenu. Il pèse quelques kilooctets et se versionne, alors que la
+donnée elle-même ne se versionne pas. C'est lui qui rend une mesure vérifiable par un tiers.
+
+**Empreinte**, ou *somme de contrôle*, ou *hachage*. Une suite de caractères calculée à partir d'un
+fichier, telle que deux fichiers différents donnent deux empreintes différentes. Elle répond à une
+question précise : le fichier que j'ai analysé est-il exactement celui que la source a publié ce
+jour-là.
+
+**Idempotence.** Propriété d'une opération qui donne le même résultat qu'on l'exécute une fois ou
+dix fois. Relancer une collecte idempotente après une coupure ne crée pas de doublons et ne casse
+rien. C'est la propriété qui rend un pipeline réellement automatisable : sans elle, chaque incident
+demande une intervention humaine pour savoir où l'on en était.
+
+**Rejouabilité.** Capacité à refaire tourner toute la chaîne, depuis la donnée brute conservée,
+après avoir corrigé une règle. Sans elle, corriger une erreur de nettoyage obligerait à
+retélécharger les sources, qui auront changé entre-temps.
+
+**Collecte incrémentale.** Ne récupérer que ce qui a changé depuis la dernière fois, au lieu de tout
+reprendre. Elle économise du temps et ménage les serveurs publics, mais elle demande de savoir
+repérer ce qui est nouveau, ce que toutes les sources ne permettent pas.
+
+**Cache.** Une copie locale d'une réponse déjà obtenue, réutilisée au lieu de redemander. Pour le
+répertoire des entreprises, résoudre 242 745 identifiants demande onze heures d'appels : sans cache,
+chaque exécution les redemanderait.
+
+**Limitation de débit**, ou *rate limiting*. La règle qui borne le nombre d'appels par seconde à une
+API. Elle protège le service public qu'on interroge, et elle évite de se faire bloquer. L'API
+Recherche d'entreprises annonce sept appels par seconde ; le projet se tient à six.
+
+**Reprise sur erreur**, ou *retry*. Réessayer un appel qui a échoué, après une attente croissante.
+Un réseau coupe, un serveur répond mal, et l'incident est souvent passager. Sans reprise, une
+collecte de plusieurs heures échoue entièrement sur une erreur d'une seconde.
+
+**Orchestration.** Le fait de lancer les étapes dans le bon ordre, à la bonne heure, de relancer ce
+qui a échoué, et de garder la trace de ce qui a tourné. Un simple planificateur de tâches suffit au
+début ; un orchestrateur dédié devient utile quand les dépendances entre étapes se multiplient.
+
+**Contrat de données**, ou *schéma*. La description de ce qu'une table doit contenir : les colonnes,
+leurs types, ce qui peut être vide, ce qui doit être unique. Écrit explicitement, il devient
+vérifiable : on ne découvre plus un changement de format en voyant un graphique devenir absurde.
+
+**Validation.** Le contrôle qu'une donnée respecte son contrat. Une validation **bloquante** arrête
+la chaîne ; une validation **avertissante** laisse passer en signalant. Le choix entre les deux est
+une décision de conception, jamais un réglage par défaut : c'est la désactivation de contrôles
+qualité qui a conduit au versement de 358 millions d'euros à tort dans l'affaire Louvois.
+
+**Marquer plutôt que supprimer.** Principe tenu dans tout le projet : une ligne invalide reçoit une
+colonne qui dit pourquoi elle l'est, et elle reste. Une ligne effacée ne peut plus être expliquée
+à un jury, ni corrigée par l'administration qui l'a publiée.
+
+**Traçabilité**, ou *lineage*. La capacité à dire, pour un chiffre affiché, de quelles colonnes et
+de quelles règles il provient. C'est ce qui permet de répondre à « d'où sort ce nombre », question
+qui sera posée en soutenance.
+
+**Modèle**, au sens de dbt. Un fichier SQL qui décrit une table à construire à partir d'autres
+tables. Le mot est malheureux, car il n'a rien à voir avec un modèle d'apprentissage automatique.
+Le projet dira « modèle de transformation » quand le contexte peut prêter à confusion.
+
+**Matérialisation.** La façon dont un modèle est écrit : recalculé à chaque interrogation (une
+*vue*), stocké une fois pour toutes (une *table*), ou complété au fil de l'eau (*incrémental*).
+C'est un arbitrage entre temps de calcul et fraîcheur.
+
+**Ingénierie des variables**, ou *feature engineering*. La fabrication, à partir des colonnes
+brutes, des grandeurs qui serviront à détecter ou à prédire : l'écart d'un montant à la médiane de
+sa famille d'achat, la part d'un titulaire chez un acheteur, le mois de notification. C'est
+souvent l'étape qui apporte le plus, bien avant le choix du modèle.
+
+**Fuite de données**, ou *data leakage*. Le fait d'utiliser, pour prédire, une information qui ne
+serait pas disponible au moment de la prédiction. Elle produit des résultats excellents en
+laboratoire et inutilisables en production. C'est l'erreur la plus fréquente et la plus difficile
+à repérer en science des données.
+
+---
+
+## 1.5 Les trois unités de comptage, et pourquoi elles comptent
 
 Une confusion suffit à fausser un pourcentage et à décrédibiliser une analyse entière. Le jeu de
 données principal de ce mémoire se compte de trois façons différentes.

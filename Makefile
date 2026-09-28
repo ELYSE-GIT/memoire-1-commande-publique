@@ -73,6 +73,21 @@ etat:
 # publication : il change a chaque mise a jour quotidienne, d'ou la resolution par l'API.
 URL_JEU_DECP = https://www.data.gouv.fr/api/1/datasets/donnees-essentielles-de-la-commande-publique-consolidees-format-tabulaire/
 
+## collecte-decp : collecte le jeu DECP vers la couche bronze, avec manifeste
+collecte-decp:
+	uv run python -m services.collecte decp
+
+## collecte-boamp : collecte les avis du BOAMP sur une periode, vers la couche bronze
+collecte-boamp:
+	uv run python -m services.collecte boamp --debut 2025-01-01 --fin 2025-07-01
+
+## collecte : les deux sources, puis l'etat du manifeste
+collecte: collecte-decp collecte-boamp collecte-etat
+
+## collecte-etat : affiche le dernier manifeste et verifie que les fichiers sont intacts
+collecte-etat:
+	uv run python -m services.collecte etat
+
 ## donnees-decp : telecharge le jeu DECP consolide en Parquet (environ 240 Mo)
 donnees-decp:
 	@mkdir -p donnees/brut
@@ -130,4 +145,4 @@ clean-all: clean
 	rm -rf .venv donnees
 	@echo "Pour liberer la VM entierement : colima delete"
 
-.PHONY: help install hooks donnees-decp bench-decp bench-decp-distributions bench-rapprochement bench-precision figures notebooks lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all
+.PHONY: help install hooks collecte collecte-decp collecte-boamp collecte-etat donnees-decp bench-decp bench-decp-distributions bench-rapprochement bench-precision figures notebooks lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all
