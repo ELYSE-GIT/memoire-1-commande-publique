@@ -37,9 +37,9 @@ test:
 ## secrets : cherche des mots de passe ou des cles, dans les fichiers et dans l'historique
 secrets:
 	@echo "--- fichiers presents ---"
-	gitleaks dir . --no-banner --redact
+	gitleaks dir . --config .gitleaks.toml --no-banner --redact
 	@echo "--- historique des commits ---"
-	gitleaks git . --no-banner --redact
+	gitleaks git . --config .gitleaks.toml --no-banner --redact
 
 ## verif : tout ce que la CI verifie, en une commande
 verif: lint types test secrets
@@ -138,6 +138,10 @@ bench-nettoyage:
 bench-detection:
 	uv run python mesures/detection.py
 
+## bench-modele : compare un modele non supervise aux regles, a budget d'alertes egal
+bench-modele:
+	uv run python mesures/modele_vs_regles.py
+
 ## bench-precision : croise les verdicts relus a la main avec le balayage des seuils
 bench-precision:
 	uv run python mesures/precision_rapprochement.py
@@ -146,10 +150,20 @@ bench-precision:
 figures:
 	uv run python mesures/figures.py
 
-## notebooks : rejoue tous les notebooks d'exploration et enregistre leurs resultats
+## notebooks : rejoue les notebooks et verifie qu'aucune cellule n'est en erreur
+## (le formatage passe avant l'execution : ruff format reecrit aussi les cellules, et le faire
+## apres donnerait des sorties enregistrees pour un code deja modifie)
 notebooks:
+	uv run ruff format analyses/
 	cd analyses && uv run jupyter execute --inplace 01-exploration-decp.ipynb
 	cd analyses && uv run jupyter execute --inplace 02-statistiques-descriptives.ipynb
+	cd analyses && uv run jupyter execute --inplace 08-modelisation-detection.ipynb
+	$(MAKE) verif-notebooks
+
+## verif-notebooks : controle que chaque notebook du depot a ete joue en entier, sans erreur
+## (indispensable : `jupyter execute` sort en code 0 meme quand une cellule echoue)
+verif-notebooks:
+	uv run python analyses/verifier_notebooks.py analyses/*.ipynb
 
 # --- Documentation --------------------------------------------------------
 
@@ -174,4 +188,4 @@ clean-all: clean
 	rm -rf .venv donnees
 	@echo "Pour liberer la VM entierement : colima delete"
 
-.PHONY: help install hooks transformer transformer-tester transformer-doc collecte collecte-decp collecte-boamp collecte-etat donnees-decp bench-decp bench-decp-distributions bench-rapprochement bench-precision bench-nettoyage bench-detection figures notebooks lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all
+.PHONY: help install hooks transformer transformer-tester transformer-doc collecte collecte-decp collecte-boamp collecte-etat donnees-decp bench-decp bench-decp-distributions bench-rapprochement bench-precision bench-nettoyage bench-detection bench-modele figures notebooks lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all
