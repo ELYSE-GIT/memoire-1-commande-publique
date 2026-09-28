@@ -134,6 +134,10 @@ bench-rapprochement:
 bench-nettoyage:
 	uv run python mesures/nettoyage.py
 
+## bench-detection : evalue la regle de prix contre les anomalies signalees par le producteur
+bench-detection:
+	uv run python mesures/detection.py
+
 ## bench-precision : croise les verdicts relus a la main avec le balayage des seuils
 bench-precision:
 	uv run python mesures/precision_rapprochement.py
@@ -170,4 +174,4 @@ clean-all: clean
 	rm -rf .venv donnees
 	@echo "Pour liberer la VM entierement : colima delete"
 
-.PHONY: help install hooks transformer transformer-tester transformer-doc collecte collecte-decp collecte-boamp collecte-etat donnees-decp bench-decp bench-decp-distributions bench-rapprochement bench-precision bench-nettoyage figures notebooks lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all
+.PHONY: help install hooks transformer transformer-tester transformer-doc collecte collecte-decp collecte-boamp collecte-etat donnees-decp bench-decp bench-decp-distributions bench-rapprochement bench-precision bench-nettoyage bench-detection figures notebooks lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all
