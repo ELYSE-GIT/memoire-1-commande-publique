@@ -10,6 +10,14 @@ De la donnee brute aux tables pretes a servir, en SQL, avec dbt.
 | **argent** | nettoyee et normalisee. **On marque les problemes, on ne supprime rien** | table |
 | **or** | prete a etre servie au site et aux analyses | table |
 
+Les modeles de la couche or :
+
+| Modele | Contenu |
+|---|---|
+| `or_marches` | les marches exploitables, 29 colonnes choisies |
+| `or_variables` | les variables de detection : ecarts de prix, concentration, calendrier |
+| `or_signaux` | les cinq signaux, avec leurs motifs en clair |
+
 ## Les commandes
 
 | Commande | Ce qu'elle fait |

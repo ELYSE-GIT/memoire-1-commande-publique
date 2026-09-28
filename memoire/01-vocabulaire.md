@@ -288,7 +288,73 @@ laboratoire et inutilisables en production. C'est l'erreur la plus fréquente et
 
 ---
 
-## 1.5 Les trois unités de comptage, et pourquoi elles comptent
+## 1.5 Le vocabulaire de la mesure et de la detection
+
+Ces termes servent a partir du moment ou l'on cherche a reperer un marche atypique. Ils sont
+definis ici parce que plusieurs se ressemblent et se confondent facilement.
+
+**Variable**, ou *feature*. Une grandeur calculee a partir des donnees, qui sert a decrire un
+marche. Le montant est une colonne ; l'ecart de ce montant a la mediane de sa famille d'achat est
+une variable. La difference est essentielle : une colonne est recue, une variable est fabriquee.
+
+**Mediane.** La valeur qui separe une serie en deux moities egales. Elle est preferee a la moyenne
+dans tout ce projet, parce qu'une seule ligne a 100 milliards d'euros deplace la moyenne et laisse
+la mediane intacte.
+
+**Quantile.** La valeur en dessous de laquelle se trouve une part donnee des observations. Le
+premier quartile laisse un quart des marches en dessous, le neuvieme decile en laisse 90 %.
+
+**Ecart interquartile.** La distance entre le premier et le troisieme quartile, c'est-a-dire
+l'etendue de la moitie centrale des observations. C'est une mesure de dispersion **robuste** : elle
+ne bouge pas quand quelques valeurs extremes changent.
+
+**Robuste.** Se dit d'une mesure qui resiste aux valeurs aberrantes. Sur des donnees declaratives
+comme celles-ci, ou une ligne sur trente porte un montant fantaisiste, une mesure non robuste
+donne un resultat faux sans prevenir.
+
+**Ecart normalise**, souvent appele *score z*. La distance entre une valeur et le centre de sa
+distribution, exprimee en nombre d'ecarts types. Il permet de comparer des choses qui ne sont pas
+comparables en euros : un depassement de 30 % sur un marche de voirie et sur un marche
+informatique n'ont pas la meme signification, mais leurs ecarts normalises, si.
+
+**Groupe de comparaison**, ou *pairs*. L'ensemble des marches auxquels on compare celui qu'on
+examine. Sa definition est le choix le plus lourd de consequences de toute la detection : comparer
+un marche de voirie communale a l'ensemble des marches publics n'apprend rien.
+
+**Detection d'anomalies.** La recherche d'observations qui s'ecartent du comportement habituel.
+Deux familles : les **regles**, explicites et explicables, et les **modeles statistiques**, qui
+apprennent la norme a partir des donnees. Le projet commence par les premieres.
+
+**Faux positif.** Un marche signale a tort. Sur un service public, c'est le cout principal :
+signaler un marche regulier abime la confiance et peut nuire a une entreprise.
+
+**Faux negatif.** Un marche anormal qui passe inapercu. Moins visible, mais c'est l'echec de la
+raison d'etre du service.
+
+**Precision et rappel.** La precision est la part de signalements justes parmi les signalements.
+Le rappel est la part d'anomalies reelles effectivement signalees. Les deux s'opposent : abaisser
+un seuil augmente le rappel et degrade la precision. **Annoncer l'un sans l'autre n'a aucun sens.**
+
+**Etiquette**, ou *label*. La reponse connue d'avance, qui permet de mesurer un modele. Ici, il
+n'en existe pas : personne ne publie la liste des marches irreguliers. Le projet utilisera des
+**etiquettes faibles**, c'est-a-dire des signaux imparfaits mais disponibles, comme les anomalies
+que le producteur signale lui-meme.
+
+**Apprentissage supervise et non supervise.** Le premier apprend a partir d'exemples etiquetes ; le
+second cherche des regularites sans etiquette. L'absence d'etiquettes fiables impose ici le second,
+et c'est une contrainte du sujet, pas un choix de confort.
+
+**Sur-apprentissage**, ou *surajustement*. Un modele qui a appris les particularites de ses donnees
+d'entrainement au lieu de la regle generale. Il excelle sur ce qu'il a vu et echoue sur le reste.
+
+**Fuite de donnees**, deja definie plus haut, et qui prend ici une forme precise : calculer la
+mediane d'un groupe **en y incluant le marche que l'on examine** revient a le comparer a
+lui-meme. L'effet est faible sur un groupe de mille marches, fort sur un groupe de trois. Le
+projet mesure cet effet plutot que de le supposer negligeable.
+
+---
+
+## 1.6 Les trois unités de comptage, et pourquoi elles comptent
 
 Une confusion suffit à fausser un pourcentage et à décrédibiliser une analyse entière. Le jeu de
 données principal de ce mémoire se compte de trois façons différentes.
