@@ -71,3 +71,59 @@ SIRET exploitable**.
 
 Faire varier la fenetre de dates et le seuil de similarite, puis verifier manuellement cinquante
 liens pour estimer le taux de faux rapprochements. Ensuite, fin de la phase 2.
+
+---
+
+## Suite, le 2026-09-27 : regler les parametres et mesurer la justesse
+
+### Le balayage
+
+Les deux parametres du rapprochement, la fenetre de dates et le seuil de similarite, etaient
+choisis sans preuve. Le balayage les fait varier et mesure le taux obtenu pour chaque combinaison.
+
+**Resultat** : la fenetre ne change presque rien, de 137 a 147 avis avec candidats entre 6 et
+36 mois. Le seuil change tout, de 42,3 % a 20 % de rapprochements entre 0,4 et 0,9. La fenetre
+laisse en mediane une centaine de candidats par avis : elle ne trie pas, elle delimite.
+
+### La justesse, qui ne se calcule pas
+
+Un taux de rapprochement ne dit rien de sa justesse, et aucune verite de reference n'existe. Il a
+fallu relire soixante paires, une par une, et poser un verdict. Les verdicts sont versionnes dans
+`mesures/verification/`, pour etre recontrolables.
+
+| Tranche | Justes | Fausses | Doutes | Justesse |
+|---|---|---|---|---|
+| 0,4 a 0,5 | 0 | 12 | 0 | 0 % |
+| 0,5 a 0,6 | 6 | 4 | 2 | 60 % |
+| 0,6 a 0,7 | 8 | 3 | 1 | 72,7 % |
+| 0,7 a 0,8 | 10 | 1 | 1 | 90,9 % |
+| 0,8 et plus | 12 | 0 | 0 | 100 % |
+
+**Les 19 paires ou le SIRET du titulaire concorde sont toutes justes.** La conception en niveaux de
+confiance est donc validee par la mesure, et non plus seulement par le raisonnement.
+
+### Le piege de calcul, evite de justesse
+
+L'echantillon relu est stratifie : douze paires par tranche, alors que les tranches n'ont pas du
+tout le meme poids reel. Faire la moyenne des verdicts aurait donne un chiffre faux, et personne ne
+s'en serait apercu : le resultat aurait ete un nombre plausible. La justesse est donc ponderee par
+l'effectif reel de chaque tranche.
+
+Un test verifie ce redressement sur un cas construit ou la moyenne naive donnerait 33 % et la
+moyenne ponderee 6,7 %.
+
+### Le resultat qui decide
+
+| Seuil | Couverture | Justesse | Rapprochements justes |
+|---|---|---|---|
+| 0,4 | 27,7 % | 66,0 % | **54,8** |
+| 0,5 | 21,3 % | 85,6 % | **54,8** |
+| 0,6 | 16,0 % | 94,1 % | 45,2 |
+
+**Les seuils 0,4 et 0,5 donnent le meme nombre de rapprochements justes.** Descendre sous 0,5
+n'ajoute que des erreurs. C'etait impossible a deviner, et cela justifie a soi seul le temps passe
+a relire les paires.
+
+**Lecon pour le memoire** : mesurer une couverture sans mesurer sa justesse conduit a optimiser le
+mauvais chiffre. La question n'est jamais « combien de liens trouve-t-on » mais « combien de liens
+justes trouve-t-on ».

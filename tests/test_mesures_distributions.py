@@ -154,6 +154,18 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
         ],
     }
     contenus.update(date_agregats)
+    contenus["rapprochement-precision"] = [
+        [
+            "seuil_objet",
+            "rapproches_par_objet",
+            "couverture_pourcent",
+            "justesse_estimee_pourcent",
+            "rapprochements_justes_attendus",
+        ],
+        ["0.4", "83", "27.7", "66.0", "54.8"],
+        ["0.5", "64", "21.3", "85.6", "54.8"],
+        ["0.6", "48", "16.0", "94.1", "45.2"],
+    ]
     for nom, lignes in contenus.items():
         with (agregats / f"{nom}.csv").open("w", newline="", encoding="utf-8") as sortie:
             csv.writer(sortie, lineterminator="\n").writerows(lignes)
@@ -164,5 +176,5 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     figures.main()
 
     produites = sorted(chemin.name for chemin in sorties.glob("*.svg"))
-    assert len(produites) == 16, f"seize figures attendues, obtenu : {produites}"
+    assert len(produites) == 17, f"dix-sept figures attendues, obtenu : {produites}"
     assert all((sorties / nom.replace(".svg", ".png")).exists() for nom in produites)

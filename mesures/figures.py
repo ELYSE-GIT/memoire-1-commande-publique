@@ -789,6 +789,73 @@ def figure_rapprochement() -> None:
     enregistrer(figure, "16-rapprochement-boamp-decp")
 
 
+def figure_precision_rapprochement() -> None:
+    """Le compromis du seuil : couvrir plus, ou se tromper moins.
+
+    Les deux series sont des pourcentages, donc un seul axe suffit. Superposer deux echelles
+    differentes dans un meme cadre est la premiere cause de mauvaise lecture d'un graphique.
+    """
+    donnees = lire("rapprochement-precision")
+    seuils = [float(d["seuil_objet"]) for d in donnees]
+    couverture = [float(d["couverture_pourcent"]) for d in donnees]
+    justesse = [float(d["justesse_estimee_pourcent"]) for d in donnees]
+    justes = [float(d["rapprochements_justes_attendus"]) for d in donnees]
+
+    figure, (gauche, droite) = plt.subplots(1, 2, figsize=(10, 3.8))
+
+    gauche.plot(
+        seuils,
+        justesse,
+        color=SERIE_1,
+        linewidth=2,
+        marker="o",
+        markersize=8,
+        label="justesse des rapprochements",
+    )
+    gauche.plot(
+        seuils,
+        couverture,
+        color=SERIE_2,
+        linewidth=2,
+        marker="s",
+        markersize=8,
+        label="couverture des avis",
+    )
+    gauche.set_xlabel("seuil de similarité des objets", color=GRIS, fontsize=8.5)
+    gauche.set_ylabel("pourcentage", color=GRIS, fontsize=8.5)
+    gauche.set_ylim(0, 105)
+    gauche.legend(loc="center left", frameon=False, fontsize=8.5, labelcolor=GRIS)
+    soigner(gauche, "Couvrir plus, ou se tromper moins")
+
+    # Le produit des deux : ce qui compte reellement, le nombre de rapprochements justes obtenus.
+    barres = droite.bar([str(s) for s in seuils], justes, color=SERIE_1, width=0.6)
+    # Les deux premieres barres sont a egalite : c'est le message de ce panneau.
+    barres[0].set_color(SERIE_2)
+    barres[1].set_color(SERIE_2)
+    droite.bar_label(barres, fmt="%.0f", padding=4, color=GRIS, fontsize=8.5)
+    droite.set_xlabel("seuil de similarité des objets", color=GRIS, fontsize=8.5)
+    droite.set_ylabel("rapprochements justes", color=GRIS, fontsize=8.5)
+    soigner(droite, "Ce qui reste une fois les erreurs retirées")
+
+    figure.suptitle(
+        "Descendre le seuil sous 0,5 n'ajoute que des erreurs",
+        color=ENCRE,
+        fontsize=12.5,
+        fontweight="bold",
+        x=0.01,
+        ha="left",
+        y=1.04,
+    )
+    legender(
+        figure,
+        "Mesure sur 300 avis, fenêtre de 18 mois. La justesse vient de la relecture à la main de "
+        "60 paires, stratifiées par tranche\nde similarité puis redressées par leur effectif réel. "
+        "À gauche, le compromis ; à droite, son produit : le nombre de rapprochements\njustes. "
+        "Les seuils 0,4 et 0,5 en donnent autant, mais 0,4 y ajoute 19 erreurs.",
+    )
+    enregistrer(figure, "17-precision-du-rapprochement")
+
+
 def main() -> None:
     print("Figures generees depuis mesures/resultats/ :")
     figure_total_annuel()
@@ -807,6 +874,7 @@ def main() -> None:
     figure_distance_titulaires()
     figure_offre_unique_par_tranche()
     figure_rapprochement()
+    figure_precision_rapprochement()
     print(f"\nDossier : {chemin_lisible(FIGURES)}")
 
 

@@ -52,6 +52,46 @@ rapprochement produira donc un **degre de confiance** et non un booleen :
 | Moyenne | acheteur, fenetre de dates, objet proche, un seul candidat | affichage avec mention explicite du doute |
 | Faible | acheteur et fenetre de dates seulement, plusieurs candidats | usage interne, jamais affiche |
 
+## Justesse mesuree, et ce qu'elle change
+
+Un taux de rapprochement ne dit rien de sa justesse. Soixante paires ont donc ete relues une par
+une, douze par tranche de similarite, avec un verdict ecrit dans
+`mesures/verification/2026-09-27-verdicts-rapprochement.csv`.
+
+| Tranche de similarite | Paires relues | Justes | Fausses | Doutes | Justesse |
+|---|---|---|---|---|---|
+| 0,4 a 0,5 | 12 | 0 | 12 | 0 | 0 % |
+| 0,5 a 0,6 | 12 | 6 | 4 | 2 | 60 % |
+| 0,6 a 0,7 | 12 | 8 | 3 | 1 | 72,7 % |
+| 0,7 a 0,8 | 12 | 10 | 1 | 1 | 90,9 % |
+| 0,8 et plus | 12 | 12 | 0 | 0 | 100 % |
+
+**Les 19 paires ou le SIRET du titulaire concorde sont toutes justes.** Le niveau 4 merite donc bien
+son nom de confiance haute, et cette fois la mesure le prouve au lieu de le supposer.
+
+En croisant ces verdicts avec le balayage des seuils, et en ponderant chaque tranche par son
+effectif reel (l'echantillon relu est stratifie, une moyenne simple serait fausse) :
+
+| Seuil | Rapproches | Couverture | Justesse estimee | Rapprochements justes |
+|---|---|---|---|---|
+| 0,4 | 83 | 27,7 % | 66,0 % | **54,8** |
+| 0,5 | 64 | 21,3 % | 85,6 % | **54,8** |
+| 0,6 | 48 | 16,0 % | 94,1 % | 45,2 |
+| 0,7 | 41 | 13,7 % | 97,8 % | 40,1 |
+| 0,8 | 31 | 10,3 % | 100 % | 31,0 |
+
+**Resultat decisif** : les seuils 0,4 et 0,5 produisent le meme nombre de rapprochements justes.
+Descendre sous 0,5 n'apporte donc aucune information utile, seulement 19 erreurs supplementaires.
+Ce constat etait impossible a deviner, et il justifie a lui seul le temps passe a relire les paires.
+
+**Effet de la fenetre de dates** : de 6 a 36 mois, le nombre d'avis avec candidats passe de 137 a
+147, soit quelques points. La fenetre laisse en mediane une centaine de marches candidats : elle ne
+trie presque rien. C'est le seuil de similarite qui discrimine, et c'est donc lui qu'il faut regler.
+
+**Reglage retenu** : fenetre de 18 mois, seuil de 0,6, ce qui donne 94,1 % de justesse pour 16 % de
+couverture. Le seuil de 0,5 reste disponible si la couverture devient prioritaire, au prix de
+8 points de justesse. Le plancher de 0,5 est une limite dure : en dessous, on n'ajoute que du faux.
+
 ## Alternatives examinees
 
 | Option | Pour | Contre | Verdict |
@@ -99,10 +139,17 @@ enfouie dans le code, precisement pour pouvoir le faire varier et mesurer son ef
 - La mesure porte sur des avis de resultat du premier semestre 2025. Les avis recents sont moins
   susceptibles d'etre deja dans les DECP, en raison du delai de publication.
 
-## A mesurer ensuite
+## Ce qui a ete mesure depuis, et ce qui reste
 
-1. L'effet de la fenetre de dates : 6, 12, 18, 24 mois, et le taux obtenu pour chacune.
-2. L'effet du seuil de similarite, de 0,4 a 0,9.
-3. Le taux de faux rapprochements, par verification manuelle d'un echantillon de cinquante liens.
-4. Le gain apporte par RapidFuzz, puis eventuellement par des plongements lexicaux, en qualite et
-   en temps de calcul.
+| Point | Statut |
+|---|---|
+| Effet de la fenetre de dates, de 6 a 36 mois | **mesure** : gain de quelques points seulement |
+| Effet du seuil de similarite, de 0,4 a 0,9 | **mesure** : c'est le vrai levier |
+| Taux de faux rapprochements | **mesure** sur 60 paires relues a la main |
+| Gain apporte par RapidFuzz puis par des plongements lexicaux | a mesurer en phase 3 |
+| Second relecteur sur les memes 60 paires | souhaitable, non fait |
+
+**Limite a enoncer dans le memoire** : les soixante verdicts ont ete poses par une seule personne,
+sur lecture des libelles. Deux libelles proches peuvent designer deux lots d'un meme marche, ce qui
+est un rapprochement acceptable, ou deux marches distincts, ce qui ne l'est pas. Un second
+relecteur changerait probablement quelques verdicts, sans modifier la tendance.
