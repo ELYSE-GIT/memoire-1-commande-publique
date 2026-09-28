@@ -198,9 +198,9 @@ def test_la_couche_or_garde_ce_qui_reste_utilisable(base: duckdb.DuckDBPyConnect
     identifiants = [
         ligne[0] for ligne in base.execute("select marche_id from or_marches").fetchall()
     ]
-    assert (
-        "siret-titulaire-faux" in identifiants
-    ), "cette regle ne conditionne pas l'analyse des prix : la ligne doit rester"
+    assert "siret-titulaire-faux" in identifiants, (
+        "cette regle ne conditionne pas l'analyse des prix : la ligne doit rester"
+    )
 
 
 def test_offre_unique_distingue_l_absence_d_information(

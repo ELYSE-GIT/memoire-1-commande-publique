@@ -95,3 +95,21 @@ ecrire sans lui ». La reponse penche parfois du cote de l'outil, et il faut alo
 L'ingenierie des variables : fabriquer, a partir des colonnes nettoyees, les grandeurs qui
 serviront a detecter les marches atypiques. Ecart du montant a la mediane de sa famille CPV,
 concentration des attributions par acheteur, position dans le calendrier budgetaire.
+
+### Deux versions de Ruff qui se contredisaient
+
+**Symptome** : la chaine d'integration refusait un fichier que le hook pre-commit venait
+d'accepter, et reciproquement. Le commit passait en local, echouait sur le serveur.
+
+**Cause** : le hook pre-commit etait fige a Ruff 0.6.9, quand le projet utilisait 0.16.8. Les deux
+formatent differemment un `assert` accompagne d'un message. Le hook reformatait dans un sens, la
+chaine exigeait l'autre.
+
+**Solution** : la meme version aux deux endroits, epinglee a l'exact, avec un commentaire qui
+explique pourquoi dans chacun des deux fichiers. `pre-commit autoupdate` a d'ailleurs propose une
+version encore plus recente, ce qui aurait recree l'ecart : l'alignement se fait a la main, ou par
+Dependabot qui met les deux a jour ensemble.
+
+**Lecon pour le memoire** : un outil de qualite installe deux fois a deux versions differentes ne
+protege plus, il bloque. C'est une forme discrete de la meme erreur que l'environnement non
+reproductible, et elle se voit seulement quand les deux copies divergent.

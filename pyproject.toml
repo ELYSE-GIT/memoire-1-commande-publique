@@ -13,7 +13,9 @@ dependencies = [
 [dependency-groups]
 # Outils de developpement uniquement. Ils ne partent jamais dans une image de production.
 dev = [
-    "ruff>=0.6",
+    # Version epinglee au meme niveau que le hook pre-commit : deux versions differentes
+    # formatent differemment et se contredisent a chaque commit.
+    "ruff==0.16.8",
     "mypy>=1.11",
     "pytest>=8.3",
     "pytest-cov>=5.0",
