@@ -3,13 +3,13 @@
 Le probleme que ce module resout : les sources du projet sont republiees tous les jours. Une
 mesure faite aujourd'hui ne peut donc pas etre refaite demain a l'identique, sauf a savoir
 precisement ce qui a ete telecharge. Sans cette trace, un chiffre du memoire devient
-invoerifiable des le lendemain.
+inverifiable des le lendemain.
 
-La donnee brute, elle, n'est pas versionnee : 236 Mo par instantane, republies quotidiennement,
-n'ont rien a faire dans un depot git. Le manifeste, qui pese quelques kilooctets, l'est.
+La donnee brute, elle, n'est pas versionnee : environ 250 Mo par instantane, republies chaque
+matin, n'ont rien a faire dans un depot git. Le manifeste, qui pese quelques kilooctets, l'est.
 
     Ce qu'on garde           Taille        Versionne   Pourquoi
-    la donnee brute          236 Mo/jour   non         lourde, remplacable, retelechargeable
+    la donnee brute          250 Mo/jour   non         lourde, remplacable, retelechargeable
     le manifeste             quelques Ko   oui         c'est la preuve de ce qui a ete mesure
     les agregats mesures     quelques Ko   oui         ce sont les chiffres du memoire
 
@@ -20,8 +20,8 @@ verification ne demande pas de conserver l'original.
 Pourquoi SHA-256 plutot qu'autre chose :
 
     Option      Avantage                        Limite                      Verdict
-    SHA-256     standard, disponible partout,   quelques secondes sur       retenu
-                aucune collision connue         236 Mo
+    SHA-256     standard, disponible partout,   environ deux secondes sur   retenu
+                aucune collision connue         250 Mo
     MD5         plus rapide                     collisions demontrees,      ecarte
                                                 a eviter meme hors securite
     Taille      instantane                      deux fichiers differents    insuffisant seul
@@ -40,7 +40,7 @@ RACINE = Path(__file__).resolve().parent.parent.parent
 BRONZE = RACINE / "donnees" / "bronze"
 MANIFESTES = RACINE / "donnees" / "manifestes"
 
-# Lecture par blocs : un fichier de 236 Mo charge d'un coup tiendrait en memoire sur ce Mac, mais
+# Lecture par blocs : un fichier de 250 Mo charge d'un coup tiendrait en memoire sur ce Mac, mais
 # pas sur le VPS, et la collecte doit tourner sur les deux.
 TAILLE_BLOC = 1024 * 1024
 
