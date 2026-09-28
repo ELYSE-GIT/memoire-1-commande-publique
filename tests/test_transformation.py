@@ -49,23 +49,26 @@ def base(tmp_path_factory: pytest.TempPathFactory) -> duckdb.DuckDBPyConnection:
     if uv is None:
         pytest.skip("uv est introuvable : ces tests demandent l'environnement du projet")
 
-    resultat = subprocess.run(  # noqa: S603
-        [
-            uv,
-            "run",
-            "dbt",
-            "build",
-            "--vars",
-            f'{{"chemin_decp": "{FIXTURE}"}}',
-            "--target",
-            "local",
-        ],
-        cwd=TRANSFORMATION,
-        env=environnement,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    def lancer_dbt(*arguments: str) -> subprocess.CompletedProcess[str]:
+        """Lance une commande dbt dans le projet de transformation."""
+        return subprocess.run(  # noqa: S603
+            [uv, "run", "dbt", *arguments],
+            cwd=TRANSFORMATION,
+            env=environnement,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    # Les paquets dbt ne sont pas versionnes : ils se reinstallent. Sur cette machine ils sont
+    # deja la et la commande prend une seconde ; sur la machine d'integration continue, qui part
+    # d'un depot vierge, elle est indispensable. Le test doit tourner dans les deux cas sans
+    # qu'on ait a s'en souvenir.
+    dependances = lancer_dbt("deps")
+    if dependances.returncode != 0:
+        pytest.fail(f"dbt deps a echoue :\n{dependances.stdout[-2000:]}")
+
+    resultat = lancer_dbt("build", "--vars", f'{{"chemin_decp": "{FIXTURE}"}}', "--target", "local")
     if resultat.returncode != 0:
         pytest.fail(f"dbt a echoue :\n{resultat.stdout[-3000:]}")
 
