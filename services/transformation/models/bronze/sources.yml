@@ -1,0 +1,23 @@
+# Les sources brutes, telles que la collecte les a deposees.
+#
+# dbt ne les fabrique pas : il les designe. C'est la frontiere entre ce que le projet recoit et ce
+# qu'il produit, et elle doit rester visible.
+
+version: 2
+
+sources:
+  - name: bronze
+    description: >
+      La donnee telle que la source l'a publiee, deposee par `make collecte`.
+      Aucune correction, aucun filtre, aucun renommage a ce stade.
+    meta:
+      collecte_par: services/collecte
+      tracabilite: donnees/manifestes/
+    tables:
+      - name: decp
+        description: >
+          Jeu consolide des donnees essentielles de la commande publique, publie chaque matin
+          sur data.gouv.fr. Agrege 63 sources. Environ 3,28 millions de lignes, 66 colonnes.
+        meta:
+          licence: Licence Ouverte 2.0
+          adresse: https://www.data.gouv.fr/datasets/donnees-essentielles-de-la-commande-publique-consolidees-format-tabulaire

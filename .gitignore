@@ -17,9 +17,19 @@ htmlcov/
 # Donnees et artefacts lourds (jamais dans git)
 donnees/
 *.parquet
+# Exception : le jeu d'essai de la transformation. Il pese 3 Ko, ses defauts sont connus d'avance,
+# et sans lui les tests d'integration ne peuvent pas tourner sur une machine vierge. La regle
+# generale vise les donnees reelles, pas les fichiers de test.
+!tests/fixtures/*.parquet
 *.duckdb
 *.sqlite
 *.gguf
+
+# Artefacts de dbt : compiles a chaque execution, jamais lus par un humain
+services/transformation/target/
+services/transformation/logs/
+services/transformation/dbt_packages/
+.user.yml
 
 # Systeme
 .DS_Store

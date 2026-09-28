@@ -1,0 +1,92 @@
+# Contrat de la couche argent : ce que cette table doit contenir, et ce qui doit rester vrai.
+#
+# Un contrat ecrit est verifiable. Sans lui, un changement de format de la source se decouvre en
+# voyant un graphique devenir absurde, souvent des semaines plus tard.
+#
+# Deux severites, et le choix entre les deux est une decision de conception :
+#   error  arrete la chaine. Reserve a ce qui rendrait la suite fausse.
+#   warn   signale sans bloquer. Pour ce qui degrade la qualite sans la rendre inexploitable.
+#
+# La desactivation de controles qualite a conduit au versement de 358 millions d'euros a tort dans
+# l'affaire Louvois. Un controle qui gene est un controle a discuter, jamais a retirer en silence.
+
+version: 2
+
+models:
+  - name: argent_marches
+    description: >
+      Les marches a leur etat actuel, nettoyes et normalises. Aucune ligne n'est supprimee :
+      les problemes detectes sont portes par des colonnes de qualite et par `motifs_rejet`.
+    columns:
+      - name: uid
+        description: Identifiant du marche, forme du SIRET de l'acheteur et de son numero interne.
+        tests:
+          - not_null
+
+      - name: acheteur_id
+        description: SIRET de l'acheteur, quatorze chiffres. Cle de jointure avec le repertoire.
+        tests:
+          # Severite reduite volontairement, et la lecon vaut d'etre notee : le contrat etait
+          # mal place. La couche argent promet de **tout garder en marquant les problemes**, donc
+          # un identifiant absent y est normal, meme s'il est genant. Le test a trouve six lignes
+          # sans SIRET ni nom d'acheteur, toutes de la meme source : un vrai defaut, a signaler,
+          # pas a faire echouer une chaine dont la raison d'etre est de le conserver.
+          #
+          # La regle stricte appartient a la couche or, ou elle bloquera a juste titre.
+          - not_null:
+              config:
+                severity: warn
+
+      - name: nature_normalisee
+        description: >
+          Nature du marche, en majuscules, sans accent ni ponctuation. Ramene les douze ecritures
+          rencontrees a six notions reelles.
+        tests:
+          - accepted_values:
+              # Liste fermee volontairement : une valeur nouvelle signale soit un changement de
+              # nomenclature, soit une source qui ecrit autrement. Les deux meritent d'etre vus.
+              arguments:
+                values:
+                  - MARCHE
+                  - ACCORD CADRE
+                  - MARCHE SUBSEQUENT
+                  - MARCHE DE PARTENARIAT
+                  - MARCHE DE DEFENSE OU DE SECURITE
+                  - CONCESSION DE SERVICE PUBLIC
+              config:
+                severity: warn
+                where: nature_normalisee is not null
+
+      - name: famille_cpv
+        description: >
+          Division du code CPV, les deux premiers chiffres, pour comparer des marches entre eux.
+          Vaut null quand le champ d'origine contenait du texte libre.
+        tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "~ '^[0-9]{2}$'"
+              config:
+                where: famille_cpv is not null
+
+      - name: cpv_conforme
+        description: Le code CPV d'origine respecte la nomenclature europeenne.
+        tests:
+          - not_null
+
+      - name: montant_renseigne
+        description: Le montant existe et est strictement positif.
+        tests:
+          - not_null
+
+      - name: exploitable_pour_les_prix
+        description: >
+          Resume des regles qui conditionnent une analyse de prix : montant present, plausible,
+          non signale, date plausible, SIRET d'acheteur conforme.
+        tests:
+          - not_null
+
+      - name: motifs_rejet
+        description: >
+          Liste en clair des regles enfreintes. Sert a expliquer une exclusion sans relire le SQL.
+        tests:
+          - not_null

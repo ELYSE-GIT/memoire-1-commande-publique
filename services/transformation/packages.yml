@@ -1,0 +1,6 @@
+# dbt-utils fournit des tests generiques que dbt n'a pas en standard, notamment la verification
+# d'une expression SQL arbitraire sur une colonne. Une dependance de plus, mais c'est la
+# bibliotheque de reference de l'ecosysteme dbt, maintenue par son editeur.
+packages:
+  - package: dbt-labs/dbt_utils
+    version: [">=1.3.0", "<2.0.0"]

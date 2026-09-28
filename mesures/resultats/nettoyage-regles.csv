@@ -1,0 +1,10 @@
+regle,verifie,lignes_marquees,part_pourcent
+montant_renseigne,Montant présent et positif,66984,3.157
+montant_plausible,Montant sous le milliard d'euros,33328,1.571
+montant_sans_anomalie_signalee,Montant non signalé par le producteur,54926,2.589
+date_plausible,Date de notification possible,515,0.024
+duree_plausible,Durée inférieure à vingt ans,2029,0.096
+acheteur_siret_valide,SIRET de l'acheteur conforme,337,0.016
+titulaire_siret_valide,SIRET du titulaire conforme,27115,1.278
+offres_plausibles,Nombre d'offres crédible,5573,0.263
+cpv_conforme,Code CPV conforme à la nomenclature,508,0.024

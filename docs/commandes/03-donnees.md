@@ -84,6 +84,42 @@ un CSV par agregat dans `mesures/resultats/`.
 **Duree** : moins d'une seconde. **Perimetre** : l'etat actuel de chaque marche, soit 1 833 468
 marches, et non les 3,28 millions de lignes d'historique.
 
+## Transformer : de la donnee brute aux tables servies
+
+```bash
+make transformer          # construit les trois couches, environ 6 s
+make transformer-tester   # lance les 18 tests de donnees
+make transformer-doc      # genere la documentation et le graphe des dependances
+make bench-nettoyage      # mesure l'effet de chaque regle de nettoyage
+```
+
+**Prerequis** : `make collecte-decp`, qui depose la donnee brute dans la couche bronze.
+
+**Ce que ca fait** : construit trois couches dans `donnees/commande_publique.duckdb`.
+
+| Couche | Contenu | Lignes |
+|---|---|---|
+| `bronze_decp` | la donnee telle que la source l'a publiee | 3 296 811 |
+| `argent_marches` | l'etat actuel de chaque marche, problemes marques | 2 121 908 |
+| `or_marches` | les marches exploitables pour une analyse de prix | 1 999 474 |
+
+**La regle a retenir** : aucune ligne n'est supprimee. Une ligne fautive reste en couche argent
+avec la liste de ses problemes dans la colonne `motifs_rejet`. Pour voir ce qui a ete ecarte :
+
+```sql
+select uid, objet, motifs_rejet
+from argent_marches
+where not exploitable_pour_les_prix
+limit 20;
+```
+
+**Resultat attendu de `make transformer`** : `Done. PASS=17 WARN=1 ERROR=0`. L'avertissement
+signale six lignes sans SIRET d'acheteur, defaut reel et connu, conserve volontairement.
+
+**En cas d'echec d'un test de donnees** : la chaine s'arrete et nomme le test. Un test qui echoue
+signale soit un changement dans la source, soit une regle devenue fausse. Les deux demandent une
+decision, jamais une desactivation.
+
 ## Mesurer le rapprochement entre le BOAMP et les DECP
 
 ```bash
