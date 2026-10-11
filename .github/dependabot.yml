@@ -25,3 +25,22 @@ updates:
       default-days: 7
     commit-message:
       prefix: "ci"
+
+  # Les hooks de pre-commit, suivis eux aussi.
+  #
+  # Pourquoi cette section existe : ruff est epingle a deux endroits, dans `pyproject.toml` pour
+  # le projet et dans `.pre-commit-config.yaml` pour le hook. Dependabot ne suivait que le
+  # premier. Chaque montee de version recreait donc l'incident du 2026-09-28 : le hook reformatait
+  # d'une facon, l'integration continue exigeait l'autre, et le commit ne passait jamais.
+  #
+  # Un test du depot verifie que les deux versions restent identiques. Cette section evite d'avoir
+  # a le corriger a la main a chaque fois.
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore"
