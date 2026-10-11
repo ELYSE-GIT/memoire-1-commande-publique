@@ -83,3 +83,32 @@ def test_un_exemple_de_configuration_est_versionne() -> None:
     exemple = (Path(__file__).resolve().parent.parent / ".env.example").read_text(encoding="utf-8")
     assert "POSTGRES_PASSWORD" in exemple
     assert "POSTGRES_PASSWORD=a_changer" in exemple
+
+
+def test_ruff_est_epingle_a_la_meme_version_partout() -> None:
+    """La version de ruff du projet et celle du hook pre-commit doivent etre identiques.
+
+    Incident du 2026-09-28 : deux versions differentes formatent differemment. Le hook reformatait
+    le fichier, l'integration continue exigeait l'inverse, et le commit ne passait jamais. La
+    panne est invisible tant qu'on ne compare pas les deux fichiers, et elle revient a chaque
+    montee de version automatique.
+
+    Ce test encode la lecon. La section `pre-commit` du fichier Dependabot evite d'avoir a la
+    corriger a la main.
+    """
+    racine = Path(__file__).resolve().parent.parent
+
+    projet = tomllib.loads((racine / "pyproject.toml").read_text(encoding="utf-8"))
+    dependances = projet["dependency-groups"]["dev"]
+    epingle = next(ligne for ligne in dependances if ligne.startswith("ruff=="))
+    version_projet = epingle.split("==")[1]
+
+    hooks = (racine / ".pre-commit-config.yaml").read_text(encoding="utf-8")
+    debut = hooks.index("astral-sh/ruff-pre-commit")
+    ligne_revision = hooks[debut : hooks.index("hooks:", debut)]
+    version_hook = ligne_revision.split("rev:")[1].strip().lstrip("v")
+
+    assert version_projet == version_hook, (
+        f"ruff est epingle a {version_projet} dans pyproject.toml "
+        f"et a {version_hook} dans .pre-commit-config.yaml"
+    )
