@@ -978,6 +978,95 @@ def figure_modele_vs_regles() -> None:
     enregistrer(figure, "19-modele-vs-regles")
 
 
+def figure_recherche() -> None:
+    """Deux moteurs, deux semantiques, et le compromis que la mesure revele.
+
+    Deux panneaux parce que deux grandeurs incomparables sont en jeu : une duree, en
+    millisecondes et sur une echelle logarithmique parce qu'elle varie d'un facteur mille, et un
+    nombre de questions restees sans reponse. Les superposer dans un seul cadre serait la
+    premiere cause de mauvaise lecture.
+    """
+    donnees = lire("recherche-par-moteur")
+    # Ordre choisi pour la lecture : les deux strategies PostgreSQL simples, puis la cascade qui
+    # est la conclusion, puis DuckDB.
+    ordre = [
+        ("postgres_et", "PostgreSQL\ntous les mots"),
+        ("postgres_ou", "PostgreSQL\nau moins un mot"),
+        ("postgres_et_puis_ou", "PostgreSQL\nen cascade"),
+        ("duckdb_et_brut", "DuckDB\nsans nettoyage"),
+        ("duckdb_et", "DuckDB\ntous les mots"),
+        ("duckdb_ou", "DuckDB\nau moins un mot"),
+    ]
+    par_moteur = {ligne["moteur"]: ligne for ligne in donnees}
+    etiquettes = [libelle for cle, libelle in ordre if cle in par_moteur]
+    p50 = [float(par_moteur[cle]["latence_p50_ms"]) for cle, _ in ordre if cle in par_moteur]
+    p95 = [float(par_moteur[cle]["latence_p95_ms"]) for cle, _ in ordre if cle in par_moteur]
+    muets = [int(par_moteur[cle]["sans_resultat"]) for cle, _ in ordre if cle in par_moteur]
+    total = [int(par_moteur[cle]["questions"]) for cle, _ in ordre if cle in par_moteur]
+
+    figure, (gauche, droite) = plt.subplots(1, 2, figsize=(10, 4.2))
+    position = list(range(len(etiquettes)))
+    largeur = 0.38
+
+    gauche.barh(
+        [rang + largeur / 2 for rang in position], p50, largeur, color=SERIE_1, label="médiane"
+    )
+    gauche.barh(
+        [rang - largeur / 2 for rang in position],
+        p95,
+        largeur,
+        color=SERIE_2,
+        label="95e centile",
+    )
+    gauche.set_xscale("log")
+    gauche.set_yticks(position)
+    gauche.set_yticklabels(etiquettes, fontsize=7.5)
+    gauche.invert_yaxis()
+    gauche.set_xlabel("latence en millisecondes, échelle logarithmique", color=GRIS, fontsize=8.5)
+    gauche.legend(loc="lower right", frameon=False, fontsize=8.5, labelcolor=GRIS)
+    soigner(gauche, "Le temps de réponse")
+    gauche.grid(axis="y", visible=False)
+    gauche.grid(axis="x", color=FILET, linewidth=0.6)
+
+    barres = droite.barh(position, muets, 0.6, color=SERIE_3)
+    # La barre la plus parlante est celle de la version naive : on la distingue.
+    for index, valeur in enumerate(muets):
+        if valeur >= 0.8 * total[index]:
+            barres[index].set_color(SERIE_2)
+    droite.bar_label(barres, fmt="%d", padding=3, color=GRIS, fontsize=8.5)
+    droite.set_yticks(position)
+    droite.set_yticklabels([])
+    droite.invert_yaxis()
+    droite.set_xlim(0, max(total) + 2)
+    droite.set_xlabel(f"questions restées sans réponse, sur {max(total)}", color=GRIS, fontsize=8.5)
+    soigner(droite, "Le silence")
+    droite.grid(axis="y", visible=False)
+    droite.grid(axis="x", color=FILET, linewidth=0.6)
+
+    figure.suptitle(
+        "Répondre vite, ou répondre toujours",
+        color=ENCRE,
+        fontsize=12.5,
+        fontweight="bold",
+        x=0.01,
+        ha="left",
+        y=1.04,
+    )
+    legender(
+        figure,
+        "Mesure du 11 octobre 2026 sur 1 999 474 marchés et 30 questions de test, "
+        "`make bench-recherche`. Six répétitions par question,\nla première jetée, médiane "
+        "retenue. « Tous les mots » répond en 4 millisecondes mais reste muet sur 9 questions "
+        "sur 30 ; « au moins un\nmot » répond toujours mais coûte plus d'une seconde. Les "
+        "enchaîner donne 7 millisecondes et aucun silence. La version DuckDB\nsans nettoyage de "
+        "la question est muette sur 29 questions sur 30 : DuckDB retire les mots vides du texte "
+        "indexé, pas de la\nquestion posée. Conclure qu'il cherche mal aurait été une erreur de "
+        "protocole, pas une mesure. Une latence varie d'environ\n30 % d'une exécution à l'autre : "
+        "c'est l'ordre de grandeur et le classement qui portent la conclusion, pas le chiffre.",
+    )
+    enregistrer(figure, "20-recherche-latence-et-silence")
+
+
 def main() -> None:
     print("Figures generees depuis mesures/resultats/ :")
     figure_total_annuel()
@@ -999,6 +1088,7 @@ def main() -> None:
     figure_precision_rapprochement()
     figure_nettoyage()
     figure_modele_vs_regles()
+    figure_recherche()
     print(f"\nDossier : {chemin_lisible(FIGURES)}")
 
 

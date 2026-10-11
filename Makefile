@@ -36,6 +36,15 @@ test:
 
 ## secrets : cherche des mots de passe ou des cles, dans les fichiers et dans l'historique
 secrets:
+	@echo "--- le fichier .env ne doit jamais pouvoir etre versionne ---"
+	@if [ -f .env ]; then \
+		git check-ignore -q .env \
+			&& echo "ok : .env est ignore par git" \
+			|| (echo "ERREUR : .env n'est pas ignore par git" && exit 1); \
+		test -z "$$(git ls-files .env)" \
+			&& echo "ok : .env n'est pas suivi" \
+			|| (echo "ERREUR : .env est suivi par git" && exit 1); \
+	else echo "pas de .env local"; fi
 	@echo "--- fichiers presents ---"
 	gitleaks dir . --config .gitleaks.toml --no-banner --redact
 	@echo "--- historique des commits ---"
@@ -66,6 +75,40 @@ down:
 etat:
 	@colima status || true
 	@docker compose ps || true
+
+# --- Base de service (PostgreSQL) -----------------------------------------
+#
+# Les identifiants ne sont jamais ecrits ici. `psql` est lance DANS le conteneur, ou
+# POSTGRES_USER et POSTGRES_DB sont deja presents comme variables d'environnement : le mot de
+# passe ne traverse donc jamais le Makefile ni l'historique du terminal.
+# Les scripts Python, eux, recoivent le `.env` par `uv run --env-file`.
+
+PSQL = docker compose exec -T base sh -c 'psql -q -v ON_ERROR_STOP=1 -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"'
+
+## base-init : cree extensions, configuration plein texte francaise et tables (sans les index)
+base-init:
+	@for fichier in base/schema/001-* base/schema/002-* base/schema/003-* base/schema/004-*; do \
+		echo "--- $$fichier"; \
+		$(PSQL) < $$fichier; \
+	done
+
+## charger : copie la couche or de DuckDB vers PostgreSQL (environ 2 millions de lignes)
+charger:
+	uv run --env-file .env python services/publication/vers_postgres.py
+
+## indexer : construit les index, a lancer APRES le chargement
+indexer:
+	@echo "--- base/schema/005-index.sql"
+	@$(PSQL) < base/schema/005-index.sql
+
+## base-vider : vide les deux tables sans toucher au schema, pour recharger proprement
+base-vider:
+	@echo 'truncate table marches, signaux restart identity;' | $(PSQL)
+	@echo "tables videes"
+
+## psql : ouvre une console SQL sur la base (quitter avec \q)
+psql:
+	docker compose exec base sh -c 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"'
 
 # --- Donnees et mesures -----------------------------------------------------
 
@@ -142,6 +185,10 @@ bench-detection:
 bench-modele:
 	uv run python mesures/modele_vs_regles.py
 
+## bench-recherche : mesure la recherche plein texte, PostgreSQL contre DuckDB
+bench-recherche:
+	uv run --env-file .env python mesures/recherche.py
+
 ## bench-precision : croise les verdicts relus a la main avec le balayage des seuils
 bench-precision:
 	uv run python mesures/precision_rapprochement.py
@@ -188,4 +235,4 @@ clean-all: clean
 	rm -rf .venv donnees
 	@echo "Pour liberer la VM entierement : colima delete"
 
-.PHONY: help install hooks transformer transformer-tester transformer-doc collecte collecte-decp collecte-boamp collecte-etat donnees-decp bench-decp bench-decp-distributions bench-rapprochement bench-precision bench-nettoyage bench-detection bench-modele figures notebooks lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all
+.PHONY: base-init charger indexer base-vider psql bench-recherche verif-notebooks help install hooks transformer transformer-tester transformer-doc collecte collecte-decp collecte-boamp collecte-etat donnees-decp bench-decp bench-decp-distributions bench-rapprochement bench-precision bench-nettoyage bench-detection bench-modele figures notebooks lint format types test secrets verif vm-up vm-down up down etat docs-txt clean clean-all

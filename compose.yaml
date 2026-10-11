@@ -1,0 +1,115 @@
+# Les services du projet, demarres a la demande et arretes apres usage.
+#
+# Pourquoi ce fichier n'existe qu'a partir de la phase 6. Jusqu'ici le projet n'avait aucun
+# service : DuckDB est une bibliotheque dans le processus Python, pas un serveur. Rien
+# n'ecoutait sur un port, rien ne tournait apres la fin d'une commande, et la reproductibilite
+# etait deja assuree par `uv.lock` et `.python-version`. Mettre une bibliotheque dans un
+# conteneur n'aurait rien isole.
+#
+#     Option envisagee            Avantage                      Limite                    Verdict
+#     rester sur DuckDB           zero service, zero conteneur  un seul processus lecteur, retenu
+#                                 deja en place                 donc inutilisable par un
+#                                                               site a plusieurs visiteurs
+#     PostgreSQL en conteneur     ce qui tournera sur le VPS,    une VM Linux a demarrer,  retenu
+#                                 plusieurs lecteurs, pgvector  et un choix fait avant
+#                                 et recherche plein texte      d'avoir mesure le besoin
+#     PostgreSQL installe a la    pas de conteneur              ne ressemble en rien au    ecarte
+#     main sur le Mac                                           VPS, et rien de
+#                                                               reproductible
+#     un moteur de recherche      concu pour ca                 un service de plus a       ecarte
+#     dedie (Elasticsearch,                                     exploiter et a securiser,  phase 6
+#     Meilisearch, Qdrant)                                      pour un besoin non mesure
+#
+# Le choix de PostgreSQL maintenant est trace dans l'ADR 0008, avec sa contrepartie : le banc
+# `make bench-recherche` mesure PostgreSQL **et** DuckDB sur les memes requetes, pour que la
+# comparaison existe au lieu d'etre supposee.
+
+services:
+
+  base:
+    # Image figee par son empreinte et pas seulement par son etiquette : une etiquette peut etre
+    # repoussee sur un autre contenu, une empreinte non. C'est la seule facon d'etre sur que le
+    # Mac et le VPS executent le meme binaire.
+    image: pgvector/pgvector:0.8.1-pg17@sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21
+    container_name: commande-publique-base
+
+    # Aucun secret dans l'image ni dans ce fichier : tout vient de `.env`, qui n'est pas versionne.
+    # `?err` fait echouer le demarrage si la variable manque, plutot que de demarrer avec un mot
+    # de passe vide.
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?manque dans .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?manque dans .env}
+      POSTGRES_DB: ${POSTGRES_DB:?manque dans .env}
+      # Collation et encodage figes : un tri de textes francais depend de la locale, et une base
+      # creee avec une locale differente ne donnerait pas le meme ordre.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+
+    # Port ouvert sur la seule boucle locale. Sans le `127.0.0.1`, Docker exposerait la base sur
+    # le reseau local, donc a toute personne connectee au meme wifi.
+    #
+    # Le port cote machine vient de `.env` et vaut 55432, pas 5432. Un PostgreSQL deja installe
+    # sur le Mac occupait le port standard, et les connexions du projet tombaient sur lui : la
+    # base repondait, mais avec une erreur trompeuse sur un role inconnu. Decaler le port du
+    # projet evite de toucher a une installation qui sert peut-etre a autre chose.
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-55432}:5432"
+
+    # Reglages adaptes a un conteneur de 3 Go. Ils ne sont pas copies d'un guide : ils sont
+    # mesures par `make bench-recherche`, et le VPS aura les siens, calcules depuis sa RAM reelle.
+    command:
+      - postgres
+      - -c
+      - shared_buffers=768MB
+      - -c
+      - work_mem=64MB
+      # La construction d'un index GIN sur deux millions de documents passe par un tri : sans
+      # cette valeur elevee, elle deborde sur le disque et prend plusieurs fois plus longtemps.
+      - -c
+      - maintenance_work_mem=512MB
+      - -c
+      - effective_cache_size=2GB
+      - -c
+      - max_parallel_maintenance_workers=2
+      # Compilation a la volee desactivee : elle coute plus qu'elle ne rapporte sur des requetes
+      # courtes, et elle rend les durees mesurees moins stables.
+      - -c
+      - jit=off
+
+    volumes:
+      # Volume nomme, et non un dossier du Mac : les echanges de fichiers entre macOS et la VM
+      # Linux passent par une couche de partage lente, ce qui fausserait toute mesure de latence.
+      - base_donnees:/var/lib/postgresql/data
+
+    # Memoire partagee : la valeur par defaut de Docker est 64 Mo, insuffisante pour les tris
+    # paralleles de PostgreSQL, qui echoue alors sur les grandes requetes.
+    shm_size: 256mb
+
+    # Plafonds explicites. La VM dispose de 4 processeurs et 6 Go ; on en laisse au Mac.
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 3g
+
+    # Rien ne redemarre tout seul. C'est la machine personnelle d'Elyse : un service oublie qui
+    # se relance a chaque ouverture de session serait exactement ce que la regle de sobriete
+    # interdit.
+    restart: "no"
+
+    # Le conteneur n'est declare pret que quand la base repond vraiment. Sans cela, la commande
+    # de chargement qui suit echouerait sur une base encore en train de s'initialiser.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+    # L'image officielle execute PostgreSQL sous l'utilisateur `postgres`, jamais root.
+    # Durcissement supplementaire : aucun privilege nouveau ne peut etre acquis par un binaire.
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  base_donnees:
+    name: commande-publique-base-donnees

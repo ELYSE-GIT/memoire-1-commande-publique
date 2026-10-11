@@ -8,6 +8,7 @@ dependencies = [
     "duckdb>=1.5.5",
     "matplotlib>=3.11.2",
     "pandas>=3.0.6",
+    "psycopg[binary]>=3.3.6",
     "scikit-learn>=1.9.1",
 ]
 

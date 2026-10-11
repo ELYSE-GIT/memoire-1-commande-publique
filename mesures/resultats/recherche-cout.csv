@@ -1,0 +1,4 @@
+element,taille_mo,duree_construction_s
+table servie PostgreSQL,1453.2,
+index plein texte PostgreSQL (GIN),120.4,
+table et index plein texte DuckDB,312.2,

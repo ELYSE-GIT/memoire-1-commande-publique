@@ -22,12 +22,29 @@ Tout ce qui est affirme ici est mesure. Chaque chiffre renvoie a la commande qui
  │ Recherche        │         │               │       │                  │    │              │
  │ d'entreprises    │────────▶│  reprise sur  │──────▶│  or  2,00 M      │───▶│ Assistant    │
  │ 242 745 SIRET    │         │  erreur       │       │  servie          │    │ (phase 6)    │
- └──────────────────┘         └───────────────┘       └──────────────────┘    └──────────────┘
-                                      │                        │
-                                      ▼                        ▼
-                              donnees/manifestes/     mesures/resultats/
-                              (versionne)             (versionne, source des figures)
+ └──────────────────┘         └───────────────┘       └────────┬─────────┘    └──────▲───────┘
+                                      │                       │                     │
+                                      ▼                       ▼                     │
+                              donnees/manifestes/     mesures/resultats/            │
+                              (versionne)             (versionne, figures)          │
+                                                              │                     │
+                                              PUBLICATION     ▼                     │
+                                            ┌─────────────────────────────┐         │
+                                            │  PostgreSQL 17 + pgvector   │─────────┘
+                                            │  conteneur, port 55432      │
+                                            │  marches 1,45 Go            │
+                                            │  index plein texte 120 Mo   │
+                                            │  recherche en 7 ms          │
+                                            └─────────────────────────────┘
 ```
+
+**Deux bases, et pourquoi.** DuckDB calcule : il agrege deux millions de lignes sans les charger
+en memoire, et ne sert qu'un seul processus lecteur. PostgreSQL sert : il repond a plusieurs
+visiteurs en meme temps, et c'est lui qui tournera sur le VPS. La publication de l'une vers
+l'autre ne nettoie rien et ne recalcule rien, sinon il y aurait deux verites.
+
+La comparaison chiffree des deux moteurs sur la recherche est dans l'ADR 0008 : PostgreSQL est
+vingt fois plus rapide, DuckDB occupe cinq fois moins de place.
 
 **Ce qui est versionne et ce qui ne l'est pas**, parce que c'est la question la plus frequente :
 
@@ -47,10 +64,13 @@ Tout ce qui est affirme ici est mesure. Chaque chiffre renvoie a la commande qui
 |---|---|---|
 | **Collecte** | recuperer les sources sans les abimer, et tracer ce qui a ete recupere | `services/collecte/` |
 | **Transformation** | trois couches, du brut au servi, en SQL | `services/transformation/models/` |
+| **Publication** | copier la couche or vers la base que le site interrogera | `services/publication/` |
+| **Schema de la base** | tables, index, configuration plein texte francaise | `base/schema/` |
+| **Services** | un seul pour l'instant, PostgreSQL, demarre a la demande | `compose.yaml` |
 | **Mesures** | tout chiffrer, et ecrire les resultats en CSV | `mesures/` |
 | **Figures** | tracer depuis les CSV, jamais depuis les donnees | `mesures/figures.py` |
 | **Exploration** | montrer la demarche, code visible et execute | `analyses/*.ipynb` |
-| **Tests** | 105 tests, dont 20 qui executent la vraie chaine | `tests/` |
+| **Tests** | 133 tests, dont 20 qui executent la vraie chaine | `tests/` |
 | **Decisions** | pourquoi tel choix, et ce qui a ete ecarte | `docs/adr/` |
 | **Journal** | ce qui a mal tourne, et la lecon | `docs/journal/` |
 
@@ -87,6 +107,8 @@ Ou il s'applique deja :
 | Prix atypique | ecart robuste a la mediane du groupe | 75,8 % de precision au seuil 4 |
 | Relier deux sources sans identifiant commun | quatre criteres empiles | de 0 % a 14,7 % de liens surs |
 | **Monter a l'apprentissage automatique** | dix methodes comparees a budget egal | **refuse** : aucun modele ne depasse la statistique |
+| Chercher dans deux millions d'objets | mots cles, tous les mots puis au moins un mot | 7 ms de mediane, aucune question sans reponse |
+| **Monter aux plongements lexicaux** | pas encore mesure | **en attente** : pgvector est installe, aucune colonne vectorielle creee |
 
 La derniere ligne est la plus importante du tableau, parce qu'elle montre que l'escalier sert dans
 les deux sens. Voir l'ADR 0007 : les modeles ne trouvent des valeurs extremes qu'une fois qu'on leur
@@ -126,6 +148,7 @@ lui ».
 | [0005](../adr/0005-nettoyage-en-trois-couches.md) | bronze, argent, or, avec dbt | marquer plutot que supprimer |
 | [0006](../adr/0006-detection-par-regles.md) | detection par regles, seuils mesures | deux niveaux, jamais une accusation |
 | [0007](../adr/0007-regles-plutot-qu-un-modele.md) | rester sur les regles, apres comparaison a dix methodes | la connaissance metier, pas la puissance statistique |
+| [0008](../adr/0008-postgresql-pour-servir-la-recherche.md) | PostgreSQL pour servir la recherche, DuckDB mesure contre lui | un choix fait avant la mesure, puis confirme par elle |
 
 ---
 
@@ -144,6 +167,7 @@ projet, avec ce qu'elle a coute et ce qui l'evite.
 | **Croire une metadonnee** | le catalogue annoncait une source abandonnee depuis un an, la donnee allait jusqu'au jour meme | une metadonnee decrit une intention, la donnee decrit un fait |
 | **Ecrire le commentaire avant de lire la sortie** | trois legendes affirmaient des tendances non verifiees, dont une fausse | lire la sortie, puis ecrire |
 | **Prendre un identifiant pour une cle unique** | `uid` identifie un marche, pas une ligne : 140 350 uid repetes, 281 404 lignes en trop, 619 montants contradictoires | verifier l'unicite avant de s'appuyer dessus, par un `count(*) - count(distinct ...)` |
+| **Supposer qu'une cle de ligne existe** | aucune colonne ni combinaison n'identifie une ligne de la couche or : 1 999 474 lignes, 1 738 289 numeros de marche, 136 lignes identiques | fabriquer une cle technique, et renoncer aux cles etrangeres |
 
 ### Sur la methode
 
@@ -155,6 +179,8 @@ projet, avec ce qu'elle a coute et ce qui l'evite.
 | **Choisir une palette a l'oeil** | elle echouait a trois controles, dont la lisibilite pour un daltonien | faire valider les couleurs par un outil |
 | **Lire un score sous le hasard comme un mauvais score** | le modele obtenait 0 % : il cherchait du cote que l'etiquette ne marque jamais, et passait a 73 % une fois oriente | ouvrir les observations designees avant de conclure |
 | **Ecarter une option sur sa reputation** | Local Outlier Factor, ecarte pour cout quadratique, traite le jeu complet en 15,8 secondes | mesurer le cout avant de l'invoquer |
+| **Comparer deux outils sans leur donner la meme chose** | DuckDB paraissait muet sur 29 questions sur 30 : il ne recevait pas la meme question, les mots vides n'etant retires que du texte indexe | verifier que le pretraitement est identique avant de conclure |
+| **Croire un message d'erreur sur la foi de son texte** | « role does not exist » alors que le role existait : un autre PostgreSQL occupait le port | quand l'erreur decrit l'impossible, verifier a qui l'on parle |
 | **Annoncer qu'une methode robuste gagnera** | les versions naives font un peu mieux, parce que l'etiquette est elle-meme un detecteur de montants | verifier ce que l'etiquette est capable de departager |
 
 ### Sur la reproductibilite
@@ -196,6 +222,9 @@ projet, avec ce qu'elle a coute et ce qui l'evite.
 | Avis du BOAMP relies aux DECP | 14,7 % en confiance haute | `make bench-rapprochement` |
 | Parquet contre CSV | 247,6 Mo contre 2 595,5 Mo | `make collecte-decp` |
 | Duree de la chaine complete | environ 6 secondes | `make transformer` |
+| Recherche plein texte, latence mediane | 7,3 ms, aucune question sans reponse | `make bench-recherche` |
+| Base servie PostgreSQL contre DuckDB | 1 573 Mo contre 312 Mo | `make bench-recherche` |
+| Chargement vers PostgreSQL | 87 s, puis 62 s d'index | `make charger`, `make indexer` |
 | Cout de l'ensemble | 0 euro | |
 
 ---

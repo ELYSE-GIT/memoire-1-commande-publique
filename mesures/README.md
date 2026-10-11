@@ -14,14 +14,28 @@ qualite (metriques ML, taux d'erreurs dans les donnees), cout en euros par mois.
 
 | Commande | Ce qu'elle mesure | Duree |
 |---|---|---|
-| `make bench-decp` | qualite et performance sur le jeu DECP consolide | environ 2 s |
+| `make bench-decp` | qualite et performance sur le jeu DECP consolide | environ 30 s |
+| `make bench-decp-distributions` | agregats descriptifs : tranches, total annuel, saisonnalite, acheteurs, CPV, offres | environ 40 s |
+| `make bench-nettoyage` | effet de chaque regle de nettoyage, couche par couche | environ 10 s |
+| `make bench-detection` | precision et rappel de la regle de prix, par seuil | environ 15 s |
+| `make bench-modele` | les regles contre un modele non supervise, a budget d'alertes egal | environ 30 s |
+| `make bench-rapprochement` | part des avis du BOAMP reliables aux DECP | environ 3 min |
+| `make bench-precision` | justesse du rapprochement, par relecture de 60 paires | environ 5 s |
+| `make bench-recherche` | recherche plein texte, PostgreSQL contre DuckDB, sur 30 questions | environ 7 min |
+| `make figures` | trace les 20 figures du memoire depuis ces agregats | environ 3 s |
 
-Les resultats sont dans `resultats/`, un fichier JSON et un CSV par execution, nommes par la date.
-Le JSON contient le contexte complet : machine, versions de Python et de DuckDB, taille du fichier
-mesure. Sans ce contexte, une mesure n'est pas comparable a une autre.
+Les resultats sont dans `resultats/`. Les figures du memoire sont tracees **depuis ces fichiers**,
+jamais saisies a la main : c'est ce qui garantit qu'un chiffre affiche dans le memoire existe dans
+un fichier qu'on peut ouvrir et verifier.
 
-| `make bench-decp-distributions` | agregats descriptifs : tranches, total annuel, saisonnalite, acheteurs, CPV, offres, ecritures | moins d'1 s |
-| `make figures` | trace les 5 figures du memoire depuis ces agregats | environ 3 s |
+Deux fichiers ne sont pas des mesures mais des **entrees** du protocole, ecrites a la main et
+versionnees pour pouvoir etre relues :
+
+| Fichier | Role |
+|---|---|
+| `verification/2026-09-27-verdicts-rapprochement.csv` | 60 paires jugees a la main |
+| `verification/questions-de-recherche.csv` | 30 questions de test de la recherche |
+| `mots-vides-francais.txt` | liste de PostgreSQL, donnee a DuckDB pour que la comparaison soit valide |
 
 ## Comment une figure du memoire est produite
 

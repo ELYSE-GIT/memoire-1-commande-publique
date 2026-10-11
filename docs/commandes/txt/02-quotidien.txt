@@ -59,3 +59,55 @@ La branche `main` est protegee : aucun push direct, une pull request avec une CI
 | `make clean` | supprime les caches Python et les rapports de tests |
 | `make clean-all` | supprime en plus le `.venv`, les donnees locales, les conteneurs, les volumes et les images du projet |
 | `colima delete` | supprime la VM entierement, y compris son disque de 40 Go |
+
+---
+
+## La base de service PostgreSQL
+
+Depuis la phase 6, le projet a un **service** : une base PostgreSQL, qui tourne dans un conteneur.
+Elle ne doit tourner que pendant une session de travail.
+
+### Demarrer
+
+```bash
+make vm-up    # la machine Linux qui fait tourner les conteneurs, une fois par session
+make up       # PostgreSQL lui-meme
+make etat     # verifier : la VM et le conteneur doivent apparaitre
+```
+
+**Duree** : 1 a 2 minutes pour `make vm-up` la premiere fois, 20 secondes ensuite. `make up` prend
+quelques secondes.
+
+**Resultat attendu** : `make etat` affiche `colima is running` et une ligne
+`commande-publique-base   Up (healthy)`. Le mot **healthy** compte : il veut dire que la base
+repond vraiment, pas seulement que le conteneur est lance.
+
+### Arreter, et ce n'est pas optionnel
+
+```bash
+make down       # arrete PostgreSQL, garde les donnees
+make vm-down    # eteint la machine Linux
+```
+
+C'est la machine personnelle d'Elyse : rien ne doit rester allume apres une session. Aucun service
+du projet ne redemarre tout seul, c'est voulu.
+
+### Ouvrir une console SQL
+
+```bash
+make psql
+```
+
+**Resultat attendu** : une invite `commande_publique=#`. Quitter avec `\q`.
+
+Quelques commandes utiles dans cette console : `\dt` liste les tables, `\d marches` decrit une
+table, `\di+` liste les index avec leur taille.
+
+### Le port, et pourquoi il n'est pas 5432
+
+La base du projet ecoute sur **55432** et non sur le port standard. Un PostgreSQL installe
+directement sur le Mac occupait deja 5432, et les connexions du projet tombaient sur lui, avec un
+message trompeur (`role "commande_publique" does not exist`) alors que le conteneur fonctionnait.
+
+Le conteneur, lui, ecoute toujours sur 5432 a l'interieur. Seul le port cote machine change, et il
+est defini par `POSTGRES_PORT` dans `.env`.

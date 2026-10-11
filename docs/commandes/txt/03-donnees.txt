@@ -212,3 +212,46 @@ rm -rf donnees/
 ```
 
 Aucune perte : tout se retelecharge avec `make donnees-decp`.
+
+---
+
+## Publier vers la base de service
+
+La chaine dbt produit la couche or dans DuckDB. Ces trois commandes la copient dans PostgreSQL,
+qui est ce que le site interrogera. **L'ordre compte.**
+
+```bash
+make base-init   # extensions, configuration plein texte francaise, tables (SANS les index)
+make charger     # copie les 2 millions de lignes
+make indexer     # construit les index
+```
+
+**Durees mesurees le 11 octobre 2026** : quelques secondes, 87 secondes, 62 secondes.
+
+**Pourquoi les index en dernier** : les construire avant le chargement obligerait PostgreSQL a les
+reequilibrer a chaque ligne inseree. Le resultat est le meme, le temps ne l'est pas.
+
+**Ce que `make base-init` affiche, et qu'il faut lire** : les deux formes `Rénovation` et
+`renovation` doivent produire exactement le meme index plein texte. C'est la preuve que le retrait
+des accents fonctionne, affichee plutot qu'affirmee.
+
+**Resultat attendu de `make charger`** :
+
+```
+  marches   1 999 474 lignes en   77.2 s   (  25 912 lignes par seconde)
+  signaux   1 999 474 lignes en    9.5 s   ( 211 183 lignes par seconde)
+```
+
+L'ecart entre les deux debits n'est pas une anomalie : la table `marches` calcule son index plein
+texte a l'ecriture, `signaux` non.
+
+### Recharger proprement
+
+```bash
+make base-vider   # vide les deux tables, garde le schema et les index
+make charger
+```
+
+Le chargeur **refuse** de s'executer si la table contient deja des lignes. Un second chargement
+doublerait tout en silence : la cle technique etant generee, chaque ligne reinseree recevrait un
+nouvel identifiant, et rien ne signalerait le doublon.
