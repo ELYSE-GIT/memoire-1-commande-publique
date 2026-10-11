@@ -162,3 +162,55 @@ Puis verifier que les chiffres du memoire correspondent toujours aux mesures :
 ```bash
 make test        # dont tests/test_chiffres_memoire.py, qui relit les CSV
 ```
+
+---
+
+## `make bench-recherche`
+
+**Ce que ca fait** : compare six facons de chercher dans les deux millions de marches, sur trente
+questions de test versionnees. Trois cote PostgreSQL, trois cote DuckDB.
+
+**Prerequis** : `make up`, `make charger` et `make indexer`.
+
+**Duree** : environ 7 minutes, dont l'essentiel passe dans le mode « au moins un mot », qui coute
+plus d'une seconde par requete. La premiere execution construit en plus l'index plein texte de
+DuckDB, 21 secondes, conserve ensuite.
+
+**Resultat attendu** :
+
+```
+  moteur                questions  sans reponse  resultats moyens   p50      p95
+  postgres_et                  30             9               6.0     3.95    24.84
+  postgres_ou                  30             0              10.0  1920.32  6315.27
+  postgres_et_puis_ou          30             0               9.0     8.03  4807.95
+  duckdb_et_brut               30            29               0.2   105.25   161.06
+  duckdb_et                    30            10               5.7   105.67   150.51
+  duckdb_ou                    30             0              10.0   131.23   224.80
+```
+
+**Les latences varient d'une execution a l'autre**, d'environ 30 %. C'est normal : elles dependent
+de l'etat des caches et de ce qui tourne par ailleurs sur la machine. Ce qui est stable, et ce
+qu'il faut lire, est l'ordre de grandeur et le classement. Le nombre de questions sans reponse,
+lui, ne bouge pas.
+
+**Comment le lire** :
+
+- `postgres_et` repond en 4 millisecondes mais reste **muet sur 9 questions sur 30**.
+- `postgres_ou` repond toujours mais coute pres de deux secondes.
+- `postgres_et_puis_ou` enchaine les deux : 8 millisecondes et aucun silence. C'est la strategie
+  retenue, et c'est le principe de l'escalier applique a la recherche.
+- `duckdb_et_brut` est muet sur 29 questions sur 30. **Ce n'est pas un defaut de DuckDB** : il
+  retire les mots vides du texte indexe mais pas de la question posee. La ligne est conservee
+  parce que c'est l'erreur qu'on commet spontanement, et que son resultat est trompeur.
+
+La decision et son raisonnement complet sont dans l'ADR 0008.
+
+### Ce que cette commande ne mesure pas
+
+**La pertinence.** Elle demande un jugement humain. La commande ecrit
+`mesures/resultats/recherche-resultats.csv` : pour les dix questions marquees `a_juger`, les dix
+premiers marches trouves par chaque moteur, avec une colonne `pertinent` vide.
+
+Il faut la remplir par `oui`, `non` ou `doute`, enregistrer le fichier sous
+`mesures/verification/jugements-recherche.csv`, puis relancer. Meme protocole que les soixante
+paires relues pour le rapprochement des sources, et pour la meme raison.

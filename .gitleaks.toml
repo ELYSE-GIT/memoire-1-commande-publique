@@ -27,7 +27,17 @@
 useDefault = true
 
 [allowlist]
-description = "Donnees locales non versionnees, hors du perimetre de fuite possible"
+description = "Fichiers locaux non versionnes, hors du perimetre de fuite possible"
 paths = [
   '''^donnees/''',
+  # Le fichier .env contient de vrais secrets, et c'est son role. Il est ignore par git, donc il
+  # ne peut pas partir dans un push. Le scanner le signalait a chaque execution, ce qui rendait
+  # `make verif` rouge en permanence et aurait fini par etre ignore : une alerte qui crie toujours
+  # ne protege plus de rien.
+  #
+  # En echange, le vrai risque est controle directement : `make secrets` verifie que .env est bien
+  # ignore par git, et `tests/test_socle.py` verifie qu'il n'est pas suivi. Un .env versionne par
+  # erreur fait donc echouer la verification et les tests, ce qui est plus sur que de compter sur
+  # une regle generique de detection.
+  '''^\.env$''',
 ]

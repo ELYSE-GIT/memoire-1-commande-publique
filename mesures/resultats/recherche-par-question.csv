@@ -1,0 +1,181 @@
+id_question,question,type,moteur,resultats,latence_ms
+Q01,travaux de voirie,mots_cles,postgres_et,10,36.61
+Q01,travaux de voirie,mots_cles,postgres_ou,10,2001.94
+Q01,travaux de voirie,mots_cles,postgres_et_puis_ou,10,41.06
+Q01,travaux de voirie,mots_cles,duckdb_et_brut,0,103.16
+Q01,travaux de voirie,mots_cles,duckdb_et,10,92.89
+Q01,travaux de voirie,mots_cles,duckdb_ou,10,128.38
+Q02,refection de la toiture d'une ecole,mots_cles,postgres_et,10,3.16
+Q02,refection de la toiture d'une ecole,mots_cles,postgres_ou,10,224.68
+Q02,refection de la toiture d'une ecole,mots_cles,postgres_et_puis_ou,10,3.68
+Q02,refection de la toiture d'une ecole,mots_cles,duckdb_et_brut,0,80.96
+Q02,refection de la toiture d'une ecole,mots_cles,duckdb_et,10,90.46
+Q02,refection de la toiture d'une ecole,mots_cles,duckdb_ou,10,102.2
+Q03,fourniture de repas pour la restauration scolaire,mots_cles,postgres_et,10,8.68
+Q03,fourniture de repas pour la restauration scolaire,mots_cles,postgres_ou,10,3409.7
+Q03,fourniture de repas pour la restauration scolaire,mots_cles,postgres_et_puis_ou,10,7.3
+Q03,fourniture de repas pour la restauration scolaire,mots_cles,duckdb_et_brut,0,105.83
+Q03,fourniture de repas pour la restauration scolaire,mots_cles,duckdb_et,10,103.51
+Q03,fourniture de repas pour la restauration scolaire,mots_cles,duckdb_ou,10,123.46
+Q04,assurance dommages aux biens,mots_cles,postgres_et,10,12.85
+Q04,assurance dommages aux biens,mots_cles,postgres_ou,10,329.2
+Q04,assurance dommages aux biens,mots_cles,postgres_et_puis_ou,10,33.7
+Q04,assurance dommages aux biens,mots_cles,duckdb_et_brut,0,245.69
+Q04,assurance dommages aux biens,mots_cles,duckdb_et,10,190.79
+Q04,assurance dommages aux biens,mots_cles,duckdb_ou,10,222.27
+Q05,entretien des espaces verts,mots_cles,postgres_et,10,41.01
+Q05,entretien des espaces verts,mots_cles,postgres_ou,10,1960.5
+Q05,entretien des espaces verts,mots_cles,postgres_et_puis_ou,10,42.54
+Q05,entretien des espaces verts,mots_cles,duckdb_et_brut,7,110.82
+Q05,entretien des espaces verts,mots_cles,duckdb_et,10,95.66
+Q05,entretien des espaces verts,mots_cles,duckdb_ou,10,112.47
+Q06,achat de vehicules pour les pompiers,mots_cles,postgres_et,2,2.98
+Q06,achat de vehicules pour les pompiers,mots_cles,postgres_ou,10,8533.82
+Q06,achat de vehicules pour les pompiers,mots_cles,postgres_et_puis_ou,2,3.87
+Q06,achat de vehicules pour les pompiers,mots_cles,duckdb_et_brut,0,126.68
+Q06,achat de vehicules pour les pompiers,mots_cles,duckdb_et,2,143.85
+Q06,achat de vehicules pour les pompiers,mots_cles,duckdb_ou,10,214.51
+Q07,travaux de rehabilitation de logements,mots_cles,postgres_et,10,24.84
+Q07,travaux de rehabilitation de logements,mots_cles,postgres_ou,10,4196.81
+Q07,travaux de rehabilitation de logements,mots_cles,postgres_et_puis_ou,10,26.54
+Q07,travaux de rehabilitation de logements,mots_cles,duckdb_et_brut,0,116.98
+Q07,travaux de rehabilitation de logements,mots_cles,duckdb_et,10,145.97
+Q07,travaux de rehabilitation de logements,mots_cles,duckdb_ou,10,167.74
+Q08,prestations d'audit,mots_cles,postgres_et,10,4.61
+Q08,prestations d'audit,mots_cles,postgres_ou,10,461.77
+Q08,prestations d'audit,mots_cles,postgres_et_puis_ou,10,3.64
+Q08,prestations d'audit,mots_cles,duckdb_et_brut,0,89.84
+Q08,prestations d'audit,mots_cles,duckdb_et,10,116.87
+Q08,prestations d'audit,mots_cles,duckdb_ou,10,119.33
+Q09,fourniture de materiel informatique,mots_cles,postgres_et,10,9.19
+Q09,fourniture de materiel informatique,mots_cles,postgres_ou,10,1797.27
+Q09,fourniture de materiel informatique,mots_cles,postgres_et_puis_ou,10,9.51
+Q09,fourniture de materiel informatique,mots_cles,duckdb_et_brut,0,102.37
+Q09,fourniture de materiel informatique,mots_cles,duckdb_et,10,129.95
+Q09,fourniture de materiel informatique,mots_cles,duckdb_ou,10,133.72
+Q10,maitrise d'oeuvre pour la construction d'un gymnase,mots_cles,postgres_et,10,5.25
+Q10,maitrise d'oeuvre pour la construction d'un gymnase,mots_cles,postgres_ou,10,3820.76
+Q10,maitrise d'oeuvre pour la construction d'un gymnase,mots_cles,postgres_et_puis_ou,10,4.61
+Q10,maitrise d'oeuvre pour la construction d'un gymnase,mots_cles,duckdb_et_brut,0,102.49
+Q10,maitrise d'oeuvre pour la construction d'un gymnase,mots_cles,duckdb_et,10,101.14
+Q10,maitrise d'oeuvre pour la construction d'un gymnase,mots_cles,duckdb_ou,10,136.81
+Q11,marches de la mairie de Lyon en 2023,acheteur_et_annee,postgres_et,0,5.95
+Q11,marches de la mairie de Lyon en 2023,acheteur_et_annee,postgres_ou,10,6315.27
+Q11,marches de la mairie de Lyon en 2023,acheteur_et_annee,postgres_et_puis_ou,10,8832.66
+Q11,marches de la mairie de Lyon en 2023,acheteur_et_annee,duckdb_et_brut,0,171.7
+Q11,marches de la mairie de Lyon en 2023,acheteur_et_annee,duckdb_et,0,166.86
+Q11,marches de la mairie de Lyon en 2023,acheteur_et_annee,duckdb_ou,10,224.8
+Q12,marches du departement de l'Isere,acheteur,postgres_et,10,3.9
+Q12,marches du departement de l'Isere,acheteur,postgres_ou,10,2344.87
+Q12,marches du departement de l'Isere,acheteur,postgres_et_puis_ou,10,3.94
+Q12,marches du departement de l'Isere,acheteur,duckdb_et_brut,0,160.2
+Q12,marches du departement de l'Isere,acheteur,duckdb_et,10,130.16
+Q12,marches du departement de l'Isere,acheteur,duckdb_ou,10,179.06
+Q13,eclairage public a la ville de Paris,mots_cles_et_acheteur,postgres_et,8,6.3
+Q13,eclairage public a la ville de Paris,mots_cles_et_acheteur,postgres_ou,10,7604.77
+Q13,eclairage public a la ville de Paris,mots_cles_et_acheteur,postgres_et_puis_ou,8,6.84
+Q13,eclairage public a la ville de Paris,mots_cles_et_acheteur,duckdb_et_brut,0,152.23
+Q13,eclairage public a la ville de Paris,mots_cles_et_acheteur,duckdb_et,1,150.51
+Q13,eclairage public a la ville de Paris,mots_cles_et_acheteur,duckdb_ou,10,290.85
+Q14,travaux de voirie dans le Nord,mots_cles_et_lieu,postgres_et,10,7.59
+Q14,travaux de voirie dans le Nord,mots_cles_et_lieu,postgres_ou,10,3821.53
+Q14,travaux de voirie dans le Nord,mots_cles_et_lieu,postgres_et_puis_ou,10,7.5
+Q14,travaux de voirie dans le Nord,mots_cles_et_lieu,duckdb_et_brut,0,161.06
+Q14,travaux de voirie dans le Nord,mots_cles_et_lieu,duckdb_et,10,117.3
+Q14,travaux de voirie dans le Nord,mots_cles_et_lieu,duckdb_ou,10,192.23
+Q15,marches en Loire-Atlantique en 2024,lieu_et_annee,postgres_et,0,2.6
+Q15,marches en Loire-Atlantique en 2024,lieu_et_annee,postgres_ou,10,2043.95
+Q15,marches en Loire-Atlantique en 2024,lieu_et_annee,postgres_et_puis_ou,10,2285.96
+Q15,marches en Loire-Atlantique en 2024,lieu_et_annee,duckdb_et_brut,0,104.67
+Q15,marches en Loire-Atlantique en 2024,lieu_et_annee,duckdb_et,0,89.7
+Q15,marches en Loire-Atlantique en 2024,lieu_et_annee,duckdb_ou,10,136.08
+Q16,medicaments pour le CHU de Toulouse,mots_cles_et_acheteur,postgres_et,0,2.36
+Q16,medicaments pour le CHU de Toulouse,mots_cles_et_acheteur,postgres_ou,10,172.54
+Q16,medicaments pour le CHU de Toulouse,mots_cles_et_acheteur,postgres_et_puis_ou,10,179.37
+Q16,medicaments pour le CHU de Toulouse,mots_cles_et_acheteur,duckdb_et_brut,0,92.89
+Q16,medicaments pour le CHU de Toulouse,mots_cles_et_acheteur,duckdb_et,0,68.49
+Q16,medicaments pour le CHU de Toulouse,mots_cles_et_acheteur,duckdb_ou,10,86.76
+Q17,qui fournit l'electricite aux hopitaux,question_naturelle,postgres_et,0,2.93
+Q17,qui fournit l'electricite aux hopitaux,question_naturelle,postgres_ou,10,410.88
+Q17,qui fournit l'electricite aux hopitaux,question_naturelle,postgres_et_puis_ou,10,403.63
+Q17,qui fournit l'electricite aux hopitaux,question_naturelle,duckdb_et_brut,0,89.58
+Q17,qui fournit l'electricite aux hopitaux,question_naturelle,duckdb_et,0,72.19
+Q17,qui fournit l'electricite aux hopitaux,question_naturelle,duckdb_ou,10,105.32
+Q18,construction de plus de 10 millions d'euros,mots_cles_et_montant,postgres_et,0,2.33
+Q18,construction de plus de 10 millions d'euros,mots_cles_et_montant,postgres_ou,10,1466.4
+Q18,construction de plus de 10 millions d'euros,mots_cles_et_montant,postgres_et_puis_ou,10,1473.89
+Q18,construction de plus de 10 millions d'euros,mots_cles_et_montant,duckdb_et_brut,0,117.31
+Q18,construction de plus de 10 millions d'euros,mots_cles_et_montant,duckdb_et,0,128.95
+Q18,construction de plus de 10 millions d'euros,mots_cles_et_montant,duckdb_ou,10,151.48
+Q19,fournitures de moins de 25 000 euros,mots_cles_et_montant,postgres_et,0,2.0
+Q19,fournitures de moins de 25 000 euros,mots_cles_et_montant,postgres_ou,10,1880.14
+Q19,fournitures de moins de 25 000 euros,mots_cles_et_montant,postgres_et_puis_ou,10,1367.54
+Q19,fournitures de moins de 25 000 euros,mots_cles_et_montant,duckdb_et_brut,0,116.92
+Q19,fournitures de moins de 25 000 euros,mots_cles_et_montant,duckdb_et,0,91.32
+Q19,fournitures de moins de 25 000 euros,mots_cles_et_montant,duckdb_ou,10,128.74
+Q20,marches attribues a Veolia,titulaire,postgres_et,0,3.22
+Q20,marches attribues a Veolia,titulaire,postgres_ou,10,4317.46
+Q20,marches attribues a Veolia,titulaire,postgres_et_puis_ou,10,4072.55
+Q20,marches attribues a Veolia,titulaire,duckdb_et_brut,0,142.39
+Q20,marches attribues a Veolia,titulaire,duckdb_et,0,130.94
+Q20,marches attribues a Veolia,titulaire,duckdb_ou,10,194.23
+Q21,nettoyage de locaux attribue a une PME,mots_cles_et_categorie,postgres_et,0,2.16
+Q21,nettoyage de locaux attribue a une PME,mots_cles_et_categorie,postgres_ou,10,3948.11
+Q21,nettoyage de locaux attribue a une PME,mots_cles_et_categorie,postgres_et_puis_ou,10,4807.95
+Q21,nettoyage de locaux attribue a une PME,mots_cles_et_categorie,duckdb_et_brut,0,112.43
+Q21,nettoyage de locaux attribue a une PME,mots_cles_et_categorie,duckdb_et,0,146.58
+Q21,nettoyage de locaux attribue a une PME,mots_cles_et_categorie,duckdb_ou,10,173.04
+Q22,assurances souscrites en 2022,mots_cles_et_annee,postgres_et,1,1.89
+Q22,assurances souscrites en 2022,mots_cles_et_annee,postgres_ou,10,208.18
+Q22,assurances souscrites en 2022,mots_cles_et_annee,postgres_et_puis_ou,1,0.82
+Q22,assurances souscrites en 2022,mots_cles_et_annee,duckdb_et_brut,0,80.99
+Q22,assurances souscrites en 2022,mots_cles_et_annee,duckdb_et,0,72.98
+Q22,assurances souscrites en 2022,mots_cles_et_annee,duckdb_ou,10,90.81
+Q23,collecte et traitement des dechets menagers,mots_cles,postgres_et,10,9.48
+Q23,collecte et traitement des dechets menagers,mots_cles,postgres_ou,10,598.23
+Q23,collecte et traitement des dechets menagers,mots_cles,postgres_et_puis_ou,10,7.72
+Q23,collecte et traitement des dechets menagers,mots_cles,duckdb_et_brut,0,99.98
+Q23,collecte et traitement des dechets menagers,mots_cles,duckdb_et,10,100.33
+Q23,collecte et traitement des dechets menagers,mots_cles,duckdb_ou,10,107.88
+Q24,renovation energetique des batiments,sans_accent,postgres_et,10,9.05
+Q24,renovation energetique des batiments,sans_accent,postgres_ou,10,896.75
+Q24,renovation energetique des batiments,sans_accent,postgres_et_puis_ou,10,8.34
+Q24,renovation energetique des batiments,sans_accent,duckdb_et_brut,0,93.73
+Q24,renovation energetique des batiments,sans_accent,duckdb_et,10,95.05
+Q24,renovation energetique des batiments,sans_accent,duckdb_ou,10,108.12
+Q25,travaux pour la mairie de Rene,faute_de_frappe,postgres_et,10,7.7
+Q25,travaux pour la mairie de Rene,faute_de_frappe,postgres_ou,10,4976.27
+Q25,travaux pour la mairie de Rene,faute_de_frappe,postgres_et_puis_ou,10,6.18
+Q25,travaux pour la mairie de Rene,faute_de_frappe,duckdb_et_brut,0,158.37
+Q25,travaux pour la mairie de Rene,faute_de_frappe,duckdb_et,10,139.44
+Q25,travaux pour la mairie de Rene,faute_de_frappe,duckdb_ou,10,233.7
+Q26,tonte des pelouses,paraphrase,postgres_et,10,1.9
+Q26,tonte des pelouses,paraphrase,postgres_ou,10,8.61
+Q26,tonte des pelouses,paraphrase,postgres_et_puis_ou,10,0.83
+Q26,tonte des pelouses,paraphrase,duckdb_et_brut,0,92.04
+Q26,tonte des pelouses,paraphrase,duckdb_et,10,69.61
+Q26,tonte des pelouses,paraphrase,duckdb_ou,10,75.56
+Q27,fourniture de masques chirurgicaux,mots_cles,postgres_et,10,3.32
+Q27,fourniture de masques chirurgicaux,mots_cles,postgres_ou,10,919.13
+Q27,fourniture de masques chirurgicaux,mots_cles,postgres_et_puis_ou,10,2.15
+Q27,fourniture de masques chirurgicaux,mots_cles,duckdb_et_brut,0,101.33
+Q27,fourniture de masques chirurgicaux,mots_cles,duckdb_et,10,107.83
+Q27,fourniture de masques chirurgicaux,mots_cles,duckdb_ou,10,122.66
+Q28,telecommunications pour France Televisions,mots_cles_et_acheteur,postgres_et,1,3.27
+Q28,telecommunications pour France Televisions,mots_cles_et_acheteur,postgres_ou,10,836.01
+Q28,telecommunications pour France Televisions,mots_cles_et_acheteur,postgres_et_puis_ou,1,1.82
+Q28,telecommunications pour France Televisions,mots_cles_et_acheteur,duckdb_et_brut,0,99.47
+Q28,telecommunications pour France Televisions,mots_cles_et_acheteur,duckdb_et,1,79.15
+Q28,telecommunications pour France Televisions,mots_cles_et_acheteur,duckdb_ou,10,111.91
+Q29,construction d'un pont a peage en Corse,probablement_sans_reponse,postgres_et,0,4.0
+Q29,construction d'un pont a peage en Corse,probablement_sans_reponse,postgres_ou,10,5762.4
+Q29,construction d'un pont a peage en Corse,probablement_sans_reponse,postgres_et_puis_ou,10,5204.89
+Q29,construction d'un pont a peage en Corse,probablement_sans_reponse,duckdb_et_brut,0,150.78
+Q29,construction d'un pont a peage en Corse,probablement_sans_reponse,duckdb_et,0,118.25
+Q29,construction d'un pont a peage en Corse,probablement_sans_reponse,duckdb_ou,10,181.63
+Q30,achat de licences Oracle,marque,postgres_et,7,2.22
+Q30,achat de licences Oracle,marque,postgres_ou,10,181.8
+Q30,achat de licences Oracle,marque,postgres_et_puis_ou,7,0.82
+Q30,achat de licences Oracle,marque,duckdb_et_brut,0,86.06
+Q30,achat de licences Oracle,marque,duckdb_et,7,103.09
+Q30,achat de licences Oracle,marque,duckdb_ou,10,122.78

@@ -1,0 +1,31 @@
+id,question,type,a_juger,commentaire
+Q01,travaux de voirie,mots_cles,oui,la recherche la plus banale : deux mots, aucun filtre
+Q02,refection de la toiture d'une ecole,mots_cles,non,trois notions dont une tres frequente
+Q03,fourniture de repas pour la restauration scolaire,mots_cles,non,vocabulaire administratif courant
+Q04,assurance dommages aux biens,mots_cles,non,expression figee du vocabulaire des marches
+Q05,entretien des espaces verts,mots_cles,oui,sert de reference a la paraphrase Q26
+Q06,achat de vehicules pour les pompiers,mots_cles,non,le mot pompiers n'apparait pas dans les objets : teste le vocabulaire de l'utilisateur
+Q07,travaux de rehabilitation de logements,mots_cles,non,formulation reelle relevee dans les donnees
+Q08,prestations d'audit,mots_cles,non,deux mots seulement
+Q09,fourniture de materiel informatique,mots_cles,non,categorie tres large
+Q10,maitrise d'oeuvre pour la construction d'un gymnase,mots_cles,non,vocabulaire metier de la construction
+Q11,marches de la mairie de Lyon en 2023,acheteur_et_annee,oui,melange un nom d'acheteur et un filtre temporel
+Q12,marches du departement de l'Isere,acheteur,non,un acheteur nomme dans les donnees
+Q13,eclairage public a la ville de Paris,mots_cles_et_acheteur,non,objet plus acheteur dans la meme phrase
+Q14,travaux de voirie dans le Nord,mots_cles_et_lieu,oui,Nord est a la fois un departement et un mot courant : piege volontaire
+Q15,marches en Loire-Atlantique en 2024,lieu_et_annee,non,aucun mot d'objet : tout est filtre
+Q16,medicaments pour le CHU de Toulouse,mots_cles_et_acheteur,non,acheteur hospitalier reel
+Q17,qui fournit l'electricite aux hopitaux,question_naturelle,oui,formulee comme une question et non comme des mots cles
+Q18,construction de plus de 10 millions d'euros,mots_cles_et_montant,oui,contient un seuil de montant exprime en mots
+Q19,fournitures de moins de 25 000 euros,mots_cles_et_montant,non,le seuil des marches sans publicite obligatoire
+Q20,marches attribues a Veolia,titulaire,oui,un nom d'entreprise connu
+Q21,nettoyage de locaux attribue a une PME,mots_cles_et_categorie,non,categorie d'entreprise plus objet
+Q22,assurances souscrites en 2022,mots_cles_et_annee,non,objet plus annee
+Q23,collecte et traitement des dechets menagers,mots_cles,non,service public local classique
+Q24,renovation energetique des batiments,sans_accent,oui,ecrit sans accent : doit trouver autant que la version accentuee
+Q25,travaux pour la mairie de Rene,faute_de_frappe,oui,Rene pour Rennes : teste la tolerance aux fautes
+Q26,tonte des pelouses,paraphrase,oui,autre facon de dire Q05 : aucun de ces mots n'est dans les objets
+Q27,fourniture de masques chirurgicaux,mots_cles,non,vocabulaire apparu en 2020 : teste aussi la couverture temporelle
+Q28,telecommunications pour France Televisions,mots_cles_et_acheteur,non,acheteur reel present dans les donnees
+Q29,construction d'un pont a peage en Corse,probablement_sans_reponse,non,doit renvoyer peu ou rien : un moteur qui repond quand meme est un probleme
+Q30,achat de licences Oracle,marque,non,nom de produit : teste la recherche sur un terme non francais

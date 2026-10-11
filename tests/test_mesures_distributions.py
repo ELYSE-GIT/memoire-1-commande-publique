@@ -166,6 +166,26 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
         ["date_plausible", "Date de notification possible", "515", "0.024"],
         ["acheteur_siret_valide", "SIRET de l'acheteur conforme", "337", "0.016"],
     ]
+    # La figure 20 lit six moteurs de recherche. Les valeurs reprennent la mesure reelle du
+    # 11 octobre 2026 : un moteur manquant dans la liste leverait une KeyError, et un moteur en
+    # trop passerait inapercu, ce qui est le comportement voulu.
+    contenus["recherche-par-moteur"] = [
+        [
+            "moteur",
+            "questions",
+            "sans_resultat",
+            "resultats_moyens",
+            "latence_p50_ms",
+            "latence_p95_ms",
+            "latence_max_ms",
+        ],
+        ["postgres_et", "30", "9", "6.0", "4.43", "23.78", "25.0"],
+        ["postgres_ou", "30", "0", "10.0", "1461.38", "4533.54", "4600.0"],
+        ["postgres_et_puis_ou", "30", "0", "9.0", "7.30", "4730.64", "4800.0"],
+        ["duckdb_et_brut", "30", "29", "0.2", "105.19", "140.15", "150.0"],
+        ["duckdb_et", "30", "10", "5.7", "100.50", "131.62", "140.0"],
+        ["duckdb_ou", "30", "0", "10.0", "119.03", "200.02", "210.0"],
+    ]
     # La figure 19 lit quatre methodes, pour six budgets. Le jeu fictif n'en garde que trois
     # budgets, ce qui suffit a verifier que la figure se trace et que les quatre series sont
     # trouvees : une methode manquante leverait une KeyError.
@@ -206,5 +226,5 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     figures.main()
 
     produites = sorted(chemin.name for chemin in sorties.glob("*.svg"))
-    assert len(produites) == 19, f"dix-neuf figures attendues, obtenu : {produites}"
+    assert len(produites) == 20, f"vingt figures attendues, obtenu : {produites}"
     assert all((sorties / nom.replace(".svg", ".png")).exists() for nom in produites)

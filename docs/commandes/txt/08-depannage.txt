@@ -68,3 +68,54 @@ gh api repos/ELYSE-GIT/memoire-1-commande-publique/branches/main/protection \
 ```
 
 Resultat attendu : les deux controles de la CI, et `admins: true`.
+
+---
+
+## `role "commande_publique" does not exist` alors que la base tourne
+
+**Symptome** : `make charger` echoue sur un role inexistant, mais `make psql` fonctionne et
+`\du` montre bien le role.
+
+**Cause** : un autre PostgreSQL occupe le port. Les connexions partent vers lui, et son message
+d'erreur decrit **sa** base, pas celle du projet.
+
+**Diagnostic** :
+
+```bash
+lsof -nP -iTCP:5432 -sTCP:LISTEN
+docker compose port base 5432
+```
+
+Si la premiere commande montre un `postgres` qui n'est pas le conteneur, c'est lui. La seconde dit
+sur quel port le conteneur est reellement publie.
+
+**Correction** : le projet ecoute sur 55432, defini par `POSTGRES_PORT` dans `.env`. Si le conflit
+revient sur un autre port, changer cette valeur puis `make down && make up`.
+
+**Lecon generale** : quand un message d'erreur decrit quelque chose d'impossible, verifier d'abord
+a qui l'on parle.
+
+## Le conteneur demarre mais reste `starting`
+
+**Symptome** : `make etat` montre `Up (health: starting)` qui ne passe jamais a `healthy`.
+
+**Diagnostic** :
+
+```bash
+docker compose logs base | tail -30
+```
+
+**Causes vues** : une variable absente de `.env`, un volume de donnees cree par une version
+differente de PostgreSQL, ou la memoire partagee insuffisante. Les trois apparaissent en clair
+dans les journaux.
+
+## Repartir d'une base vide
+
+```bash
+make down
+docker volume rm commande-publique-base-donnees
+make up && make base-init && make charger && make indexer
+```
+
+La deuxieme ligne **supprime definitivement** les donnees de la base. Elles se reconstruisent
+entierement depuis DuckDB, donc il n'y a rien a sauvegarder, mais il faut une vingtaine de minutes.
