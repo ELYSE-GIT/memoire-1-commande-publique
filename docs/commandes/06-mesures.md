@@ -32,7 +32,9 @@ make transformer         # construit les couches argent et or, et les variables 
 | `make bench-modele` | les regles contre un modele, a budget d'alertes egal | environ 30 s | `modele-vs-regles.csv`, `-cout.csv` |
 | `make bench-rapprochement` | part des avis du BOAMP reliables aux DECP | environ 3 min | `*-rapprochement-boamp-decp.csv` |
 | `make bench-precision` | justesse du rapprochement, par relecture de 60 paires | environ 5 s | `rapprochement-precision.csv` |
-| `make figures` | trace les 19 figures du memoire depuis les CSV | environ 3 s | `memoire/figures/` |
+| `make bench-incertitude` | intervalle de confiance de chaque pourcentage tire d'un echantillon | environ 1 s | `incertitude-*.csv` |
+| `make bench-stabilite` | la regle de detection calee sur 2019-2023, appliquee a 2024-2026 | environ 2 s | `stabilite-*.csv` |
+| `make figures` | trace les 23 figures du memoire depuis les CSV | environ 5 s | `memoire/figures/` |
 
 ---
 
@@ -214,3 +216,63 @@ premiers marches trouves par chaque moteur, avec une colonne `pertinent` vide.
 Il faut la remplir par `oui`, `non` ou `doute`, enregistrer le fichier sous
 `mesures/verification/jugements-recherche.csv`, puis relancer. Meme protocole que les soixante
 paires relues pour le rapprochement des sources, et pour la meme raison.
+
+---
+
+## `make bench-incertitude`
+
+**Ce qu'elle fait** : calcule l'intervalle de confiance a 95 % de chaque pourcentage du projet
+tire d'un echantillon, par trois methodes comparees, et un bootstrap stratifie pour la justesse du
+rapprochement, qui est un estimateur pondere sans formule simple.
+
+**Ou** : sur le Mac. **Duree** : environ 1 seconde. **Prerequis** : `make transformer`, plus les
+CSV produits par `make bench-assistant` et `make bench-rapprochement`.
+
+```bash
+make bench-incertitude
+```
+
+**Comment le lire** :
+
+- la colonne `wilson_bas` est la seule que le memoire cite. Les colonnes `wald_*` et `exact_*`
+  servent a montrer pourquoi, et ne sont pas des resultats ;
+- sur les mesures parfaites, `wald_bas` vaut 100 : la formule la plus repandue annonce une
+  certitude. C'est la raison de l'avoir ecartee, et elle est publiee dans la figure 22 ;
+- `bootstrap_degenere` a `oui` signale une tranche ou toutes les paires relues sont justes. Le
+  rééchantillonnage y rend un intervalle de largeur nulle, qui se lit comme une certitude et
+  signale l'inverse. Dans ce cas, lire les colonnes `exact_sans_redressement_*` ;
+- `incertitude-sources.csv` est la table la plus utile : pour chaque chiffre annonce, elle nomme
+  la source d'incertitude qui domine. Un intervalle de confiance ne couvre que le hasard du
+  tirage, jamais une non-reponse ni une etiquette approximative.
+
+---
+
+## `make bench-stabilite`
+
+**Ce qu'elle fait** : recalcule les references de la regle de prix sur les seules annees 2019 a
+2023, applique la regle a 2024-2026, et compare au calibrage actuel, qui utilise toutes les
+annees y compris celles qu'il juge.
+
+**Ou** : sur le Mac. **Duree** : environ 2 secondes. **Prerequis** : `make transformer`.
+
+```bash
+make bench-stabilite
+```
+
+**Comment le lire** :
+
+- la ligne a lire est `apprentissage seul` evaluee sur `test`, la seule dont la colonne `fuite`
+  vaut `non`. C'est le chiffre que le memoire publie : **69,3 %** ;
+- l'ecart avec la ligne `global` evaluee sur `test`, 73,3 %, est ce que la fuite ajoutait :
+  4 points, et les deux intervalles ne se chevauchent pas ;
+- `stabilite-par-annee.csv` montre que la regle ne vieillit pas, mais que 2023 decroche de 28
+  points sans explication etablie ;
+- `stabilite-familles.csv` liste les familles d'achat dont la mediane bouge entre les deux
+  periodes. Trente et une sur cinquante-sept bougent de plus de 26 %.
+
+### Ce que cette commande ne mesure pas
+
+**Elle ne separe pas la fuite de l'effet de taille.** Le calibrage global dispose de plus de
+lignes pour estimer une mediane, ce qui aide reellement. Une partie des 4 points vient de la, et
+un decoupage unique ne sait pas dire laquelle. Une validation glissante, qui recalerait les
+references chaque annee, est la suite inscrite au carnet.

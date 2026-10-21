@@ -1,0 +1,6 @@
+seuil_objet,rapproches_par_objet,paires_relues,paires_justes,justesse_pourcent,bootstrap_bas,bootstrap_haut,largeur_points,bootstrap_degenere,exact_sans_redressement_bas,exact_sans_redressement_haut,tirages_exploitables
+0.4,83,60,36,66.0,59.3,72.3,13.0,non,50.4,76.6,10000
+0.5,64,48,36,85.6,76.7,94.0,17.3,non,67.3,91.8,10000
+0.6,48,36,30,94.1,88.4,98.7,10.2,non,72.5,96.7,10000
+0.7,41,24,22,97.8,92.7,100.0,7.3,non,78.1,99.9,10000
+0.8,31,12,12,100.0,100.0,100.0,0.0,oui,73.5,100.0,10000

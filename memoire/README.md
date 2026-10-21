@@ -11,7 +11,9 @@ enferme dans un format proprietaire tant que ce choix n'est pas arrete.
 | `00-plan.md` | plan des 13 chapitres, pagination cible, principes de redaction | a jour |
 | `01-vocabulaire.md` | chapitre 1 : tous les termes du domaine et de la technique | brouillon redige |
 | `02-etat-des-lieux.md` | chapitre 2 : le probleme, en chiffres mesures | brouillon redige |
-| `figures/` | les figures, produites par `make figures` depuis `mesures/resultats/` | 15 figures |
+| `09-recherche-et-assistant.md` | chapitre 9 : du mot-cle a la reponse sourcee | brouillon redige |
+| `11-mesures-et-incertitude.md` | chapitre 11, sections 11.1 et 11.2 : ce que vaut un pourcentage, et la validation hors echantillon | brouillon partiel |
+| `figures/` | les figures, produites par `make figures` depuis `mesures/resultats/` | 23 figures |
 
 ## Regles tenues dans ces textes
 
@@ -23,3 +25,6 @@ enferme dans un format proprietaire tant que ce choix n'est pas arrete.
    3 283 035 lignes brutes, 2 114 675 lignes a l'etat actuel, 1 833 468 marches distincts.
 5. Les brouillons portent une note en tete : les faits sont verifies, la formulation reste a
    reprendre par l'auteur, dans sa voix.
+6. Tout pourcentage tire d'un echantillon est publie avec son intervalle a 95 %, calcule par la
+   methode de Wilson. Un pourcentage calcule sur la population entiere n'en recoit pas, mais la
+   source d'incertitude qui le concerne est nommee. Voir l'ADR 0010.

@@ -1240,6 +1240,312 @@ def figure_assistant() -> None:
     enregistrer(figure, "21-assistant-cout-et-verifications")
 
 
+def virgule(valeur: float, decimales: int = 1) -> str:
+    """Separateur decimal francais. Un memoire en francais n'affiche pas « 18.1 »."""
+    return f"{valeur:.{decimales}f}".replace(".", ",")
+
+
+def milliers(valeur: int) -> str:
+    """Espace fine comme separateur de milliers, convention francaise."""
+    return f"{valeur:,}".replace(",", " ")
+
+
+def figure_incertitude() -> None:
+    """Ce que vaut chaque pourcentage, et quelle incertitude compte vraiment.
+
+    Deux panneaux qui ne disent pas la meme chose. A gauche, le hasard du tirage, celui qui se
+    calcule. A droite, la demonstration que ce n'est pas toujours lui qui domine : pour la part
+    de PME, passer de l'echantillon au recensement a supprime le hasard de tirage et laisse une
+    non-reponse qu'aucune formule ne corrige.
+    """
+    proportions = lire("incertitude-proportions")
+    pme = lire("incertitude-recensement-pme")[0]
+
+    # Libelles courts : le nom complet de la mesure vit dans le CSV, la figure doit rester lisible.
+    courts = {
+        "assistant : intention reconnue": "intention reconnue\n(40 questions)",
+        "assistant : comportement attendu": "comportement attendu\n(40 questions)",
+        "assistant : citation juste": "citation juste\n(448 citations)",
+        "rapprochement : avis avec un candidat": "avis avec un candidat\n(300 avis)",
+        "rapprochement : avis rapproches au seuil 0,5": "avis rapprochés\n(300 avis)",
+        "rapprochement : justesse brute des paires relues": "paires justes\n(56 exploitables)",
+    }
+
+    figure, (gauche, droite) = plt.subplots(1, 2, figsize=(10.5, 4.2))
+
+    positions = list(range(len(proportions)))
+    for position, ligne in zip(positions, proportions, strict=True):
+        taux = float(ligne["taux_pourcent"])
+        bas = float(ligne["wilson_bas"])
+        haut = float(ligne["wilson_haut"])
+        # Les deux mesures parfaites sont tracees dans la couleur d'alerte : c'est la que la
+        # formule naive se trompe le plus lourdement.
+        couleur = SERIE_2 if taux == 100.0 else SERIE_1
+        gauche.plot(
+            [bas, haut], [position, position], color=couleur, linewidth=3, solid_capstyle="butt"
+        )
+        gauche.plot([taux], [position], marker="o", markersize=7, color=couleur)
+        # Les bornes de Wald, en trait fin et legerement decale. Sur les lignes a 100 % elles se
+        # referment sur le point : le trait a une longueur nulle et devient invisible. Un trait
+        # invisible ne se lit pas, donc le cas est marque d'un trait vertical. C'est tout le
+        # propos du panneau, il ne peut pas rester implicite.
+        wald_bas, wald_haut = float(ligne["wald_bas"]), float(ligne["wald_haut"])
+        if wald_haut - wald_bas < 0.05:
+            gauche.plot(
+                [wald_bas],
+                [position + 0.3],
+                marker="|",
+                markersize=8,
+                color=GRIS,
+                markeredgewidth=1,
+            )
+            gauche.text(
+                wald_bas - 1.2,
+                position + 0.32,
+                "largeur nulle",
+                color=GRIS,
+                fontsize=7.5,
+                ha="right",
+                va="center",
+            )
+        else:
+            gauche.plot(
+                [wald_bas, wald_haut],
+                [position + 0.3, position + 0.3],
+                color=GRIS,
+                linewidth=1,
+                solid_capstyle="butt",
+            )
+        # La colonne de valeurs est a une abscisse fixe, hors de la zone des barres : sinon elle
+        # suit la borne haute et vient recouvrir le libelle de la ligne voisine.
+        gauche.text(
+            107,
+            position,
+            f"{virgule(taux)} %   [{virgule(bas)} ; {virgule(haut)}]",
+            color=GRIS,
+            fontsize=8,
+            va="center",
+        )
+
+    gauche.set_yticks(positions)
+    gauche.set_yticklabels([courts[ligne["mesure"]] for ligne in proportions], fontsize=8)
+    gauche.set_xlim(26, 136)
+    gauche.set_xlabel("pourcentage", color=GRIS, fontsize=8.5)
+    gauche.invert_yaxis()
+    soigner(gauche, "Trait épais : Wilson. Trait fin : la formule naïve")
+    # La grille horizontale n'apporte rien sur un graphique a categories : elle est retiree apres
+    # `soigner`, qui l'ajoute par defaut pour les graphiques a barres verticales.
+    gauche.grid(axis="y", visible=False)
+    gauche.grid(axis="x", color=FILET, linewidth=0.6)
+
+    # Panneau de droite : la meme grandeur, mesuree deux fois, avec deux incertitudes de nature
+    # differente. Les deux barres sont sur la meme echelle, donc leurs longueurs se comparent.
+    recense = float(pme["part_pme_sur_resolus_pourcent"])
+    demi_tirage = float(pme["largeur_tirage_echantillon_points"]) / 2
+    borne_basse = float(pme["borne_basse_pourcent"])
+    borne_haute = float(pme["borne_haute_pourcent"])
+
+    droite.plot(
+        [recense - demi_tirage, recense + demi_tirage],
+        [1, 1],
+        color=SERIE_2,
+        linewidth=11,
+        solid_capstyle="butt",
+    )
+    droite.plot(
+        [borne_basse, borne_haute], [0, 0], color=SERIE_1, linewidth=11, solid_capstyle="butt"
+    )
+    droite.plot([recense], [0], marker="|", markersize=15, color="white")
+    droite.axvline(60.0, color=ENCRE, linewidth=1, linestyle=(0, (4, 3)))
+    # Le repere du producteur est annote sous les barres : au-dessus, il croisait le libelle
+    # de la barre haute.
+    droite.text(60.0, -0.7, "60 % publiés par le producteur", color=ENCRE, fontsize=8, ha="center")
+
+    tirage = virgule(float(pme["largeur_tirage_echantillon_points"]))
+    non_reponse = virgule(float(pme["etendue_non_reponse_points"]))
+    # Les libelles sont poses dans l'axe, au-dessus de leur barre, et non sur la graduation de
+    # gauche : un libelle de deux lignes y deborderait sur le panneau voisin.
+    droite.text(
+        52,
+        1.30,
+        f"échantillon de {pme['titulaires_echantillonnes']} titulaires, "
+        f"hasard de tirage : {tirage} points",
+        color=SERIE_2,
+        fontsize=8.5,
+        ha="left",
+    )
+    droite.text(
+        52,
+        0.30,
+        f"recensement de {milliers(int(pme['attributions']))} attributions, "
+        f"non-réponse : {non_reponse} points",
+        color=SERIE_1,
+        fontsize=8.5,
+        ha="left",
+    )
+    droite.set_yticks([])
+    droite.set_ylim(-1.0, 2.0)
+    droite.set_xlim(51, 71)
+    droite.set_xlabel("part des attributions à une PME, en pourcentage", color=GRIS, fontsize=8.5)
+    soigner(droite, "Compter ne supprime pas l'incertitude")
+    droite.grid(axis="y", visible=False)
+    droite.grid(axis="x", color=FILET, linewidth=0.6)
+
+    figure.suptitle(
+        "Quarante sur quarante ne veut pas dire cent pour cent",
+        color=ENCRE,
+        fontsize=12.5,
+        fontweight="bold",
+        x=0.01,
+        ha="left",
+        y=1.04,
+    )
+    legender(
+        figure,
+        "À gauche, intervalles à 95 % des proportions tirées d'un échantillon. Le trait épais est "
+        "l'intervalle de Wilson, le trait fin\ncelui de la formule p ± 1,96 racine(p(1-p)/n) : sur "
+        "les deux mesures parfaites, elle annonce 100 % sans aucune marge, donc la\ncertitude que "
+        "la question suivante sera juste. À droite, la même grandeur mesurée deux fois : "
+        "l'enrichissement appliqué à toute\nla table a supprimé le hasard de tirage, et laissé une "
+        "non-réponse que personne ne comptait. L'unité de comptage est\nl'attribution, soit un "
+        "couple marché-titulaire : un groupement d'entreprises en produit plusieurs pour un même "
+        "marché.\n"
+        "Sources : mesures/resultats/incertitude-proportions.csv et\n"
+        "incertitude-recensement-pme.csv.",
+    )
+    enregistrer(figure, "22-incertitude-des-mesures")
+
+
+def figure_stabilite() -> None:
+    """Une regle calee sur le passe, appliquee a la suite.
+
+    Le panneau de gauche repond a la question posee : la regle ne se degrade pas avec l'age. Il en
+    souleve une autre, plus genante : l'annee 2023 decroche de trente points, et les intervalles
+    interdisent d'y voir du bruit.
+    """
+    annees = lire("stabilite-par-annee")
+    calibrages = lire("stabilite-calibrage")
+
+    figure, (gauche, droite) = plt.subplots(1, 2, figsize=(10.5, 4.0))
+
+    etiquettes = [ligne["annee"] for ligne in annees]
+    positions = list(range(len(annees)))
+    valeurs = [float(ligne["precision_pourcent"]) for ligne in annees]
+    vers_le_bas = [
+        valeur - float(ligne["precision_bas"])
+        for valeur, ligne in zip(valeurs, annees, strict=True)
+    ]
+    vers_le_haut = [
+        float(ligne["precision_haut"]) - valeur
+        for valeur, ligne in zip(valeurs, annees, strict=True)
+    ]
+
+    # La periode de test est ombree : tout ce qui est a droite de la coupure n'a pas servi a
+    # calculer les references.
+    premiere_de_test = next(
+        indice for indice, ligne in enumerate(annees) if ligne["periode"] == "test"
+    )
+    coupure = premiere_de_test - 0.5
+    gauche.axvspan(coupure, len(annees) - 0.4, color=FILET, alpha=0.5, linewidth=0)
+    gauche.text(
+        coupure + 0.12,
+        24,
+        "années postérieures au calage",
+        color=GRIS,
+        fontsize=8,
+        ha="left",
+    )
+
+    gauche.errorbar(
+        positions,
+        valeurs,
+        yerr=[vers_le_bas, vers_le_haut],
+        color=SERIE_1,
+        ecolor=SERIE_1,
+        elinewidth=1.4,
+        capsize=4,
+        marker="o",
+        markersize=7,
+        linewidth=2,
+    )
+    # L'annee qui decroche est nommee : une figure ne laisse pas au lecteur le soin de deviner ce
+    # qu'elle montre.
+    indice_bas = valeurs.index(min(valeurs))
+    gauche.annotate(
+        f"{etiquettes[indice_bas]} : {virgule(valeurs[indice_bas])} %\ncause non établie",
+        xy=(indice_bas, valeurs[indice_bas]),
+        xytext=(indice_bas - 2.0, valeurs[indice_bas] - 15),
+        color=SERIE_2,
+        fontsize=8.5,
+        arrowprops={"arrowstyle": "-", "color": SERIE_2, "linewidth": 1},
+    )
+    gauche.set_xticks(positions)
+    gauche.set_xticklabels(etiquettes)
+    gauche.set_ylim(18, 100)
+    gauche.set_ylabel("concordance avec les anomalies signalées, en %", color=GRIS, fontsize=8.5)
+    soigner(gauche, "La règle ne vieillit pas, mais 2023 décroche")
+
+    # Panneau de droite : les deux calibrages, evalues sur la meme periode de test. L'ecart entre
+    # les deux barres est exactement ce que la fuite ajoutait a la mesure publiee.
+    sur_le_test = [ligne for ligne in calibrages if ligne["periode_evaluee"] == "test"]
+    noms = [
+        "calibrage global\nréférences calculées\nsur toutes les années",
+        "calibrage honnête\nréférences calculées\navant la période jugée",
+    ]
+    hauteurs = [float(ligne["precision_pourcent"]) for ligne in sur_le_test]
+    erreurs = [
+        [h - float(ligne["precision_bas"]) for h, ligne in zip(hauteurs, sur_le_test, strict=True)],
+        [
+            float(ligne["precision_haut"]) - h
+            for h, ligne in zip(hauteurs, sur_le_test, strict=True)
+        ],
+    ]
+    barres = droite.bar(
+        noms, hauteurs, color=[SERIE_2, SERIE_1], width=0.5, yerr=erreurs, capsize=5, ecolor=ENCRE
+    )
+    droite.bar_label(
+        barres,
+        labels=[f"{virgule(hauteur)} %" for hauteur in hauteurs],
+        padding=12,
+        color=GRIS,
+        fontsize=9,
+    )
+    ecart = hauteurs[0] - hauteurs[1]
+    droite.annotate(
+        f"{virgule(ecart)} points\nque la fuite ajoutait",
+        xy=(0.5, max(hauteurs) + 11),
+        color=ENCRE,
+        fontsize=9,
+        ha="center",
+        va="center",
+    )
+    droite.set_ylim(0, 92)
+    droite.set_ylabel("concordance sur la période de test, en %", color=GRIS, fontsize=8.5)
+    droite.tick_params(axis="x", labelsize=8)
+    soigner(droite, "Ce que coûtait le calage sur tout l'historique")
+
+    figure.suptitle(
+        "Juger des marchés avec une médiane qu'ils ont aidé à former",
+        color=ENCRE,
+        fontsize=12.5,
+        fontweight="bold",
+        x=0.01,
+        ha="left",
+        y=1.04,
+    )
+    legender(
+        figure,
+        "Règle de prix au seuil de production (écart normalisé supérieur à 4, familles de 30 "
+        "marchés minimum), évaluée contre les\nanomalies signalées par le producteur des données. "
+        "Apprentissage 2019-2023, test 2024-2026. Barres d'erreur : intervalle de\nWilson à 95 %. "
+        "À gauche, aucune dégradation avec l'âge de la règle, mais un décrochage de 2023 que "
+        "l'intervalle interdit\nd'attribuer au hasard. À droite, les deux calibrages évalués sur "
+        "la même période : la mesure publiée profitait de la fuite.\n"
+        "Sources : mesures/resultats/stabilite-par-annee.csv et stabilite-calibrage.csv.",
+    )
+    enregistrer(figure, "23-stabilite-temporelle")
+
+
 def main() -> None:
     print("Figures generees depuis mesures/resultats/ :")
     figure_total_annuel()
@@ -1263,6 +1569,8 @@ def main() -> None:
     figure_modele_vs_regles()
     figure_recherche()
     figure_assistant()
+    figure_incertitude()
+    figure_stabilite()
     print(f"\nDossier : {chemin_lisible(FIGURES)}")
 
 

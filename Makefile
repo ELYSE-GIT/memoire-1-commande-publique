@@ -203,6 +203,15 @@ bench-assistant:
 bench-precision:
 	uv run python mesures/precision_rapprochement.py
 
+## bench-incertitude : intervalle de confiance de chaque pourcentage tire d'un echantillon
+## (Wilson, Wald et binomial exact compares, plus un bootstrap stratifie sur la justesse)
+bench-incertitude:
+	uv run python -m mesures.incertitude
+
+## bench-stabilite : la regle de detection calee sur 2019-2023, appliquee a 2024-2026
+bench-stabilite:
+	uv run python -m mesures.stabilite
+
 ## figures : trace les figures du memoire a partir des agregats mesures
 figures:
 	uv run python mesures/figures.py
@@ -217,6 +226,7 @@ notebooks:
 	cd analyses && uv run jupyter execute --inplace 08-modelisation-detection.ipynb
 	cd analyses && uv run --env-file ../.env jupyter execute --inplace \
 		09-assistant-reponses-sourcees.ipynb
+	cd analyses && uv run jupyter execute --inplace 10-incertitude-et-stabilite.ipynb
 	$(MAKE) verif-notebooks
 
 ## verif-notebooks : controle que chaque notebook du depot a ete joue en entier, sans erreur

@@ -12,6 +12,8 @@ Exploration des donnees. C'est le brouillon du projet, et la preuve de la demarc
 | `06-api-recherche-entreprises.ipynb` | resolution des SIRET, part des PME, demonstration du biais de selection | fait, 2026-09-21 |
 | `07-rapprochement-des-sources.ipynb` | relier le BOAMP aux DECP : entonnoir, reglage des parametres, justesse mesuree | fait, 2026-09-27 |
 | `08-modelisation-detection.ipynb` | dix methodes de detection comparees a budget d'alertes egal, hyperparametres manipulables | fait, 2026-09-29 |
+| `09-assistant-reponses-sourcees.ipynb` | repondre en citant ses sources : trois versions, deux fausses pistes conservees | fait, 2026-10-21 |
+| `10-incertitude-et-stabilite.ipynb` | ce que vaut chaque pourcentage, et une regle calee sur le passe appliquee a la suite | fait, 2026-10-21 |
 
 Un script accompagne ces notebooks : `verifier_notebooks.py`, lance par `make verif-notebooks`. Il
 controle que chaque cellule est du Python valide, qu'aucune ne porte de sortie d'erreur et que
@@ -56,3 +58,17 @@ direct, pendant une demonstration, sans avoir a relire tout le notebook.
   portent des montants contradictoires. Cela a rendu une mesure non reproductible avant d'etre vu.
 - Une graine fixe ne suffit pas a rendre un calcul reproductible : il faut aussi un ordre de lignes
   fixe, parce que DuckDB n'en garantit aucun sans `order by`.
+- Quarante intentions reconnues sur quarante ne veut pas dire 100 % : l'intervalle a 95 % va de
+  91,2 a 100. La formule la plus repandue, `p ± 1,96 racine(p(1-p)/n)`, annonce ici 100 % sans
+  marge, et une proportion negative sur un succes sur cent.
+- Un bootstrap peut rendre un intervalle de largeur nulle quand l'echantillon n'a aucune variation.
+  Cela se lit comme une certitude et signale l'inverse : le cas est detecte et marque.
+- La regle de detection etait calee sur toutes les annees, y compris celles qu'elle juge. Calee sur
+  2019-2023 et appliquee a 2024-2026, sa concordance passe de 73,3 a **69,3 %** : la fuite valait
+  4 points.
+- La part de PME est desormais comptee sur toute la table, 60,8 % des **attributions** (un
+  groupement d'entreprises en produit plusieurs pour un marche), et non plus estimee sur 170
+  titulaires. A l'echelle du marche, 56,5 % ont au moins une PME. L'incertitude n'a pas disparu : elle est passee de 14,5 points de hasard de tirage a
+  6,8 points de non-reponse, que nulle formule ne corrige.
+- L'annee 2023 decroche de 28 points de concordance, sans explication etablie. La variation entre
+  annees depasse de sept fois l'effet de fuite que la mesure cherchait.
