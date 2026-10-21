@@ -16,7 +16,7 @@ Cible : 40 à 60 pages, hors annexes.
 | 6 | Architecture retenue | le trajet de la donnée, service par service, avec les alternatives écartées | 6 | à écrire |
 | 7 | Ingénierie des données | collecte, stockage, transformation, qualité | 6 | phase 3 et 4 |
 | 8 | Détection des marchés atypiques | de la règle au modèle, et ce que la mesure justifie | 6 | phase 5 |
-| 9 | Recherche et assistant | du mot-clé à la réponse sourcée, l'escalier de complexité | 5 | phase 6 |
+| 9 | Recherche et assistant | du mot-clé à la réponse sourcée, l'escalier de complexité | 5 | **rédigé** |
 | 10 | Mise en production et sécurité | VPS, conteneurs, supervision, sauvegardes | 4 | phase 9 |
 | 11 | Mesures, coûts et comparaison au marché | performance, qualité, euros par mois, face aux offres payantes | 5 | phase 8 |
 | 12 | Difficultés rencontrées et solutions | le journal de bord, transformé en enseignements | 4 | alimenté en continu |

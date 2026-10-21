@@ -1,0 +1,9 @@
+choix,version,millisecondes,verdict
+agregats du comptage,"une requete, cinq colonnes",301.5,"retenu : trois requetes, chacune demandee quand elle sert"
+agregats du comptage,retenu : trois colonnes seulement,101.0,
+valeurs distinctes d'un lieu,select distinct sur deux millions de lignes,44.8,retenu : parcours de l'index de valeur en valeur
+valeurs distinctes d'un lieu,retenu : parcours de l'index (loose index scan),0.6,
+periode couverte,min et max sur la colonne annee,345.0,"retenu : min et max sur la date, qui est indexee"
+periode couverte,retenu : min et max sur la date de notification,0.5,
+trois citations,array_agg trie sur l'ensemble filtre,325.3,retenu : order by avec limit 3
+trois citations,retenu : order by avec limit 3,105.3,

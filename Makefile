@@ -87,7 +87,8 @@ PSQL = docker compose exec -T base sh -c 'psql -q -v ON_ERROR_STOP=1 -U "$$POSTG
 
 ## base-init : cree extensions, configuration plein texte francaise et tables (sans les index)
 base-init:
-	@for fichier in base/schema/001-* base/schema/002-* base/schema/003-* base/schema/004-*; do \
+	@for fichier in base/schema/001-* base/schema/002-* base/schema/003-* base/schema/004-* \
+	                base/schema/006-*; do \
 		echo "--- $$fichier"; \
 		$(PSQL) < $$fichier; \
 	done
@@ -96,14 +97,18 @@ base-init:
 charger:
 	uv run --env-file .env python services/publication/vers_postgres.py
 
-## indexer : construit les index, a lancer APRES le chargement
+## indexer : construit les index et le vocabulaire, a lancer APRES le chargement
+## (le vocabulaire est une donnee derivee de la colonne de recherche, comme un index : il doit
+## etre reconstruit exactement quand les index le sont, sinon les frequences mentent)
 indexer:
 	@echo "--- base/schema/005-index.sql"
 	@$(PSQL) < base/schema/005-index.sql
+	@echo "--- base/schema/007-remplir-vocabulaire.sql"
+	@$(PSQL) < base/schema/007-remplir-vocabulaire.sql
 
 ## base-vider : vide les deux tables sans toucher au schema, pour recharger proprement
 base-vider:
-	@echo 'truncate table marches, signaux restart identity;' | $(PSQL)
+	@echo 'truncate table marches, signaux, vocabulaire restart identity;' | $(PSQL)
 	@echo "tables videes"
 
 ## psql : ouvre une console SQL sur la base (quitter avec \q)
@@ -189,6 +194,11 @@ bench-modele:
 bench-recherche:
 	uv run --env-file .env python mesures/recherche.py
 
+## bench-assistant : mesure l'assistant a reponses sourcees sur les 40 questions du jeu
+## (verifie aussi chaque citation et chaque chiffre : voir l'en-tete de mesures/assistant.py)
+bench-assistant:
+	uv run --env-file .env python -m mesures.assistant
+
 ## bench-precision : croise les verdicts relus a la main avec le balayage des seuils
 bench-precision:
 	uv run python mesures/precision_rapprochement.py
@@ -205,6 +215,8 @@ notebooks:
 	cd analyses && uv run jupyter execute --inplace 01-exploration-decp.ipynb
 	cd analyses && uv run jupyter execute --inplace 02-statistiques-descriptives.ipynb
 	cd analyses && uv run jupyter execute --inplace 08-modelisation-detection.ipynb
+	cd analyses && uv run --env-file ../.env jupyter execute --inplace \
+		09-assistant-reponses-sourcees.ipynb
 	$(MAKE) verif-notebooks
 
 ## verif-notebooks : controle que chaque notebook du depot a ete joue en entier, sans erreur

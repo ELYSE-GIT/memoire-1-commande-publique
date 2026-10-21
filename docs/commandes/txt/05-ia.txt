@@ -1,6 +1,221 @@
 # 05. Indexation, recherche et assistant
 
-A remplir pendant la phase 5.
+Tout ce fichier tourne **sur le Mac**, avec le conteneur PostgreSQL demarre. Rien ne demande
+Internet, rien ne demande le VPS.
 
-Chaque commande ajoutee ici precise : ce qu'elle fait, ou la lancer (Mac ou VPS), le resultat
-attendu et la duree approximative.
+L'ordre compte : on ne peut pas indexer une table vide, ni interroger un index absent.
+
+```bash
+make vm-up        # demarre la machine virtuelle a conteneurs (Colima)
+make up           # demarre PostgreSQL
+make base-init    # cree les extensions, la configuration francaise et les tables
+make charger      # copie la couche or de DuckDB vers PostgreSQL, environ 2 millions de lignes
+make indexer      # construit les index ET le vocabulaire
+```
+
+A la fin de la session :
+
+```bash
+make down         # arrete PostgreSQL
+make vm-down      # arrete la machine virtuelle
+```
+
+---
+
+## La carte
+
+| Commande | Ce qu'elle fait | Duree |
+|---|---|---|
+| `make base-init` | cree extensions, configuration plein texte, tables, vocabulaire | environ 5 s |
+| `make charger` | copie la couche or vers PostgreSQL | environ 3 min |
+| `make indexer` | construit les index et remplit le vocabulaire | environ 4 min |
+| `make bench-recherche` | mesure la recherche, PostgreSQL contre DuckDB | environ 2 min |
+| `make bench-assistant` | mesure l'assistant sur 40 questions, et verifie ses citations | environ 4 min |
+| `make psql` | ouvre une console SQL sur la base | immediat |
+| `make base-vider` | vide les tables sans toucher au schema | environ 10 s |
+
+---
+
+## `make base-init`
+
+**Ce que ca fait** : installe les extensions (`unaccent`, `pg_trgm`, `vector`), cree la
+configuration de recherche francaise `public.francais`, puis les tables `marches`, `signaux` et
+`vocabulaire`.
+
+**Resultat attendu** : la configuration affiche une preuve de son fonctionnement, deux vecteurs
+identiques pour « Rénovation » et « renovation ». C'est le seul endroit du projet ou un script de
+schema affiche quelque chose : la demonstration vaut mieux que l'affirmation.
+
+**Duree** : environ 5 secondes.
+
+**Si ca echoue** : voir `08-depannage.md`, section « role does not exist ».
+
+---
+
+## `make charger`
+
+**Ce que ca fait** : lit la couche or dans DuckDB et l'ecrit dans PostgreSQL par paquets de
+50 000 lignes, avec `COPY` depuis l'entree standard.
+
+**Resultat attendu** : 1 999 474 lignes dans `marches`, autant dans `signaux`.
+
+**Duree** : environ 3 minutes.
+
+**Garde-fou** : la commande **refuse de charger dans une table non vide**. Pour recharger, lancer
+`make base-vider` d'abord. Sans cette regle, un second chargement doublerait silencieusement
+chaque ligne, et tous les comptages du memoire deviendraient faux.
+
+---
+
+## `make indexer`
+
+**Ce que ca fait** : deux choses, et c'est volontaire.
+
+1. Construit les index : GIN sur la colonne de recherche, B-tree sur les identifiants et les
+   lieux, BRIN sur l'annee, trigrammes sur les noms, et un index partiel sur les marches
+   signales.
+2. Remplit la table `vocabulaire`, qui donne la frequence de chaque mot de l'index.
+
+Les deux sont groupes parce que le vocabulaire est une **donnee derivee de la colonne de
+recherche, exactement comme un index**. Reconstruire l'un sans l'autre laisserait des frequences
+qui mentent, et l'assistant ecarterait les mauvais mots.
+
+**Resultat attendu** : un tableau des tailles. Les chiffres du 21 octobre 2026 :
+
+| objet | taille |
+|---|---|
+| table `marches` | 1 386 Mo |
+| table `signaux` | 320 Mo |
+| index GIN de recherche | 115 Mo |
+| index B-tree sur la region | 14 Mo |
+| index partiel des marches signales | 408 ko |
+| index BRIN sur l'annee | 56 ko |
+
+Les deux dernieres lignes sont les plus interessantes du tableau : un index partiel et un index
+BRIN font le meme travail que leurs equivalents complets pour mille fois moins d'espace, quand les
+conditions s'y pretent. Ces conditions sont expliquees dans `base/schema/005-index.sql`.
+
+**Duree** : environ 4 minutes, dont 8 secondes pour le vocabulaire.
+
+---
+
+## `make bench-recherche`
+
+**Ce que ca fait** : mesure six moteurs de recherche sur 30 questions. Deux moteurs (PostgreSQL et
+DuckDB), deux semantiques (tous les mots, au moins un mot), plus la cascade et la version DuckDB
+sans nettoyage de la question.
+
+**Resultat attendu** : la cascade « tous les mots, puis au moins un mot » repond en environ 8 ms
+sans jamais rester muette.
+
+**Duree** : environ 2 minutes.
+
+**Sortie** : `recherche-par-moteur.csv`, `recherche-par-question.csv`, `recherche-cout.csv`,
+`recherche-resultats.csv`.
+
+Le dernier fichier porte une colonne `pertinent` **vide**, a remplir a la main. Tant qu'elle
+l'est, ce banc mesure la vitesse et le silence, pas la qualite.
+
+---
+
+## `make bench-assistant`
+
+**Ce que ca fait** : pose les 40 questions de `mesures/verification/questions-assistant.csv`,
+six fois chacune, et verifie la reponse de trois facons automatiques.
+
+1. **Les citations.** Chaque numero de marche cite est recherche **avec le filtre annonce**. S'il
+   n'y est pas, la reponse cite une source qui ne la soutient pas.
+2. **La coherence.** Six regles par reponse : le nombre de marches a montant publie ne depasse pas
+   le nombre de marches, la somme par titulaire ne depasse pas le total, une reponse qui annonce
+   des marches cite au moins une source, et ainsi de suite.
+3. **Le recomptage.** Le meme comptage est redemande apres avoir interdit les index au
+   planificateur. Meme semantique, autre machinerie.
+
+Le banc rejoue aussi **les deux versions de chaque decision de performance**, pour que les
+chiffres « avant » soient remesures et non recopies.
+
+**Resultat attendu**, mesure du 21 octobre 2026 :
+
+| mesure | valeur |
+|---|---|
+| intentions reconnues | 40 sur 40 |
+| comportement attendu (repondre ou refuser) | 40 sur 40 |
+| citations verifiees | 448 |
+| citations fausses | **0** |
+| regles de coherence rompues | **0** |
+| recomptages divergents | **0** |
+| latence mediane | 18 ms |
+| latence la plus lente | de 0,3 a 0,4 s selon l'execution |
+| cout | 0,0002 euro pour mille questions |
+
+**Duree** : environ 4 minutes. Le recomptage sans index est ce qui prend le plus de temps, et
+c'est normal : il demande a PostgreSQL de travailler mal, exprès.
+
+**Sortie** : `assistant-par-question.csv`, `assistant-resume.csv`, `assistant-reponses.csv`,
+`assistant-cout-des-choix.csv`.
+
+Le fichier `assistant-reponses.csv` se lit directement : une ligne par question, avec la reponse
+en clair, le filtre applique et les marches cites. C'est le fichier a ouvrir pour verifier a la
+main ce que la machine a verifie toute seule.
+
+---
+
+## Poser une question a la main
+
+Pour la demonstration, ou pour essayer une tournure :
+
+```bash
+uv run --env-file .env python -c "
+import os, psycopg
+from services.assistant.reponse_sourcee import charger_lexiques, repondre
+c = psycopg.connect(f\"host=localhost port={os.environ['POSTGRES_PORT']} dbname={os.environ['POSTGRES_DB']} user={os.environ['POSTGRES_USER']} password={os.environ['POSTGRES_PASSWORD']}\")
+cur = c.cursor(); lex = charger_lexiques(cur)
+r = repondre(cur, 'qui a remporte les marches de voirie en Ile-de-France en 2023', lex)
+print(r.phrase); print('filtre :', r.filtre); print('sources :', r.citations[:3])
+"
+```
+
+Plus confortable pour explorer : le notebook `analyses/09-assistant-reponses-sourcees.ipynb`, qui
+lit `.env` tout seul et se manipule en direct.
+
+---
+
+## Le vocabulaire, pour comprendre une reponse
+
+Quand l'assistant ecarte un mot, il dit pourquoi. Pour verifier son chiffre :
+
+```bash
+make psql
+```
+
+La table ne contient que des **lexemes**, c'est-a-dire des mots racinises : « travaux » y est
+stocke « traval ». Il faut donc raciniser le mot avant de le chercher, et demander la racinisation
+a PostgreSQL plutot que de la deviner.
+
+```sql
+select lexeme, marches, round(100.0 * marches / echantillon, 2) as pourcent
+from vocabulaire
+where lexeme = split_part(to_tsvector('public.francais', 'travaux')::text, '''', 2);
+```
+
+```
+ lexeme | marches | pourcent
+--------+---------+----------
+ traval |   17375 |    17.30
+```
+
+Remplacer `'travaux'` par le mot a verifier. Pour comparer plusieurs mots d'un coup :
+
+```sql
+select lexeme, marches, round(100.0 * marches / echantillon, 2) as pourcent
+from vocabulaire
+where lexeme in ('traval', 'voir', 'scolair', 'a', 'le')
+order by marches desc;
+```
+
+**A quoi s'attendre** : « traval » autour de 17 %, « a » autour de 23 %. Le second surprend, et
+c'est explique dans `base/schema/006-table-vocabulaire.sql` : la recherche insensible aux accents
+a fait entrer la preposition « à » dans l'index.
+
+Un mot absent de cette table est un mot qu'aucun marche ne contient. C'est ce qui fait refuser
+l'assistant quand il s'agit du seul terme de recherche de la question.
