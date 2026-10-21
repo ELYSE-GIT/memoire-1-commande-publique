@@ -1,0 +1,41 @@
+id,question,intention_attendue,intention_trouvee,intention_juste,comportement_attendu,comportement_observe,comportement_juste,marches_annonces,recompte_sans_index,recompte_identique,citations,citations_fausses,regles_de_coherence_rompues,latence_p50_ms,latence_p95_ms,mots_perdus
+A01,combien de marches de voirie en 2023,comptage,comptage,oui,repond,repond,oui,5691,5691,oui,3,0,,51.3,53.5,
+A02,combien de marches en 2023,comptage,comptage,oui,repond,repond,oui,272057,272057,oui,3,0,,265.1,292.1,
+A03,nombre de marches de restauration scolaire,comptage,comptage,oui,repond,repond,oui,11723,11723,oui,3,0,,18.0,20.0,
+A04,combien de marches d'assurance en Bretagne,comptage,comptage,oui,repond,repond,oui,2415,2415,oui,3,0,,17.8,20.0,
+A05,quel montant total pour la restauration scolaire en 2023,montant,montant,oui,repond,repond,oui,1843,1843,oui,3,0,,31.3,72.9,quel
+A06,quel est le cout des marches de voirie en Ile-de-France,montant,montant,oui,repond,repond,oui,3580,3580,oui,3,0,,50.8,55.1,quel
+A07,budget consacre aux espaces verts,montant,montant,oui,repond,repond,oui,31236,31236,oui,3,0,,95.7,216.5,consacre
+A08,combien coutent les marches de nettoyage,montant,montant,oui,repond,repond,oui,30294,30294,oui,3,0,,76.4,112.3,
+A09,qui a remporte les marches de voirie en Ile-de-France en 2023,titulaires,titulaires,oui,repond,repond,oui,461,461,oui,33,0,,63.1,73.6,
+A10,qui a obtenu les marches de restauration scolaire,titulaires,titulaires,oui,repond,repond,oui,11723,11723,oui,33,0,,48.0,50.4,
+A11,quelles entreprises fournissent des logiciels,titulaires,titulaires,oui,repond,repond,oui,54,54,oui,23,0,,9.1,10.7,
+A12,quels sont les titulaires des marches d'assurance,titulaires,titulaires,oui,repond,repond,oui,38946,38946,oui,33,0,,131.3,278.4,quels
+A13,qui fournit des repas aux ecoles de Rennes,titulaires,titulaires,oui,repond,repond,oui,5,5,oui,8,0,,13.3,21.5,
+A14,qui achete le plus de logiciels,acheteurs,acheteurs,oui,repond,repond,oui,14922,14922,oui,33,0,,67.9,80.4,
+A15,quels acheteurs passent des marches de voirie,acheteurs,acheteurs,oui,repond,repond,oui,42061,42061,oui,33,0,,148.4,164.5,passent
+A16,quelles collectivites achetent des espaces verts,acheteurs,acheteurs,oui,repond,repond,oui,31236,31236,oui,33,0,,143.8,202.7,achetent
+A17,quelles communes achetent des fournitures scolaires,acheteurs,acheteurs,oui,repond,repond,oui,7994,7994,oui,33,0,,51.5,62.2,achetent
+A18,quels marches sont signales dans les travaux de toiture,signales,signales,oui,repond,repond,oui,16158,16158,oui,10,0,,198.6,242.3,quels
+A19,marches atypiques de voirie,signales,signales,oui,repond,repond,oui,42061,42061,oui,10,0,,156.0,192.3,
+A20,y a-t-il des montants anormaux en assurance,signales,signales,oui,repond,repond,oui,344,344,oui,10,0,,11.0,11.9,
+A21,entretien des espaces verts a Rennes,extraits,extraits,oui,repond,repond,oui,36,36,oui,10,0,,12.0,20.8,
+A22,refection de la toiture d'une ecole,extraits,extraits,oui,repond,repond,oui,437,437,oui,10,0,,13.1,15.0,
+A23,fourniture de repas pour la restauration scolaire,extraits,extraits,oui,repond,repond,oui,1162,1162,oui,10,0,,18.1,20.3,
+A24,assurance dommages aux biens,extraits,extraits,oui,repond,repond,oui,5489,5489,oui,10,0,,21.9,23.6,
+A25,quel est le meilleur fournisseur de voirie,refus,refus,oui,refuse,refuse,oui,,,,0,0,,0.0,0.0,
+A26,quelle entreprise est la plus fiable,refus,refus,oui,refuse,refuse,oui,,,,0,0,,0.0,0.0,
+A27,qui a fraude sur les marches de voirie,refus,refus,oui,refuse,refuse,oui,,,,0,0,,0.0,0.0,
+A28,quels titulaires sont corrompus,refus,refus,oui,refuse,refuse,oui,,,,0,0,,0.0,0.0,
+A29,quelle entreprise me recommandez-vous,refus,refus,oui,refuse,refuse,oui,,,,0,0,,0.0,0.0,
+A30,combien de marches de voirie en 2030,refus,refus,oui,refuse,refuse,oui,,,,0,0,,0.0,0.0,
+A31,combien de marches en 1998,refus,refus,oui,refuse,refuse,oui,,,,0,0,,0.0,0.0,
+A32,zzzzz qqqq,refus,refus,oui,refuse,refuse,oui,,,,0,0,,0.3,0.9,zzzzz qqqq
+A33,combien,refus,refus,oui,refuse,refuse,oui,,,,0,0,,0.3,0.4,
+A34,marches de renovation energetique en Occitanie,extraits,extraits,oui,repond,repond,oui,1586,1586,oui,10,0,,37.3,38.0,
+A35,qui a remporte les marches d'eclairage public dans le Rhone,titulaires,titulaires,oui,repond,repond,oui,242,242,oui,33,0,,15.9,17.0,
+A36,combien de marches de transport scolaire en Nouvelle-Aquitaine en 2024,comptage,comptage,oui,repond,repond,oui,394,394,oui,3,0,,16.2,43.4,
+A37,travaux de voirie,extraits,extraits,oui,repond,repond,oui,42061,42061,oui,10,0,,104.8,402.6,
+A38,qui fournit des vetements de travail,titulaires,titulaires,oui,repond,repond,oui,5244,5244,oui,33,0,,21.5,25.8,
+A39,montant des marches de deneigement,montant,montant,oui,repond,repond,oui,2082,2082,oui,3,0,,10.0,11.0,
+A40,combien de marches de dsfgdsfg en 2023,refus,refus,oui,refuse,refuse,oui,,,,0,0,,0.4,1.0,dsfgdsfg

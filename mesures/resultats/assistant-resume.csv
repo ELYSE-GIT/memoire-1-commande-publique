@@ -1,0 +1,12 @@
+mesure,valeur,unite,commentaire
+chargement des lexiques,248.3,ms,"demarrage du service : 24 regions, 107 departements, 74 055 lexemes. Mesure a 48 050 ms avant les corrections du 21 octobre 2026"
+questions,40,questions,"jeu versionne, relu a la main"
+intention reconnue,100.0,%,40 sur 40
+comportement attendu,100.0,%,"repondre quand il faut, refuser quand il faut"
+citations verifiees,448,citations,chacune recherchee avec le filtre annonce
+citations fausses,0,citations,une seule suffirait a disqualifier la methode
+regles de coherence rompues,0,questions,six regles verifiees par reponse
+recomptages divergents,0,questions,"meme comptage, planificateur prive d'index"
+latence mediane,18.1,ms,mediane des p50 par question
+latence la plus lente,402.6,ms,travaux de voirie
+cout,0.00022,euros / 1000 questions,temps de calcul au prix d'un VPS a 12 euros par mois

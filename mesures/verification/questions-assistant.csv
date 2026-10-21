@@ -1,0 +1,41 @@
+id,question,intention_attendue,comportement_attendu,commentaire
+A01,combien de marches de voirie en 2023,comptage,repond,comptage avec texte et annee
+A02,combien de marches en 2023,comptage,repond,aucun texte : le cas qui a revele l'absence d'index sur l'annee
+A03,nombre de marches de restauration scolaire,comptage,repond,tournure sans le mot combien
+A04,combien de marches d'assurance en Bretagne,comptage,repond,comptage avec region
+A05,quel montant total pour la restauration scolaire en 2023,montant,repond,le mot total doit etre consomme par l'intention
+A06,quel est le cout des marches de voirie en Ile-de-France,montant,repond,synonyme de montant
+A07,budget consacre aux espaces verts,montant,repond,autre synonyme
+A08,combien coutent les marches de nettoyage,montant,repond,combien plus coute : une somme et non un comptage
+A09,qui a remporte les marches de voirie en Ile-de-France en 2023,titulaires,repond,la question la plus courante
+A10,qui a obtenu les marches de restauration scolaire,titulaires,repond,synonyme de remporter
+A11,quelles entreprises fournissent des logiciels,titulaires,repond,tournure par le mot entreprise
+A12,quels sont les titulaires des marches d'assurance,titulaires,repond,tournure par le mot titulaire
+A13,qui fournit des repas aux ecoles de Rennes,titulaires,repond,texte plus nom de commune
+A14,qui achete le plus de logiciels,acheteurs,repond,le superlatif appartient a l'intention
+A15,quels acheteurs passent des marches de voirie,acheteurs,repond,tournure par le mot acheteur
+A16,quelles collectivites achetent des espaces verts,acheteurs,repond,synonyme d'acheteur
+A17,quelles communes achetent des fournitures scolaires,acheteurs,repond,autre synonyme
+A18,quels marches sont signales dans les travaux de toiture,signales,repond,jointure avec la table des signaux
+A19,marches atypiques de voirie,signales,repond,synonyme de signale
+A20,y a-t-il des montants anormaux en assurance,signales,repond,tournure interrogative
+A21,entretien des espaces verts a Rennes,extraits,repond,aucune intention reconnue : on retombe sur la recherche
+A22,refection de la toiture d'une ecole,extraits,repond,recherche par mots cles seule
+A23,fourniture de repas pour la restauration scolaire,extraits,repond,vocabulaire administratif courant
+A24,assurance dommages aux biens,extraits,repond,expression figee du domaine
+A25,quel est le meilleur fournisseur de voirie,refus,refuse,demande une appreciation que les donnees ne portent pas
+A26,quelle entreprise est la plus fiable,refus,refuse,meme refus par un autre mot
+A27,qui a fraude sur les marches de voirie,refus,refuse,demande une qualification penale
+A28,quels titulaires sont corrompus,refus,refuse,accusation : le refus est le comportement correct
+A29,quelle entreprise me recommandez-vous,refus,refuse,demande un conseil
+A30,combien de marches de voirie en 2030,refus,refuse,annee hors de la periode chargee
+A31,combien de marches en 1998,refus,refuse,annee anterieure a la periode chargee
+A32,zzzzz qqqq,refus,refuse,aucun mot du vocabulaire
+A33,combien,refus,refuse,question vide apres analyse
+A34,marches de renovation energetique en Occitanie,extraits,repond,texte plus region
+A35,qui a remporte les marches d'eclairage public dans le Rhone,titulaires,repond,texte plus departement
+A36,combien de marches de transport scolaire en Nouvelle-Aquitaine en 2024,comptage,repond,texte plus region plus annee
+A37,travaux de voirie,extraits,repond,le mot travaux depasse le plafond de frequence et sera ecarte
+A38,qui fournit des vetements de travail,titulaires,repond,vocabulaire peu frequent
+A39,montant des marches de deneigement,montant,repond,mot rare mais present dans le vocabulaire
+A40,combien de marches de dsfgdsfg en 2023,refus,refuse,le seul mot de contenu est inconnu : repondre sur l annee seule repondrait a une autre question

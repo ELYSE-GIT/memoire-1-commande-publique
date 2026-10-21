@@ -204,6 +204,33 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
         ["10000", "modele_oriente", "70.9"],
         ["10000", "hasard", "2.7"],
     ]
+    # L'assistant : deux fichiers, parce que la figure 21 croise le cout des choix et le resume
+    # des verifications. Les valeurs sont celles du 21 octobre 2026, reduites a l'essentiel.
+    contenus["assistant-cout-des-choix"] = [
+        ["choix", "version", "millisecondes", "verdict"],
+        ["agregats du comptage", "une requete, cinq colonnes", "589.5", "retenu : trois requetes"],
+        ["agregats du comptage", "retenu : trois colonnes seulement", "103.6", ""],
+        ["valeurs distinctes d'un lieu", "select distinct", "46.2", "retenu : parcours d'index"],
+        ["valeurs distinctes d'un lieu", "retenu : parcours de l'index", "0.7", ""],
+        ["periode couverte", "min et max sur la colonne annee", "346.6", "retenu : sur la date"],
+        ["periode couverte", "retenu : min et max sur la date", "0.6", ""],
+        ["trois citations", "array_agg trie sur l'ensemble", "330.0", "retenu : limit 3"],
+        ["trois citations", "retenu : order by avec limit 3", "103.0", ""],
+    ]
+    contenus["assistant-resume"] = [
+        ["mesure", "valeur", "unite", "commentaire"],
+        ["chargement des lexiques", "533.7", "ms", "demarrage du service"],
+        ["questions", "40", "questions", "jeu versionne"],
+        ["intention reconnue", "100.0", "%", "40 sur 40"],
+        ["comportement attendu", "100.0", "%", "repondre ou refuser"],
+        ["citations verifiees", "448", "citations", "avec le filtre annonce"],
+        ["citations fausses", "0", "citations", "une seule disqualifierait la methode"],
+        ["regles de coherence rompues", "0", "questions", "six regles par reponse"],
+        ["recomptages divergents", "0", "questions", "planificateur prive d'index"],
+        ["latence mediane", "18.1", "ms", "mediane des p50"],
+        ["latence la plus lente", "290.9", "ms", "combien de marches en 2023"],
+        ["cout", "0.00021", "euros / 1000 questions", "au prix d'un VPS a 12 euros"],
+    ]
     contenus["rapprochement-precision"] = [
         [
             "seuil_objet",
@@ -226,5 +253,5 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     figures.main()
 
     produites = sorted(chemin.name for chemin in sorties.glob("*.svg"))
-    assert len(produites) == 20, f"vingt figures attendues, obtenu : {produites}"
+    assert len(produites) == 21, f"vingt et une figures attendues, obtenu : {produites}"
     assert all((sorties / nom.replace(".svg", ".png")).exists() for nom in produites)

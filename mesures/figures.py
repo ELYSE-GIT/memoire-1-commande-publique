@@ -1067,6 +1067,179 @@ def figure_recherche() -> None:
     enregistrer(figure, "20-recherche-latence-et-silence")
 
 
+def figure_assistant() -> None:
+    """Le cout de chaque choix, remesure dans les deux sens, et les verifications automatiques.
+
+    Deux panneaux, parce que la figure doit porter les deux arguments du composant et qu'ils sont
+    de nature differente.
+
+    A gauche, ce que chaque decision a coute ou economise. Les deux versions de chaque choix sont
+    rejouees a chaque passage du banc, donc la barre « avant » n'est pas un souvenir : elle est
+    remesuree. C'est la regle appliquee au modele de detection ecarte en phase 5.
+
+    A droite, ce qui justifie de ne pas avoir mis de modele de langue : une reponse construite a
+    partir d'un filtre explicite se verifie par une machine, et 448 verifications passent.
+    """
+    choix = lire("assistant-cout-des-choix")
+    resume = {ligne["mesure"]: ligne for ligne in lire("assistant-resume")}
+
+    # Le CSV porte des cles de code, sans accents, parce qu'il est lu par des tests. Une figure
+    # est lue par un humain : les libelles sont traduits ici, a un seul endroit.
+    LIBELLES = {
+        "agregats du comptage": "agrégats du comptage",
+        "valeurs distinctes d'un lieu": "valeurs distinctes\nd'une région",
+        "periode couverte": "période couverte\npar les données",
+        "trois citations": "les trois marchés cités",
+    }
+
+    def virgule(valeur: str) -> str:
+        """Le separateur decimal francais. Une figure de memoire ne s'ecrit pas en anglais."""
+        return str(valeur).replace(".", ",")
+
+    # Les paires, dans l'ordre ou elles ont ete decidees. La version retenue porte le mot
+    # « retenu » dans sa colonne, ce qui evite de dupliquer l'information ici.
+    paires: list[tuple[str, float, float]] = []
+    for ligne in choix:
+        if not ligne["version"].startswith("retenu"):
+            avant = float(ligne["millisecondes"])
+            apres = next(
+                float(autre["millisecondes"])
+                for autre in choix
+                if autre["choix"] == ligne["choix"] and autre["version"].startswith("retenu")
+            )
+            paires.append((ligne["choix"], avant, apres))
+
+    figure, (gauche, droite) = plt.subplots(1, 2, figsize=(10.5, 4.4))
+
+    position = list(range(len(paires)))
+    largeur = 0.38
+    gauche.barh(
+        [rang + largeur / 2 for rang in position],
+        [avant for _, avant, _ in paires],
+        largeur,
+        color=SERIE_2,
+    )
+    gauche.barh(
+        [rang - largeur / 2 for rang in position],
+        [apres for _, _, apres in paires],
+        largeur,
+        color=SERIE_1,
+    )
+    gauche.set_xscale("log")
+    # Les deux series sont nommees sur la premiere paire seulement, ce qui remplace une legende.
+    # Toute legende posee dans le cadre masquait une paire, et posee au-dessus elle recouvrait le
+    # titre du panneau.
+    for rang, (_, avant_ms, apres_ms) in enumerate(paires):
+        for decalage, valeur, nom in (
+            (largeur / 2, avant_ms, "première version"),
+            (-largeur / 2, apres_ms, "version retenue"),
+        ):
+            # Une decimale sous dix millisecondes : « 1 ms » pour 0,7 ms ferait disparaitre le
+            # rapport de 66 que la figure est censee montrer.
+            texte = (f"{valeur:.1f} ms" if valeur < 10 else f"{valeur:.0f} ms").replace(".", ",")
+            if rang == 0:
+                texte = f"{texte}, {nom}"
+            gauche.annotate(
+                texte,
+                (valeur, rang + decalage),
+                xytext=(4, 0),
+                textcoords="offset points",
+                va="center",
+                color=GRIS,
+                fontsize=8,
+            )
+    gauche.set_yticks(position)
+    gauche.set_yticklabels([LIBELLES.get(nom, nom) for nom, _, _ in paires], fontsize=8)
+    gauche.invert_yaxis()
+    gauche.set_xlabel("millisecondes, échelle logarithmique", color=GRIS, fontsize=8.5)
+    # L'axe est elargi a droite pour degager un coin ou poser la legende. Sans cela, elle se
+    # superpose a la paire la plus longue, ou deborde sur la note de bas de figure.
+    # Les deux series sont nommees sur la premiere paire seulement, ce qui remplace une legende.
+    # Toute legende posee dans le cadre masquait une paire, et posee au-dessus elle recouvrait le
+    # titre du panneau.
+    for rang, (_, avant_ms, apres_ms) in enumerate(paires):
+        for decalage, valeur, nom in (
+            (largeur / 2, avant_ms, "première version"),
+            (-largeur / 2, apres_ms, "version retenue"),
+        ):
+            # Une decimale sous dix millisecondes : « 1 ms » pour 0,7 ms ferait disparaitre le
+            # rapport de 66 que la figure est censee montrer.
+            texte = (f"{valeur:.1f} ms" if valeur < 10 else f"{valeur:.0f} ms").replace(".", ",")
+            if rang == 0:
+                texte = f"{texte}, {nom}"
+            gauche.annotate(
+                texte,
+                (valeur, rang + decalage),
+                xytext=(4, 0),
+                textcoords="offset points",
+                va="center",
+                color=GRIS,
+                fontsize=8,
+            )
+    gauche.set_xlim(0.4, 20000)
+    soigner(gauche, "Ce que chaque choix a coûté")
+    gauche.grid(axis="y", visible=False)
+    gauche.grid(axis="x", color=FILET, linewidth=0.6)
+
+    # Le panneau de droite oppose ce qui a ete verifie a ce qui a echoue. Les trois dernieres
+    # barres valent zero, et c'est le resultat : une barre absente se lit mieux qu'un tableau.
+    verifications = [
+        ("citations\nvérifiées", int(resume["citations verifiees"]["valeur"]), SERIE_1),
+        ("citations\nfausses", int(resume["citations fausses"]["valeur"]), SERIE_2),
+        (
+            "règles\nrompues",
+            int(resume["regles de coherence rompues"]["valeur"]),
+            SERIE_2,
+        ),
+        (
+            "recomptages\ndivergents",
+            int(resume["recomptages divergents"]["valeur"]),
+            SERIE_2,
+        ),
+    ]
+    barres = droite.bar(
+        range(len(verifications)),
+        [valeur for _, valeur, _ in verifications],
+        0.58,
+        color=[couleur for _, _, couleur in verifications],
+    )
+    droite.bar_label(barres, fmt="%d", padding=3, color=GRIS, fontsize=9)
+    droite.set_xticks(range(len(verifications)))
+    droite.set_xticklabels([nom for nom, _, _ in verifications], fontsize=8)
+    droite.set_ylabel("nombre", color=GRIS, fontsize=8.5)
+    soigner(droite, "Ce qu'une machine peut vérifier")
+    droite.grid(axis="x", visible=False)
+    droite.grid(axis="y", color=FILET, linewidth=0.6)
+
+    figure.suptitle(
+        "Répondre en citant ses sources, sans modèle de langue",
+        color=ENCRE,
+        fontsize=12.5,
+        fontweight="bold",
+        x=0.01,
+        ha="left",
+        y=1.04,
+    )
+    legender(
+        figure,
+        f"Mesure du 21 octobre 2026 sur 1 999 474 marchés et "
+        f"{resume['questions']['valeur']} questions de test, `make bench-assistant`. À gauche, "
+        f"les deux versions de\nchaque décision sont rejouées à chaque passage du banc : la barre "
+        "« première version » est remesurée, pas recopiée. À droite, les\ntrois vérifications "
+        "automatiques que permet une réponse portant son filtre et ses sources : chaque numéro "
+        "de marché cité est\nrecherché avec le filtre annoncé, six règles de cohérence sont "
+        "contrôlées par réponse, et chaque comptage est refait en interdisant\nles index au "
+        f"planificateur. Latence médiane {virgule(resume['latence mediane']['valeur'])} ms, "
+        f"la plus lente {virgule(resume['latence la plus lente']['valeur'])} ms, pour "
+        f"{virgule(resume['cout']['valeur'])} euro par millier de\nquestions. "
+        f"Les {resume['questions']['valeur']} questions ayant été "
+        "écrites par l'auteur des motifs, le score de reconnaissance mesure la cohérence interne "
+        "et non\nla capacité à comprendre une question nouvelle : ce sont les trois "
+        "vérifications, indépendantes de qui a écrit les questions, qui portent\nla conclusion.",
+    )
+    enregistrer(figure, "21-assistant-cout-et-verifications")
+
+
 def main() -> None:
     print("Figures generees depuis mesures/resultats/ :")
     figure_total_annuel()
@@ -1089,6 +1262,7 @@ def main() -> None:
     figure_nettoyage()
     figure_modele_vs_regles()
     figure_recherche()
+    figure_assistant()
     print(f"\nDossier : {chemin_lisible(FIGURES)}")
 
 
