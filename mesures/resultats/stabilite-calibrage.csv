@@ -1,0 +1,5 @@
+calibrage,periode_evaluee,annees,fuite,marches_evalues,signales,concordants,etiquetes,precision_pourcent,precision_bas,precision_haut,rappel_pourcent,part_signalee_pourcent
+global (production actuelle),apprentissage,2019-2023,oui,1119675,5073,3956,29745,78.0,76.8,79.1,13.3,0.453
+global (production actuelle),test,2024-2026,oui,911189,3328,2440,24046,73.3,71.8,74.8,10.1,0.365
+apprentissage seul,apprentissage,2019-2023,oui,1119620,5415,3835,29745,70.8,69.6,72.0,12.9,0.484
+apprentissage seul,test,2024-2026,non,911140,3623,2512,24046,69.3,67.8,70.8,10.4,0.398

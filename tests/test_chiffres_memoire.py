@@ -129,6 +129,59 @@ def test_completude_des_champs_faibles() -> None:
     assert parts["Considerations sociales"] == 49.4
 
 
+def test_intervalle_annonce_pour_quarante_sur_quarante() -> None:
+    """Le chapitre 11 annonce [91,2 ; 100,0] pour les 40 intentions reconnues sur 40.
+
+    C'est le chiffre le plus souvent repris du chapitre, et le plus facile a recopier de travers :
+    il est verifie contre la mesure, comme les autres.
+    """
+    lignes = {ligne["mesure"]: ligne for ligne in agregat("incertitude-proportions")}
+    intention = lignes["assistant : intention reconnue"]
+    assert intention["succes"] == intention["essais"]
+    assert float(intention["wilson_bas"]) == 91.2
+    assert float(intention["wilson_haut"]) == 100.0
+    # Et la formule ecartee, qui ne laisse aucune marge : c'est l'argument du chapitre.
+    assert float(intention["wald_bas"]) == 100.0
+
+
+def test_ce_que_la_fuite_ajoutait_a_la_detection() -> None:
+    """Le chapitre 11 annonce 69,3 % hors echantillon, contre 73,3 % avec la fuite."""
+    sur_le_test = {
+        ligne["calibrage"]: ligne
+        for ligne in agregat("stabilite-calibrage")
+        if ligne["periode_evaluee"] == "test"
+    }
+    avec_fuite = float(sur_le_test["global (production actuelle)"]["precision_pourcent"])
+    sans_fuite = float(sur_le_test["apprentissage seul"]["precision_pourcent"])
+    assert avec_fuite == 73.3
+    assert sans_fuite == 69.3
+    assert round(avec_fuite - sans_fuite, 1) == 4.0
+    # Les deux intervalles ne se chevauchent pas : c'est ce qui autorise a parler d'un ecart reel.
+    assert float(sur_le_test["apprentissage seul"]["precision_haut"]) < float(
+        sur_le_test["global (production actuelle)"]["precision_bas"]
+    )
+
+
+def test_encadrement_de_la_part_des_pme() -> None:
+    """Le chapitre 11 annonce 60,8 % comptes, et un encadrement de 56,7 a 63,5."""
+    pme = agregat("incertitude-recensement-pme")[0]
+    assert float(pme["part_pme_sur_resolus_pourcent"]) == 60.8
+    assert float(pme["borne_basse_pourcent"]) == 56.7
+    assert float(pme["borne_haute_pourcent"]) == 63.5
+    # La non-reponse est plus etroite que le hasard de tirage de l'ancien echantillon : c'est la
+    # comparaison que la section fait, et elle doit rester vraie.
+    assert float(pme["etendue_non_reponse_points"]) < float(
+        pme["largeur_tirage_echantillon_points"]
+    )
+
+
+def test_le_decrochage_de_2023() -> None:
+    """Le chapitre 11 annonce 53,1 % en 2023, sans chevauchement avec 2022."""
+    par_annee = {ligne["annee"]: ligne for ligne in agregat("stabilite-par-annee")}
+    assert float(par_annee["2023"]["precision_pourcent"]) == 53.1
+    assert float(par_annee["2023"]["precision_haut"]) < float(par_annee["2022"]["precision_bas"])
+
+
 def test_chaque_figure_citee_existe() -> None:
     """Une image appelee dans le memoire doit exister, sinon le document sort troue."""
     manquantes = []

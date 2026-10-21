@@ -15,10 +15,10 @@ Cible : 40 à 60 pages, hors annexes.
 | 5 | Histoire des pratiques | d'où viennent ces outils, et pourquoi ils ont remplacé les précédents | 4 | matière réunie |
 | 6 | Architecture retenue | le trajet de la donnée, service par service, avec les alternatives écartées | 6 | à écrire |
 | 7 | Ingénierie des données | collecte, stockage, transformation, qualité | 6 | phase 3 et 4 |
-| 8 | Détection des marchés atypiques | de la règle au modèle, et ce que la mesure justifie | 6 | phase 5 |
+| 8 | Détection des marchés atypiques | de la règle au modèle, et ce que la mesure justifie | 6 | phase 5, matière réunie ; la validation hors échantillon est en 11.2 |
 | 9 | Recherche et assistant | du mot-clé à la réponse sourcée, l'escalier de complexité | 5 | **rédigé** |
 | 10 | Mise en production et sécurité | VPS, conteneurs, supervision, sauvegardes | 4 | phase 9 |
-| 11 | Mesures, coûts et comparaison au marché | performance, qualité, euros par mois, face aux offres payantes | 5 | phase 8 |
+| 11 | Mesures, coûts et comparaison au marché | performance, qualité, euros par mois, face aux offres payantes | 5 | **11.1 et 11.2 rédigées**, le reste en phase 8 |
 | 12 | Difficultés rencontrées et solutions | le journal de bord, transformé en enseignements | 4 | alimenté en continu |
 | 13 | Conclusion et limites | ce qui est démontré, ce qui ne l'est pas, ce qui reste à faire | 2 | à écrire |
 

@@ -213,9 +213,9 @@ projet, avec ce qu'elle a coute et ce qui l'evite.
 | Lignes brutes / etat actuel / marches | 3 296 811 / 2 121 908 / 1 833 468 | `make bench-nettoyage` |
 | Lignes exploitables apres nettoyage | 94,2 % | `make bench-nettoyage` |
 | Total annuel brut contre reel | 3 030 Md€ contre 233 Md€ | `make bench-decp-distributions` |
-| Part des marches attribues a une PME | 59,2 % (officiel : 60 %) | notebook 06 |
+| Part des attributions a une PME | 60,8 % comptes, encadrement [56,7 ; 63,5] | `make bench-incertitude` |
 | Marches portant au moins un signal | 76 309, soit 3,8 % | `make transformer` |
-| Precision de la regle de prix, seuil 4 | 75,8 % (minorant) | `make bench-detection` |
+| Precision de la regle de prix, seuil 4 | 69,3 % hors echantillon [67,8 ; 70,8] (minorant) | `make bench-stabilite` |
 | Precision de la regle a 1 000 alertes | 96,1 % contre 65,7 % pour le meilleur modele | `make bench-modele` |
 | Methodes de detection comparees | 10, dont 7 apprises | notebook 08 |
 | Lignes dont l'uid est partage | 281 404 sur 2 054 924 | notebook 08 |
@@ -223,6 +223,8 @@ projet, avec ce qu'elle a coute et ce qui l'evite.
 | Parquet contre CSV | 247,6 Mo contre 2 595,5 Mo | `make collecte-decp` |
 | Duree de la chaine complete | environ 6 secondes | `make transformer` |
 | Recherche plein texte, latence mediane | 7,3 ms, aucune question sans reponse | `make bench-recherche` |
+| Intentions reconnues par l'assistant | 40 sur 40, intervalle [91,2 ; 100,0] | `make bench-incertitude` |
+| Ce que la fuite de donnees ajoutait a la detection | 4,0 points de concordance | `make bench-stabilite` |
 | Base servie PostgreSQL contre DuckDB | 1 573 Mo contre 312 Mo | `make bench-recherche` |
 | Chargement vers PostgreSQL | 87 s, puis 62 s d'index | `make charger`, `make indexer` |
 | Cout de l'ensemble | 0 euro | |
