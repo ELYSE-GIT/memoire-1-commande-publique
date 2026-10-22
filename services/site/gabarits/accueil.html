@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block contenu %}
+<section class="bandeau">
+  <h1>Les marchés publics français, cherchables et vérifiables</h1>
+  <p class="chapo">
+    {{ comptages.marches_distincts | nombre }} marchés attribués entre
+    {{ comptages.premiere_annee }} et {{ comptages.derniere_annee }}, publiés par
+    {{ comptages.acheteurs | nombre }} acheteurs. Chaque chiffre affiché sur ce site renvoie
+    à l'adresse qui le produit, et chaque réponse porte le filtre qui lui a été appliqué.
+  </p>
+
+  {# Le formulaire mene a /recherche sans htmx : c'est un vrai formulaire, donc la page
+     d'accueil fonctionne sans JavaScript. #}
+  <form class="chercher" action="/recherche" method="get" role="search">
+    <label for="q">Chercher dans l'objet des marchés, les acheteurs et les titulaires</label>
+    <div class="ligne">
+      <input type="search" id="q" name="q" placeholder="travaux de voirie" maxlength="200">
+      <button type="submit">Chercher</button>
+    </div>
+  </form>
+</section>
+
+<section class="comptages">
+  <h2>Ce que contient la base</h2>
+  <dl>
+    <div>
+      <dt>Attributions</dt>
+      <dd>{{ comptages.marches | nombre }}</dd>
+      <p>Une ligne par titulaire. Un marché attribué à un groupement en compte plusieurs.</p>
+    </div>
+    <div>
+      <dt>Marchés distincts</dt>
+      <dd>{{ comptages.marches_distincts | nombre }}</dd>
+      <p>Numéros de marché différents.</p>
+    </div>
+    <div>
+      <dt>Acheteurs</dt>
+      <dd>{{ comptages.acheteurs | nombre }}</dd>
+      <p>Collectivités, établissements et administrations identifiés par leur SIRET.</p>
+    </div>
+    <div>
+      <dt>Titulaires</dt>
+      <dd>{{ comptages.titulaires | nombre }}</dd>
+      <p>Entreprises attributaires identifiées par leur SIRET.</p>
+    </div>
+    <div>
+      <dt>Montant total</dt>
+      <dd>{{ (comptages.montant_total_marches or comptages.montant_total) | euros }}</dd>
+      <p>
+        {% if comptages.montant_total_marches %}
+        Chaque marché compté une fois. L'addition ligne par ligne donnerait
+        {{ comptages.montant_total | euros }}, soit
+        {{ surcompte_pourcent | pourcentage }} de plus, parce qu'un marché attribué à un
+        groupement répète son montant sur chaque titulaire.
+        <a href="/a-propos#montants">Détail</a>
+        {% else %}
+        Addition ligne par ligne, qui <strong>surcompte</strong> les marchés attribués à un
+        groupement d'entreprises. Le total dédoublonné n'a pas encore été calculé.
+        {% endif %}
+        Les montants manquants ne sont pas estimés.
+      </p>
+    </div>
+    <div>
+      <dt>À examiner</dt>
+      <dd>{{ comptages.marches_signales | nombre }}</dd>
+      <p>
+        Attributions portant au moins un signal, soit
+        {{ part_signalee | pourcentage }} des attributions.
+        <a href="/a-examiner">Les voir</a>.
+      </p>
+    </div>
+  </dl>
+  <p class="note">
+    Comptages calculés au chargement des données, le
+    {{ comptages.calcule_a.strftime('%d/%m/%Y à %Hh%M') }}. Ils ne sont pas recalculés à
+    chaque visite : sur deux millions de lignes, le calcul prend entre 10 et 61 secondes selon
+    l'état des caches, et la page d'accueil répondrait par une erreur.
+  </p>
+</section>
+
+{% if figure.barres %}
+<section class="figure">
+  <h2>Attributions par année, et part des PME</h2>
+  {# La geometrie est calculee dans `figure_par_annee`, en Python, et passe par des attributs
+     SVG. Aucun attribut `style`, donc aucune exception a la politique de securite. #}
+  <svg viewBox="0 0 {{ figure.largeur }} {{ figure.hauteur_totale }}"
+       width="100%" height="{{ figure.hauteur_totale }}"
+       role="img" aria-label="Diagramme des attributions par année">
+    {% for barre in figure.barres %}
+    <g>
+      <title>{{ barre.annee }} : {{ barre.attributions | nombre }} attributions{% if barre.part_pme is not none %}, dont {{ barre.part_pme | pourcentage }} à des PME{% endif %}</title>
+      <rect class="barre" x="{{ barre.x }}" y="{{ barre.y }}"
+            width="{{ barre.largeur }}" height="{{ barre.hauteur }}"></rect>
+      {% if barre.hauteur_pme %}
+      <rect class="barre-pme" x="{{ barre.x }}"
+            y="{{ figure.base - barre.hauteur_pme }}"
+            width="{{ barre.largeur }}" height="{{ barre.hauteur_pme }}"></rect>
+      {% endif %}
+      <text class="etiquette" x="{{ barre.x + barre.largeur // 2 }}"
+            y="{{ figure.base + 18 }}" text-anchor="middle">{{ barre.annee }}</text>
+    </g>
+    {% endfor %}
+  </svg>
+  <p class="legende">
+    <span class="puce puce-barre"></span> attributions
+    <span class="puce puce-pme"></span> dont attribuées à une PME
+  </p>
+  <p class="note">
+    La part de PME est rapportée aux seules attributions dont la catégorie d'entreprise du
+    titulaire est connue, et non à toutes : {{ comptages.marches | nombre }} attributions
+    sont chargées, et la catégorie manque pour {{ part_sans_categorie | pourcentage }}
+    d'entre elles. Les compter comme des non-PME sous-estimerait la part d'autant,
+    toujours dans le même sens.
+    Les années extrêmes sont incomplètes : la collecte s'arrête à la date du chargement.
+  </p>
+</section>
+{% endif %}
+
+<section class="pistes">
+  <h2>Par où commencer</h2>
+  <ul class="cartes">
+    <li>
+      <h3><a href="/recherche?q=travaux%20de%20voirie">Chercher un marché</a></h3>
+      <p>Par mots, par année, par département, par montant. La liste dit toujours sur
+      combien de marchés le classement a porté.</p>
+    </li>
+    <li>
+      <h3><a href="/a-examiner">Voir les marchés atypiques</a></h3>
+      <p>Les marchés qui s'écartent de leurs pairs, avec le motif en clair. Un signal est
+      une invitation à regarder, pas un verdict.</p>
+    </li>
+    <li>
+      <h3><a href="/questions">Poser une question en français</a></h3>
+      <p>Sans modèle de langue : la question est lue par des règles, traduite en SQL, et la
+      réponse cite les numéros de marché qui la fondent.</p>
+    </li>
+  </ul>
+</section>
+{% endblock %}
+
+{% block source_de_la_page %}
+Cette page lit <a href="{{ prefixe_api }}/statistiques">{{ prefixe_api }}/statistiques</a> et
+<a href="{{ prefixe_api }}/statistiques/annees">{{ prefixe_api }}/statistiques/annees</a>.
+{% endblock %}

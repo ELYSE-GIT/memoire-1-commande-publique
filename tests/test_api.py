@@ -50,7 +50,7 @@ from services.api import main, requetes
 # implicite, et il a raison, l'identite de l'objet remplace devant etre certaine.
 from services.api.base import Etat, curseur, lexiques_de
 from services.api.main import application
-from services.api.modeles import Marche, Signal
+from services.api.modeles import Marche, ReponseAssistant, Signal
 
 RACINE = Path(__file__).resolve().parent.parent
 SCHEMA = RACINE / "base" / "schema"
@@ -135,7 +135,15 @@ def client(faux: FauxCurseur | None = None, etat: Etat | None = None) -> TestCli
     """
     application.state.etat = etat or Etat()
     application.dependency_overrides[curseur] = lambda: faux or FauxCurseur()
-    return TestClient(application, raise_server_exceptions=False)
+    # Les routes JSON vivent sous `PREFIXE_API` depuis le 22 octobre 2026, la racine etant
+    # laissee aux pages du site. Le prefixe est pose une fois dans l'adresse de base plutot que
+    # recopie dans chacun des appels : les tests restent lisibles, et le prefixe reste importe
+    # depuis le code au lieu d'etre ecrit en dur ici.
+    return TestClient(
+        application,
+        base_url=f"http://testserver{main.PREFIXE_API}",
+        raise_server_exceptions=False,
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -293,7 +301,9 @@ def test_la_liste_des_signaux_exige_au_moins_un_signal() -> None:
     assert client().get("/signaux", params={"minimum": 0}).status_code == 422
     faux = FauxCurseur([[LIGNE_SIGNAL]])
     assert client(faux).get("/signaux").status_code == 200
-    assert faux.derniers_parametres == (1, 10, 0)
+    # Onze et non dix : la route demande une ligne de plus pour savoir s'il existe une page
+    # suivante, exactement comme /marches.
+    assert faux.derniers_parametres == (1, 11, 0)
 
 
 def test_un_marche_inconnu_rend_404_et_non_une_liste_vide() -> None:
@@ -611,3 +621,82 @@ def test_le_cache_des_mots_oublie_les_plus_anciens() -> None:
     assert faux.appels == appels_avant, "un mot recent doit encore etre en cache"
     lexiques.frequence("mot0")
     assert faux.appels == appels_avant + 1, "le plus ancien doit avoir ete oublie"
+
+
+# --- Ce que la construction du site a revele ---------------------------------
+#
+# Les trois tests qui suivent portent sur des defauts bien reels de l'API, tous trouves le
+# 22 octobre 2026 en construisant les pages, aucun par les tests existants. Ils ont un point
+# commun : chacun passait inapercu tant que l'API n'avait qu'un seul appelant, celui qui l'avait
+# ecrite.
+
+
+def test_la_serie_par_annee_rend_des_modeles_et_non_des_dictionnaires() -> None:
+    """Une annotation de type n'est pas une promesse tant que rien ne l'execute.
+
+    Cette route rendait `curseur.fetchall()` avec un `# type: ignore[return-value]`, en
+    annoncant `list[StatistiqueAnnuelle]`. FastAPI convertissait au moment de serialiser, donc
+    l'API etait juste et le mensonge invisible. Le jour ou une page a appele la fonction
+    directement, `annee.annee` sur un dictionnaire a fait repondre 500.
+    """
+    ligne = {
+        "annee": 2024,
+        "attributions": 307_824,
+        "montant_total": 180_000_000.00,
+        "attributions_resolues": 262_856,
+        "attributions_pme": 163_234,
+        "part_pme_pourcent": 62.1,
+    }
+    rendu = main.lire_par_annee(FauxCurseur([[ligne]]))  # type: ignore[arg-type]
+    assert rendu[0].annee == 2024
+    assert rendu[0].part_pme_pourcent == 62.1
+
+
+def test_une_reponse_d_assistant_accepte_des_citations_par_ligne() -> None:
+    """Les questions sur les titulaires rendent une liste de numeros dans chaque ligne.
+
+    Le type du champ `lignes` ne l'acceptait pas, et toute question de ce genre faisait repondre
+    500 a l'API. `make bench-assistant` ne le voyait pas, parce qu'il appelle la bibliotheque
+    sans passer par le modele de reponse ; `make bench-api` ne le voyait pas non plus, parce
+    qu'il n'envoyait qu'une question de comptage. Chaque banc couvrait ce que l'autre laissait
+    de cote.
+    """
+    reponse = ReponseAssistant(
+        question="qui a remporte les marches de voirie",
+        phrase="...",
+        intention="titulaires",
+        filtre="contenant « voirie »",
+        lignes=[{"nom": "Voirie de l'Ouest", "marches": 12, "citations": ["2024-A", "2024-B"]}],
+        duree_ms=31.0,
+    )
+    assert reponse.lignes[0]["citations"] == ["2024-A", "2024-B"]
+
+
+def test_la_liste_des_signaux_dit_s_il_existe_une_page_suivante() -> None:
+    """Une liste nue ne permet pas de savoir s'il reste quelque chose derriere.
+
+    Le deduire de « la page est pleine » propose un lien vers une page vide chaque fois que le
+    dernier resultat tombe sur une fin de page.
+    """
+    pleine = client(FauxCurseur([[LIGNE_SIGNAL] * 11])).get("/signaux", params={"taille": 10})
+    assert pleine.json()["page_suivante"] is True
+    assert len(pleine.json()["resultats"]) == 10
+
+    derniere = client(FauxCurseur([[LIGNE_SIGNAL] * 10])).get("/signaux", params={"taille": 10})
+    assert derniere.json()["page_suivante"] is False
+
+
+def test_le_prechauffage_lance_les_vraies_requetes_du_service() -> None:
+    """Prechauffer avec une requete qui ressemble a celle du service ne prechauffe rien.
+
+    Mesure du 22 octobre 2026 : une approximation ecrite a la main faisait bien tomber le
+    premier appel de la recherche de 794 a 135 ms, mais ne changeait rien a /signaux
+    (1 199 ms contre 1 379 ms). Seules les pages reellement lues entrent en memoire.
+    """
+    requetes_de_demarrage = {
+        requete.as_string(None) if hasattr(requete, "as_string") else str(requete)
+        for _, requete, _ in requetes.prechauffage()
+    }
+    corps, _ = requetes.recherche("travaux", {})
+    assert corps.as_string(None) in requetes_de_demarrage
+    assert requetes.SIGNAUX.as_string(None) in requetes_de_demarrage

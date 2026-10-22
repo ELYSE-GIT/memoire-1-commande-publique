@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block contenu %}
+<h1>À propos des données</h1>
+
+<p class="chapo">
+  Cette page dit d'où viennent les chiffres, ce qu'ils valent, et ce que ce site ne peut pas
+  dire. Elle n'interroge pas la base, exprès : elle reste lisible quand la base ne répond pas,
+  ce qui est le moment où l'on a le plus besoin de savoir ce qui est affiché d'habitude.
+</p>
+
+<h2 id="sources">Les sources</h2>
+<dl class="texte">
+  <dt>Données essentielles de la commande publique (DECP)</dt>
+  <dd>
+    Publication obligatoire des acheteurs publics pour les marchés au-delà d'un certain
+    montant, consolidée par la direction des affaires juridiques et republiée sur
+    data.gouv.fr sous licence ouverte. C'est la source de tous les marchés affichés ici.
+  </dd>
+  <dt>BOAMP</dt>
+  <dd>
+    Bulletin officiel des annonces des marchés publics : les avis publiés avant l'attribution.
+    Il sert à vérifier et à compléter, pas à produire les listes affichées.
+  </dd>
+  <dt>API Recherche d'entreprises</dt>
+  <dd>
+    Annuaire public des entreprises, interrogé par SIRET pour obtenir la catégorie d'entreprise
+    (PME, ETI, grande entreprise). C'est de là que vient la part de PME.
+  </dd>
+</dl>
+
+<h2 id="limites">Ce que les données ne permettent pas de dire</h2>
+<ul class="texte">
+  <li>
+    <strong>Une déclaration manquante n'est pas un marché inexistant.</strong> La publication
+    dépend de l'acheteur. Un acheteur qui ne publie pas est invisible ici, et son absence ne
+    se distingue pas d'un acheteur qui n'a rien acheté.
+  </li>
+  <li>
+    <strong>Un montant publié n'est pas un montant payé.</strong> C'est le montant du marché à
+    la notification, avant avenants, reconductions et travaux non réalisés.
+  </li>
+  <li>
+    <strong>Une attribution n'est pas un marché.</strong> Un marché attribué à un groupement
+    d'entreprises est publié une fois par titulaire. Tout pourcentage affiché ici précise donc
+    son unité de comptage, attribution ou marché distinct, parce que les deux donnent des
+    chiffres différents.
+  </li>
+  <li>
+    <strong>La catégorie d'entreprise manque parfois.</strong> Quand le SIRET n'a pas pu être
+    résolu, le titulaire n'a pas de catégorie. Ces lignes sont exclues du dénominateur de la
+    part de PME, et non comptées comme des non-PME : les compter ainsi sous-estimerait la part
+    de PME, toujours dans le même sens.
+  </li>
+  <li>
+    <strong>Les années extrêmes sont incomplètes.</strong> La première année de la base et
+    l'année en cours ne couvrent pas douze mois de publication.
+  </li>
+</ul>
+
+<h2 id="montants">Pourquoi additionner les montants donne un faux total</h2>
+<p class="texte">
+  Un marché attribué à un groupement d'entreprises occupe une ligne par titulaire, et le
+  montant publié sur chacune de ces lignes est très souvent celui du marché entier, répété, et
+  non la part de ce titulaire. La source ne publie pas la répartition entre les membres du
+  groupement : elle n'existe pas dans les données.
+</p>
+<p class="texte">
+  Conséquence mesurée sur les données chargées ici : additionner tous les montants ligne par
+  ligne donne <strong>1&nbsp;500,9 milliards d'euros</strong>, alors que compter chaque marché
+  une seule fois en donne <strong>1&nbsp;098,2 milliards</strong>. L'écart est de
+  403 milliards, soit <strong>36,7&nbsp;%</strong> de surcompte. Ce site affiche le second
+  chiffre, et affiche le premier à côté pour que l'écart soit visible.
+</p>
+<p class="texte">
+  La règle retenue compte une fois chaque couple (marché, montant). Elle a une limite connue :
+  deux lots d'un même marché portant exactement le même montant sont fusionnés. Une autre règle
+  défendable, garder le montant le plus élevé de chaque marché, donne 1&nbsp;097,9 milliards,
+  soit 0,03&nbsp;% d'écart avec la précédente. Le choix entre ces deux règles ne change donc
+  rien ; le choix de dédoublonner ou non change le total de 37&nbsp;%.
+</p>
+
+<h2 id="signaux">Comment les marchés « à examiner » sont choisis</h2>
+<p class="texte">
+  Un marché est signalé quand il s'écarte de ses pairs sur un point mesurable : un prix très
+  éloigné de la médiane de sa famille d'achat, une offre unique sur un marché important, un
+  titulaire qui concentre les marchés d'un acheteur. Chaque signal est accompagné des valeurs
+  qui ont servi à le produire, et la comparaison n'est faite que dans des groupes de plus de
+  30 marchés, en dessous desquels la médiane n'est pas fiable.
+</p>
+<p class="texte">
+  Ces règles ont été évaluées contre les anomalies que le producteur des données signale
+  lui-même. La concordance est de <strong>69,3&nbsp;%</strong> hors échantillon : les seuils
+  ont été calés sur les années 2019 à 2023, puis appliqués sans modification aux années 2024 à
+  2026, et l'intervalle de confiance va de 67,8 à 70,8&nbsp;%. Un modèle d'apprentissage non
+  supervisé a été comparé à ces règles, à budget d'alertes égal, et ne les a pas battues.
+</p>
+<p class="texte">
+  Trois limites à garder en tête. La concordance avec un signalement n'est pas une concordance
+  avec la vérité : le producteur publie ses propres signalements, pas une liste d'irrégularités
+  établies. Le signal « prix très bas » est affiché mais <strong>non évalué</strong>, parce
+  qu'aucune étiquette disponible ne permet de le confirmer ni de l'infirmer. Et un marché sans
+  signal n'est pas un marché régulier : c'est un marché qui ne s'écarte pas de ses pairs sur
+  les points mesurés ici.
+</p>
+
+<h2 id="classement">Pourquoi le classement est parfois « approché »</h2>
+<p class="texte">
+  Classer par pertinence tous les marchés qui contiennent un mot courant coûte trop cher pour
+  une page web. Sur le mot « travaux », 348&nbsp;748 marchés répondent, et les classer tous
+  prend près de dix secondes : la page renvoyait une erreur. Le service ne classe donc que les
+  5&nbsp;000 premiers marchés que son index lui rend, ce qui ramène la réponse sous les
+  70&nbsp;millisecondes.
+</p>
+<p class="texte">
+  La contrepartie est réelle et mesurée. Sur une recherche large, les dix marchés affichés
+  peuvent être <strong>entièrement différents</strong> des dix du classement exact. C'est pour
+  cela que la liste porte la mention « classement approché » dès que le plafond est atteint :
+  une approximation annoncée est une limite, une approximation cachée est un mensonge sur la
+  donnée. Ajouter un mot, une année ou un département fait redescendre sous le plafond, et le
+  classement redevient exact.
+</p>
+
+<h2 id="api">Tout est interrogeable sans ce site</h2>
+<p class="texte">
+  Chaque page affichée ici est produite par une adresse de l'API, qui rend les mêmes données en
+  JSON. Le pied de chaque page indique laquelle. La liste complète, avec les paramètres
+  acceptés et un formulaire pour les essayer, est sur
+  <a href="{{ chemin_docs }}">{{ chemin_docs }}</a>. Aucune clé n'est nécessaire : les données
+  servies sont publiques.
+</p>
+
+<h2 id="projet">Ce qu'est ce site</h2>
+<p class="texte">
+  Un travail d'étude, construit avec des outils libres sur une machine ordinaire, pour mesurer
+  ce qu'une telle plateforme coûte réellement. Ce n'est pas un service public, et il n'a aucune
+  valeur officielle. En cas de doute sur un marché, la publication de l'acheteur fait foi.
+</p>
+{% endblock %}

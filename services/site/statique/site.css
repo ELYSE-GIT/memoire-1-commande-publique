@@ -1,0 +1,316 @@
+/* La feuille de style du site. Un seul fichier, ecrit a la main.
+ *
+ * Pourquoi pas un cadre CSS (Tailwind, Bootstrap, Pico) :
+ *
+ *   Option envisagee   Avantage                     Limite                        Verdict
+ *   une feuille        aucune dependance, aucun     tout est a ecrire, environ    retenu
+ *   ecrite a la main   build, 12,5 Ko servis        300 lignes
+ *   Tailwind           tres rapide a ecrire         une chaine de compilation     ecarte
+ *                                                   Node.js sur le VPS, ou 3 Mo
+ *                                                   de CSS non purge
+ *   Bootstrap          complet                      230 Ko, et une apparence      ecarte
+ *                                                   reconnaissable entre mille
+ *   Pico.css           10 Ko, classes implicites    une dependance tierce a       ecarte
+ *                                                   versionner pour peu de gain
+ *
+ * Ce qui a fait pencher : la contrainte de deploiement (aucun Node.js sur le VPS) et le poids
+ * servi, qui est mesure par `make bench-site`. A quelle echelle la reponse changerait : au-dela
+ * d'une quinzaine de pages, un cadre eviterait la derive des styles.
+ *
+ * Aucune police n'est chargee depuis un tiers : les polices systeme sont deja installees, elles
+ * s'affichent sans attente et n'envoient aucune requete a un domaine externe. */
+
+:root {
+  --encre: #15181d;
+  --encre-douce: #4a515c;
+  --papier: #ffffff;
+  --papier-doux: #f5f6f8;
+  --trait: #d7dae0;
+  --accent: #1f4e79;
+  --accent-doux: #e8eef4;
+  --alerte: #8a4b00;
+  --alerte-doux: #fdf3e3;
+  --signal: #8c1f1f;
+  --rayon: 4px;
+  --mesure: 72ch;
+}
+
+/* Le theme sombre suit le reglage du systeme. Il n'y a pas de bouton pour le changer : un
+ * bouton demanderait de retenir le choix du visiteur, donc du stockage local, pour un reglage
+ * que son systeme exprime deja. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --encre: #e8eaee;
+    --encre-douce: #a4abb6;
+    --papier: #15181d;
+    --papier-doux: #1d2127;
+    --trait: #333942;
+    --accent: #7fb3e0;
+    --accent-doux: #1c2a38;
+    --alerte: #e0b070;
+    --alerte-doux: #2b2317;
+    --signal: #e59090;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--encre);
+  background: var(--papier);
+  -webkit-text-size-adjust: 100%;
+}
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+
+/* Le lien d'evitement n'est visible qu'au clavier, quand il recoit le focus. */
+.saut {
+  position: absolute;
+  left: -9999px;
+  background: var(--accent);
+  color: var(--papier);
+  padding: 0.6rem 1rem;
+  z-index: 10;
+}
+.saut:focus { left: 0; top: 0; }
+
+/* Un contour de focus visible partout : sans lui, la navigation au clavier est aveugle. */
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* --- Entete et pied ------------------------------------------------------ */
+
+.entete {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 1rem clamp(1rem, 4vw, 3rem);
+  border-bottom: 1px solid var(--trait);
+}
+.marque { font-weight: 650; font-size: 1.05rem; text-decoration: none; color: var(--encre); }
+.entete nav { display: flex; flex-wrap: wrap; gap: 1.25rem; }
+
+main {
+  padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 4vw, 3rem);
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.pied {
+  border-top: 1px solid var(--trait);
+  padding: 1.5rem clamp(1rem, 4vw, 3rem) 3rem;
+  color: var(--encre-douce);
+  font-size: 0.9rem;
+}
+.pied p { max-width: var(--mesure); margin: 0.4rem 0; }
+
+/* --- Textes -------------------------------------------------------------- */
+
+h1 { font-size: clamp(1.6rem, 3.5vw, 2.1rem); line-height: 1.2; margin: 0 0 0.75rem; }
+h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; }
+h3 { font-size: 1.05rem; margin: 0 0 0.3rem; }
+
+.chapo, .texte { max-width: var(--mesure); }
+.chapo { font-size: 1.1rem; color: var(--encre-douce); }
+.note, .aide, .legende { font-size: 0.88rem; color: var(--encre-douce); max-width: var(--mesure); }
+.aide { display: inline-block; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; }
+
+dl.texte dt { font-weight: 650; margin-top: 1rem; }
+dl.texte dd { margin: 0.2rem 0 0; max-width: var(--mesure); }
+ul.texte { max-width: var(--mesure); padding-left: 1.2rem; }
+ul.texte li { margin-bottom: 0.6rem; }
+
+/* --- Messages ------------------------------------------------------------ */
+
+.avertissement, .refus, .vide, .rien {
+  max-width: var(--mesure);
+  padding: 0.8rem 1rem;
+  border-radius: var(--rayon);
+  margin: 1rem 0;
+}
+.avertissement { background: var(--alerte-doux); border-left: 4px solid var(--alerte); }
+.refus { background: var(--alerte-doux); border-left: 4px solid var(--signal); }
+.vide, .rien { background: var(--papier-doux); color: var(--encre-douce); }
+
+/* --- Formulaires --------------------------------------------------------- */
+
+form { margin: 1.5rem 0; }
+label { display: block; font-weight: 600; font-size: 0.92rem; margin-bottom: 0.25rem; }
+
+input, select, button {
+  font: inherit;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--papier);
+  color: var(--encre);
+}
+input:focus, select:focus { border-color: var(--accent); }
+
+button {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  padding-inline: 1.2rem;
+}
+button:hover { filter: brightness(1.12); }
+
+.ligne { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.ligne input { flex: 1 1 18rem; }
+
+.filtres {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem 1.5rem;
+  align-items: start;
+  padding: 1.25rem;
+  background: var(--papier-doux);
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+}
+.filtres.mince { grid-template-columns: minmax(14rem, 22rem) auto; align-items: end; }
+.champ.large { grid-column: 1 / -1; }
+.champ input, .champ select { width: 100%; }
+.champ.case { display: flex; gap: 0.5rem; align-items: baseline; }
+.champ.case input { width: auto; }
+.champ.case label { font-weight: 400; }
+.actions { display: flex; gap: 1rem; align-items: center; grid-column: 1 / -1; }
+.secondaire { font-size: 0.92rem; }
+
+/* L'indicateur d'attente de htmx. Masque par defaut, affiche pendant la requete : c'est htmx
+ * qui pose la classe `htmx-request` sur l'element designe par `hx-indicator`. */
+.attente { font-size: 0.88rem; color: var(--encre-douce); visibility: hidden; }
+.attente.htmx-request { visibility: visible; }
+
+/* --- Accueil ------------------------------------------------------------- */
+
+.bandeau { margin-bottom: 2.5rem; }
+.chercher { max-width: 40rem; }
+
+.comptages dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+.comptages dl > div {
+  padding: 1rem;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+}
+.comptages dt { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--encre-douce); }
+.comptages dd { margin: 0.2rem 0 0.4rem; font-size: 1.45rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.comptages dl > div p { margin: 0; font-size: 0.85rem; color: var(--encre-douce); }
+
+/* Le diagramme de la page d'accueil. Les couleurs sont ici, la geometrie est dans le gabarit :
+ * la politique de securite interdit l'attribut `style`, donc aucune dimension ne passe par du
+ * CSS en ligne. */
+.figure svg { max-width: 100%; height: auto; display: block; }
+.barre { fill: var(--accent-doux); stroke: var(--accent); stroke-width: 1; }
+.barre-pme { fill: var(--accent); }
+.etiquette { fill: var(--encre-douce); font-size: 11px; }
+.legende { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+.puce { display: inline-block; width: 0.9rem; height: 0.9rem; border-radius: 2px; vertical-align: -1px; margin-right: 0.3rem; }
+.puce-barre { background: var(--accent-doux); border: 1px solid var(--accent); }
+.puce-pme { background: var(--accent); }
+
+.cartes { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem; }
+.cartes li { padding: 1.25rem; border: 1px solid var(--trait); border-radius: var(--rayon); }
+.cartes p { margin: 0; font-size: 0.92rem; color: var(--encre-douce); }
+
+/* --- Listes de marches --------------------------------------------------- */
+
+.compte { font-size: 0.88rem; color: var(--encre-douce); max-width: var(--mesure); }
+
+ol.marches { list-style: none; padding: 0; margin: 1.5rem 0; }
+ol.marches > li {
+  padding: 1rem 0;
+  border-top: 1px solid var(--trait);
+}
+ol.marches > li:last-child { border-bottom: 1px solid var(--trait); }
+ol.marches h3 { font-weight: 600; }
+.qui { margin: 0.2rem 0; color: var(--encre-douce); font-size: 0.95rem; }
+.chiffres { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; margin: 0.3rem 0 0; font-size: 0.88rem; color: var(--encre-douce); }
+.montant { font-weight: 650; color: var(--encre); font-variant-numeric: tabular-nums; }
+.etiquette-categorie {
+  font-size: 0.78rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--trait);
+  border-radius: 999px;
+  color: var(--encre-douce);
+}
+
+ul.motifs { margin: 0.3rem 0; padding-left: 1.1rem; }
+ul.motifs li { color: var(--signal); font-size: 0.92rem; }
+
+.pagination { display: flex; gap: 1.5rem; align-items: baseline; flex-wrap: wrap; margin: 1.5rem 0; }
+.pagination span { color: var(--encre-douce); font-size: 0.92rem; }
+
+/* --- Fiche d'un marche --------------------------------------------------- */
+
+.fil { font-size: 0.88rem; color: var(--encre-douce); margin: 0 0 0.5rem; }
+
+dl.repere, dl.comparaison {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+dl.repere > div, dl.comparaison > div { padding: 0.8rem 1rem; background: var(--papier-doux); border-radius: var(--rayon); }
+dl.repere dt, dl.comparaison dt { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--encre-douce); }
+dl.repere dd, dl.comparaison dd { margin: 0.25rem 0 0; font-weight: 600; }
+
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--trait); vertical-align: top; }
+th { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--encre-douce); }
+td.nombre, th.nombre { text-align: right; font-variant-numeric: tabular-nums; }
+
+.signal { padding: 1rem; border: 1px solid var(--trait); border-left: 4px solid var(--signal); border-radius: var(--rayon); margin: 1rem 0; }
+
+/* --- Assistant ----------------------------------------------------------- */
+
+.poser { max-width: 46rem; }
+.exemples { margin: 1.5rem 0; max-width: var(--mesure); }
+.exemples summary { cursor: pointer; font-weight: 600; }
+.exemples ul { padding-left: 1.2rem; }
+.exemples li { margin-bottom: 0.4rem; }
+
+.reponse { margin: 1.5rem 0; }
+.phrase { font-size: 1.2rem; max-width: var(--mesure); padding: 1rem 1.2rem; background: var(--accent-doux); border-radius: var(--rayon); }
+dl.verification { display: flex; flex-wrap: wrap; gap: 1rem 2rem; margin: 1rem 0; }
+dl.verification dt { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--encre-douce); }
+dl.verification dd { margin: 0.1rem 0 0; font-weight: 600; }
+
+ul.chiffres-cles { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 1rem; }
+ul.chiffres-cles li { padding: 0.5rem 0.9rem; background: var(--papier-doux); border-radius: var(--rayon); }
+ul.chiffres-cles .cle { display: block; font-size: 0.8rem; color: var(--encre-douce); }
+ul.chiffres-cles .valeur { font-weight: 650; font-variant-numeric: tabular-nums; }
+
+ul.citations { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+ul.citations li a {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+}
+
+/* --- Impression ---------------------------------------------------------- */
+/* Une fiche de marche doit pouvoir etre imprimee ou enregistree en PDF : c'est la forme sous
+ * laquelle une page de ce site finira dans un dossier. */
+@media print {
+  .entete nav, .filtres, .pagination, .saut, .attente { display: none; }
+  body { font-size: 11pt; color: #000; background: #fff; }
+  a { color: #000; }
+  main { max-width: none; padding: 0; }
+}

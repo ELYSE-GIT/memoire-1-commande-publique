@@ -49,6 +49,8 @@ atteint, reecrire l'assistant serait un cout sans contrepartie.
 from __future__ import annotations
 
 import logging
+import os
+import time
 from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
@@ -59,8 +61,9 @@ from fastapi import HTTPException, Request
 from psycopg.rows import dict_row, tuple_row
 from psycopg_pool import ConnectionPool
 
+from services.api import requetes
 from services.assistant.lecture_question import Lexiques
-from services.assistant.reponse_sourcee import charger_lexiques
+from services.assistant.reponse_sourcee import charger_lexiques, repondre
 from services.configuration import chaine_de_connexion
 
 journal = logging.getLogger("api")
@@ -270,6 +273,72 @@ def _curseur_pour_les_mots(
     return fournir
 
 
+# Le prechauffage est actif par defaut, et coupe par `PRECHAUFFAGE=0`. Le pourquoi, avec la
+# mesure qui l'a rendu necessaire, est a cote de `requetes.PRECHAUFFAGE`.
+PRECHAUFFAGE_ACTIF = os.environ.get("PRECHAUFFAGE", "1") != "0"
+
+# Delai accorde au prechauffage. Il remplace `statement_timeout` pour ces requetes-la, qui sont
+# justement celles qui le depassent a froid. Trente secondes : au-dela, mieux vaut demarrer un
+# service froid que de ne pas demarrer du tout, et le journal dira ce qui n'a pas abouti.
+DELAI_PRECHAUFFAGE_MS = 30_000
+
+# Les questions posees a l'assistant pour le prechauffer.
+#
+# Une par forme de reponse, et pas une seule : chaque intention construit un SQL different, qui
+# lit d'autres tables et d'autres index. Mesure du 22 octobre 2026, apres n'avoir prechauffe
+# qu'un comptage : la premiere question sur des marches signales depassait encore les dix
+# secondes du service et repondait 504, puis 2,9 s, puis 0,2 s. Prechauffer un comptage ne
+# prechauffe pas la jointure avec la table des signaux, qui pese 320 Mo.
+#
+# Ce sont exactement les questions que le site propose en exemple, celles sur lesquelles un
+# visiteur clique en arrivant, et un test verifie que les deux listes ne divergent pas. Elles
+# viennent du jeu versionne `mesures/verification/questions-assistant.csv`.
+QUESTIONS_DE_PRECHAUFFAGE = (
+    "combien de marches de voirie en 2023",
+    "qui a remporte les marches de voirie en Ile-de-France en 2023",
+    "marches atypiques de voirie",
+    "entretien des espaces verts a Rennes",
+    "quel est le meilleur fournisseur de voirie",
+)
+
+
+def prechauffer(etat: Etat) -> float:
+    """Lance une fois les requetes les plus couteuses, pour que le premier visiteur ne les paie pas.
+
+    L'assistant est prechauffe en lui posant reellement une question, et non en imitant ses
+    requetes : il en construit plusieurs, qui dependent de ce qu'il comprend, et les recopier
+    ici les figerait au premier changement de sa lecture.
+
+    Les erreurs sont journalisees et ignorees : un prechauffage qui echoue ne doit pas empecher
+    le service de demarrer, il doit seulement laisser le service froid. C'est exactement l'etat
+    dans lequel il demarrait avant que ce prechauffage n'existe.
+    """
+    if etat.reserve is None or not PRECHAUFFAGE_ACTIF:
+        return 0.0
+    depart = time.perf_counter()
+    with etat.reserve.connection() as connexion:
+        # Le delai de la connexion est releve pour la duree du prechauffage seulement, et
+        # `is_local` est vrai : le reglage est annule a la fin de la transaction, donc la
+        # connexion rendue a la reserve retrouve les dix secondes du service.
+        connexion.execute(
+            "select set_config('statement_timeout', %s, true)", (str(DELAI_PRECHAUFFAGE_MS),)
+        )
+        for nom, requete, valeurs in requetes.prechauffage():
+            try:
+                connexion.execute(requete, valeurs).fetchall()
+            except psycopg.Error as erreur:
+                journal.warning("prechauffage incomplet (%s) : %s", nom, erreur)
+        if etat.lexiques is not None:
+            for question in QUESTIONS_DE_PRECHAUFFAGE:
+                try:
+                    with connexion.cursor(row_factory=tuple_row) as curseur_sql:
+                        repondre(curseur_sql, question, etat.lexiques)
+                except psycopg.Error as erreur:
+                    journal.warning("prechauffage incomplet (%s) : %s", question, erreur)
+        connexion.rollback()
+    return (time.perf_counter() - depart) * 1000
+
+
 def preparer(etat: Etat, commande: str = "make api") -> None:
     """Ouvre la reserve et charge les lexiques, sans empecher le service de demarrer en cas d'echec.
 
@@ -300,6 +369,10 @@ def preparer(etat: Etat, commande: str = "make api") -> None:
             etat.lexiques = charger_lexiques(curseur_sql, _curseur_pour_les_mots(etat))
     except Exception as erreur:  # noqa: BLE001
         journal.error("lexiques non charges : %s", erreur)
+
+    duree = prechauffer(etat)
+    if duree:
+        journal.info("prechauffage en %.0f ms", duree)
 
 
 def fermer(etat: Etat) -> None:

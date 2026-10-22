@@ -53,6 +53,7 @@ from typing import Any
 
 import psycopg
 
+from services.api.main import PREFIXE_API
 from services.api.requetes import PLAFOND_CANDIDATS
 from services.configuration import chaine_de_connexion
 
@@ -62,7 +63,11 @@ SORTIE = RACINE / "mesures" / "resultats"
 # Port distinct de celui du developpement : le banc ne doit pas tomber sur une API deja
 # demarree a la main, dont l'etat des caches serait inconnu.
 PORT = int(os.environ.get("PORT_BANC_API", "8099"))
-RACINE_HTTP = f"http://127.0.0.1:{PORT}"
+
+# Les routes JSON vivent sous un prefixe depuis le 22 octobre 2026, pour laisser la racine aux
+# pages du site. Le prefixe est importe et non recopie : s'il changeait, ce banc mesurerait des
+# 404 a quelques millisecondes et conclurait que tout va tres bien.
+RACINE_HTTP = f"http://127.0.0.1:{PORT}{PREFIXE_API}"
 
 # Repetitions par route. Vingt-et-une, dont la premiere jetee : assez pour un p95 qui ne depende
 # pas d'un seul appel malheureux, assez peu pour que le banc tienne en une minute.
@@ -72,6 +77,11 @@ REPETITIONS = 21
 # reserve de fils de Starlette, pas le service.
 PALIERS = (1, 2, 4, 8, 16)
 APPELS_PAR_PALIER = 60
+
+# Appels jetes avant la montee en charge, pour mesurer un regime etabli et non le remplissage
+# des caches. Cent : c'est ce qu'il faut pour que le p95 d'un client cesse de bouger d'une
+# execution a l'autre.
+APPELS_DE_CHAUFFAGE = 100
 
 DELAI_DEMARRAGE_S = 40.0
 
@@ -92,6 +102,20 @@ QUESTIONS_DE_CLASSEMENT = (
     "entretien",
     "fourniture",
     "maintenance",
+)
+
+# Une question par intention de l'assistant, toutes tirees du jeu versionne
+# `mesures/verification/questions-assistant.csv`. Elles n'existent pas pour comparer des
+# latences entre elles, mais pour que chaque forme de reponse traverse le modele de l'API au
+# moins une fois par execution du banc.
+QUESTIONS_PAR_INTENTION = (
+    ("comptage", "combien de marches de voirie en Bretagne en 2024"),
+    ("montant", "quel montant total pour la restauration scolaire en 2023"),
+    ("titulaires", "qui a remporte les marches de voirie en Ile-de-France en 2023"),
+    ("acheteurs", "qui achete le plus de logiciels"),
+    ("signales", "marches atypiques de voirie"),
+    ("extraits", "entretien des espaces verts a Rennes"),
+    ("refus", "quel est le meilleur fournisseur de voirie"),
 )
 
 # Ce qu'une page affiche, donc ce sur quoi la comparaison porte : les dix premiers.
@@ -154,6 +178,11 @@ def demarrer() -> subprocess.Popen[bytes]:
             "warning",
         ],
         cwd=RACINE,
+        # Prechauffage coupe, et c'est le point de ce banc : la colonne
+        # `premier_appel_ms` mesure ce que coute le premier acces a une base froide. Avec le
+        # prechauffage actif, elle mesurerait un service deja chaud et ne dirait plus rien.
+        # `mesures/site.py`, lui, mesure le service tel qu'il est deploye, prechauffage compris.
+        env={**os.environ, "PRECHAUFFAGE": "0"},
     )
     depart = time.perf_counter()
     while time.perf_counter() - depart < DELAI_DEMARRAGE_S:
@@ -236,13 +265,18 @@ def routes_a_mesurer(marche_id: str) -> list[tuple[str, str, str]]:
         ("signaux", "/signaux?taille=10", "les marches a examiner, par l'index partiel"),
         ("statistiques", "/statistiques", "les comptages de la page d'accueil"),
         ("par annee", "/statistiques/annees", "la courbe de la page d'accueil"),
-        (
-            "assistant",
-            "/assistant?"
-            + urllib.parse.urlencode(
-                {"question": "combien de marches de voirie en Bretagne en 2024"}
-            ),
-            "une question en francais, traduite en SQL",
+        # Une question par intention, et non une seule. Chacune rend une forme de reponse
+        # differente, et c'est la seule facon de verifier qu'elles passent toutes le modele de
+        # reponse. Mesure du 22 octobre 2026 : avec une seule question de comptage, les
+        # questions sur les titulaires repondaient 500 depuis la mise en service de l'API, sans
+        # qu'aucun test ni aucun banc ne le voie.
+        *(
+            (
+                f"assistant {intention}",
+                "/assistant?" + urllib.parse.urlencode({"question": question}),
+                f"une question en francais, intention « {intention} »",
+            )
+            for intention, question in QUESTIONS_PAR_INTENTION
         ),
     ]
 
@@ -269,7 +303,7 @@ def mesurer_les_routes(marche_id: str) -> list[dict[str, Any]]:
         lignes.append(
             {
                 "route": nom,
-                "chemin": chemin,
+                "chemin": PREFIXE_API + chemin,
                 "ce_que_ca_represente": role,
                 "appels": len(durees),
                 "premier_appel_ms": round(froid_ms, 1),
@@ -330,8 +364,17 @@ def mesurer_la_charge() -> list[dict[str, Any]]:
     La question posee : le choix d'un pilote synchrone dans des routes `def`, donc executees
     dans une reserve de fils, tient-il jusqu'ou. La reponse n'est pas une opinion, c'est le
     palier a partir duquel le p95 decroche alors que le debit n'augmente plus.
+
+    Le service est chauffe avant de commencer, et pas d'un seul appel. Un debit decrit un
+    regime etabli : mesure sur une base dont les pages arrivent encore du disque, il decrit
+    l'etat du cache et non le service. Mesure du 22 octobre 2026, apres un unique appel a vide
+    sur une base froide : 13,4 requetes par seconde a un client, contre 53 sur une base
+    chaude. Ce n'etait pas une mesure du service, c'etait une mesure du disque.
     """
     chemin = "/marches?" + urllib.parse.urlencode({"q": "travaux de voirie"})
+    print(f"  (chauffage : {APPELS_DE_CHAUFFAGE} appels non mesures)")
+    for _ in range(APPELS_DE_CHAUFFAGE):
+        appeler(chemin)
     lignes = []
     for concurrence in PALIERS:
         appeler(chemin)  # un appel a vide, pour ne pas mesurer le premier

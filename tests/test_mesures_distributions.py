@@ -475,6 +475,99 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
         ["8", "60", "0", "83.1", "92.0", "160.6"],
         ["16", "60", "0", "92.2", "152.2", "209.8"],
     ]
+    # La figure 25 : le site. Poids des pages et gain du rechargement partiel.
+    contenus["site-pages"] = [
+        [
+            "page",
+            "chemin",
+            "ce_que_ca_represente",
+            "code",
+            "temoin_present",
+            "premier_appel_ms",
+            "p50_ms",
+            "p95_ms",
+            "poids_ko",
+            "poids_comprime_ko",
+            "attente_mobile_ms",
+        ],
+        [
+            "accueil",
+            "/",
+            "la premiere page",
+            "200",
+            "True",
+            "17.0",
+            "2.6",
+            "3.4",
+            "10.3",
+            "3.0",
+            "12.0",
+        ],
+        [
+            "recherche texte",
+            "/recherche?q=voirie",
+            "du texte libre",
+            "200",
+            "True",
+            "95.0",
+            "34.5",
+            "48.2",
+            "11.7",
+            "3.6",
+            "14.0",
+        ],
+        [
+            "a propos",
+            "/a-propos",
+            "les sources et les limites",
+            "200",
+            "True",
+            "2.0",
+            "0.5",
+            "0.8",
+            "8.7",
+            "3.6",
+            "14.0",
+        ],
+    ]
+    contenus["site-fragments"] = [
+        [
+            "page",
+            "chemin",
+            "page_entiere_ko",
+            "fragment_ko",
+            "economie_pourcent",
+            "page_entiere_comprime_ko",
+            "fragment_comprime_ko",
+            "page_entiere_p50_ms",
+            "fragment_p50_ms",
+            "fragment_sans_squelette",
+        ],
+        [
+            "recherche texte",
+            "/recherche?q=voirie",
+            "11.7",
+            "7.9",
+            "32.5",
+            "3.6",
+            "2.4",
+            "34.5",
+            "33.1",
+            "True",
+        ],
+        [
+            "questions",
+            "/questions?question=combien",
+            "5.5",
+            "1.6",
+            "71.3",
+            "2.1",
+            "0.9",
+            "46.9",
+            "45.2",
+            "True",
+        ],
+    ]
     for nom, lignes in contenus.items():
         with (agregats / f"{nom}.csv").open("w", newline="", encoding="utf-8") as sortie:
             csv.writer(sortie, lineterminator="\n").writerows(lignes)
@@ -485,5 +578,5 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     figures.main()
 
     produites = sorted(chemin.name for chemin in sorties.glob("*.svg"))
-    assert len(produites) == 24, f"vingt-quatre figures attendues, obtenu : {produites}"
+    assert len(produites) == 25, f"vingt-cinq figures attendues, obtenu : {produites}"
     assert all((sorties / nom.replace(".svg", ".png")).exists() for nom in produites)

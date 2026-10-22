@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- L'icone de l'onglet. Un SVG de quelques lignes plutot qu'un .ico : un seul fichier, net a
+     toutes les tailles, et rien a generer. Trois barres de hauteurs differentes, qui sont la
+     figure de la page d'accueil reduite a son plus simple. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img"
+     aria-label="Commande publique">
+  <rect width="32" height="32" rx="6" fill="#1f4e79"/>
+  <rect x="7" y="18" width="5" height="8" fill="#ffffff"/>
+  <rect x="14" y="12" width="5" height="14" fill="#ffffff"/>
+  <rect x="21" y="7" width="5" height="19" fill="#ffffff"/>
+</svg>

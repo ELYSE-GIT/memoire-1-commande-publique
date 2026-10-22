@@ -66,12 +66,13 @@ vingt fois plus rapide, DuckDB occupe cinq fois moins de place.
 | **Transformation** | trois couches, du brut au servi, en SQL | `services/transformation/models/` |
 | **Publication** | copier la couche or vers la base que le site interrogera | `services/publication/` |
 | **Schema de la base** | tables, index, configuration plein texte francaise | `base/schema/` |
-| **API publique** | sept routes : recherche, marche, signaux, comptages, assistant | `services/api/` |
-| **Services** | PostgreSQL en conteneur, l'API en processus, tous deux demarres a la demande | `compose.yaml`, `make api` |
+| **API publique** | sept routes JSON sous `/api` : recherche, marche, signaux, comptages, assistant | `services/api/` |
+| **Site public** | six pages HTML a la racine, gabarits Jinja2 et htmx, sans JavaScript applicatif | `services/site/` |
+| **Services** | PostgreSQL en conteneur, le site et l'API dans un seul processus, demarres a la demande | `compose.yaml`, `make site` |
 | **Mesures** | tout chiffrer, et ecrire les resultats en CSV | `mesures/` |
 | **Figures** | tracer depuis les CSV, jamais depuis les donnees | `mesures/figures.py` |
 | **Exploration** | montrer la demarche, code visible et execute | `analyses/*.ipynb` |
-| **Tests** | 239 tests, dont 20 qui executent la vraie chaine | `tests/` |
+| **Tests** | 283 tests, dont 20 qui executent la vraie chaine | `tests/` |
 | **Decisions** | pourquoi tel choix, et ce qui a ete ecarte | `docs/adr/` |
 | **Journal** | ce qui a mal tourne, et la lecon | `docs/journal/` |
 
@@ -152,6 +153,10 @@ lui ».
 | [0006](../adr/0006-detection-par-regles.md) | detection par regles, seuils mesures | deux niveaux, jamais une accusation |
 | [0007](../adr/0007-regles-plutot-qu-un-modele.md) | rester sur les regles, apres comparaison a dix methodes | la connaissance metier, pas la puissance statistique |
 | [0008](../adr/0008-postgresql-pour-servir-la-recherche.md) | PostgreSQL pour servir la recherche, DuckDB mesure contre lui | un choix fait avant la mesure, puis confirme par elle |
+| [0009](../adr/0009-assistant-sans-modele-de-langue.md) | un assistant par regles, qui cite ses sources | il refuse ce qu'il ne sait pas lire, plutot que d'inventer |
+| [0010](../adr/0010-incertitude-et-validation-temporelle.md) | intervalles de confiance et validation hors echantillon | aucun pourcentage publie sans son incertitude |
+| [0011](../adr/0011-api-publique.md) | une API mesuree avant d'etre jolie | quatre regles tirees de mesures, pas d'habitudes |
+| [0012](../adr/0012-site-public.md) | un site rendu par le serveur, et l'API sous un prefixe | un service, aucune compilation, et des pages qui marchent sans JavaScript |
 
 ---
 
@@ -206,6 +211,10 @@ projet, avec ce qu'elle a coute et ce qui l'evite.
 | **Publier un notebook sans l'executer** | du code non teste presente comme un resultat | `make notebooks` rejoue tout, et les sorties sont versionnees |
 | **Versionner un artefact non reproductible** | 6 500 lignes de difference pour des figures identiques | sel fixe et date retiree : deux executions donnent le meme fichier au bit pres |
 | **Un chemin relatif dans un artefact partage** | une vue interrogeable depuis dbt et nulle part ailleurs | un artefact partage ne depend pas de l'endroit d'ou on l'appelle |
+| **Faire taire un verificateur de types** | une route annoncait des modeles et rendait des dictionnaires, sous un `# type: ignore` : le cadre convertissait a la serialisation, donc rien n'echouait, jusqu'au second appelant | un `type: ignore` masque une affirmation fausse, pas un detail de typage. Corriger l'affirmation |
+| **Mesurer une seule forme d'une reponse** | neuf questions sur quarante faisaient repondre 500 a l'API, parce qu'un banc n'appelait pas le modele et que l'autre n'envoyait qu'une question | un banc envoie une entree par forme de sortie, pas une entree representative |
+| **Verifier une politique de securite en la lisant** | tests verts, banc vert, page affichee, et une violation dans la console du navigateur a chaque page | ouvrir un navigateur, et relire les en-tetes reellement servis |
+| **Additionner sans verifier l'unite de comptage** | un total de 1 500,9 milliards d'euros affiche en page d'accueil, surcompte de 36,7 % par les groupements d'entreprises | avant toute somme, demander ce qu'une ligne represente. Le projet documentait le piege pour les comptages, pas pour les montants |
 
 ---
 

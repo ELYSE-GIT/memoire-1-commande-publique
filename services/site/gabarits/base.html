@@ -1,0 +1,61 @@
+{# Le squelette commun a toutes les pages.
+
+   Il ne contient aucune balise <script> avec du code dedans : htmx est charge depuis un
+   fichier du site, et la politique de securite declaree par `services/site/pages.py` interdit
+   le script en ligne. C'est ce qui permet d'avoir une politique stricte sans exception.
+#}
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ titre }} | Commande publique</title>
+  <meta name="description" content="Les marchés publics français, cherchables et vérifiables : {{ titre }}.">
+  {# La configuration de htmx passe par une balise meta, et c'est voulu : htmx se configure
+     normalement en JavaScript, ce que la politique de securite de ce site interdit.
+
+     `includeIndicatorStyles` a faux parce que htmx insère sinon sa propre feuille de style
+     dans la page, en ligne. Le navigateur la bloque (politique `style-src 'self'`) et affiche
+     une erreur dans la console à chaque page. Les styles d'attente sont dans site.css, donc
+     cette insertion ne servait à rien d'autre qu'à produire une erreur. Mesuré dans un vrai
+     navigateur : sans cette ligne, une violation par page. #}
+  <meta name="htmx-config" content='{"includeIndicatorStyles": false}'>
+  {# `defer` et non `async` : htmx doit s'executer apres que le document est construit, sinon
+     il n'a aucun attribut hx-* a lire. #}
+  <script src="{{ chemin_statique }}/htmx-2.0.11.min.js" defer></script>
+  <link rel="stylesheet" href="{{ chemin_statique }}/site.css">
+  <link rel="icon" href="{{ chemin_statique }}/marque.svg" type="image/svg+xml">
+</head>
+<body>
+  {# Premier element focalisable de la page : au clavier, il evite de traverser la navigation
+     a chaque page pour atteindre le contenu. #}
+  <a class="saut" href="#contenu">Aller au contenu</a>
+
+  <header class="entete">
+    <a class="marque" href="/">Commande&nbsp;publique</a>
+    <nav aria-label="Navigation principale">
+      <a href="/recherche">Rechercher</a>
+      <a href="/a-examiner">À examiner</a>
+      <a href="/questions">Poser une question</a>
+      <a href="/a-propos">À propos</a>
+    </nav>
+  </header>
+
+  <main id="contenu">
+    {% block contenu %}{% endblock %}
+  </main>
+
+  <footer class="pied">
+    <p>
+      Données : <a href="https://www.data.gouv.fr/datasets/donnees-essentielles-de-la-commande-publique-consolidees-format-tabulaire/">données
+      essentielles de la commande publique</a> (DECP, licence ouverte) et
+      <a href="https://www.boamp.fr/">BOAMP</a>. Ce site n'est pas un service public.
+    </p>
+    <p>
+      Chaque page affichée ici est produite par une adresse de l'API, interrogeable
+      directement : <a href="{{ chemin_docs }}">documentation des routes</a>.
+      {% block source_de_la_page %}{% endblock %}
+    </p>
+  </footer>
+</body>
+</html>

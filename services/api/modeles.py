@@ -120,16 +120,35 @@ class PageDeMarches(BaseModel):
     classement_approche: bool = Field(
         default=False,
         description="Vrai quand plus de resultats repondent que le service n'en classe "
-        "(20 000). Les marches affiches sont alors les mieux classes parmi les 20 000 plus "
-        "recents qui contiennent les mots, et non parmi tous. Mesure : sur la question "
-        "« travaux », 348 748 marches repondent et aucun des dix affiches n'est dans les dix "
-        "du classement exact. A afficher a l'ecran",
+        "(5 000). Les marches affiches sont alors les mieux classes parmi les 5 000 premiers "
+        "que l'index rend, et non parmi tous ceux qui contiennent les mots. Ces 5 000 sont en "
+        "pratique les plus recents, parce que la table est ecrite par date decroissante "
+        "(correlation mesuree de -0,96), ce qui est une dependance a l'ordre de chargement et "
+        "non une garantie. Mesure : sur la question « travaux », 348 748 marches repondent et "
+        "aucun des dix affiches n'est dans les dix du classement exact. A afficher a l'ecran",
     )
     candidats_examines: int | None = Field(
         default=None,
         description="Nombre de marches reellement classes. Null quand la requete ne comporte "
         "aucun texte, donc aucun classement",
     )
+
+
+class PageDeSignaux(BaseModel):
+    """Une page de marches signales.
+
+    Une liste nue etait servie jusqu'au 22 octobre 2026, et c'est la construction du site qui a
+    montre le manque : rien ne permettait de savoir s'il existait une page suivante. Le deduire
+    de « la page est pleine » se trompe chaque fois que le dernier resultat tombe pile sur une
+    fin de page, et propose alors un lien vers une page vide. Comme pour `PageDeMarches`, la
+    route demande une ligne de plus qu'elle n'en rend : sa presence repond a la question sans
+    payer de comptage.
+    """
+
+    resultats: list[Signal]
+    page: int
+    taille: int
+    page_suivante: bool
 
 
 class MarcheDetaille(BaseModel):
@@ -149,7 +168,20 @@ class Statistiques(BaseModel):
     marches_distincts: int
     acheteurs: int
     titulaires: int
-    montant_total: Decimal | None = None
+    montant_total: Decimal | None = Field(
+        default=None,
+        description="Somme des montants portes par les lignes. SURCOMPTE de 36,7 pour cent : "
+        "un marche attribue a un groupement d'entreprises repete le montant du marche entier "
+        "sur chacune de ses lignes. Servi quand meme, parce que c'est le chiffre qu'on obtient "
+        "en additionnant naivement et qu'il valait mieux le publier a cote du bon",
+    )
+    montant_total_marches: Decimal | None = Field(
+        default=None,
+        description="Somme des montants en ne comptant qu'une fois chaque couple "
+        "(marche, montant). C'est le chiffre a citer : 1 098,2 milliards d'euros contre "
+        "1 500,9 pour la somme des lignes, mesure du 22 octobre 2026. Null si la colonne n'a "
+        "pas encore ete remplie par `make indexer`",
+    )
     premiere_annee: int | None = None
     derniere_annee: int | None = None
     marches_signales: int = Field(description="Lignes portant au moins un signal")
@@ -197,7 +229,22 @@ class ReponseAssistant(BaseModel):
         description="Le filtre applique, en francais. Sans lui, un chiffre ne veut rien dire"
     )
     chiffres: dict[str, float | int | str | None] = Field(default_factory=dict)
-    lignes: list[dict[str, str | float | int | None]] = Field(default_factory=list)
+    # Une valeur de ligne peut etre une liste de numeros de marche, et pas seulement un
+    # scalaire : les questions sur les titulaires et sur les acheteurs rendent une ligne par
+    # entreprise, avec ses trois plus gros marches en pieces justificatives.
+    #
+    # Ce type etait `str | float | int | None` jusqu'au 22 octobre 2026, et toute question de
+    # ce genre faisait repondre 500 a l'API. Personne ne l'avait vu, et la raison merite d'etre
+    # notee : `make bench-assistant` verifie les quarante questions du jeu, mais il appelle la
+    # bibliotheque directement, sans passer par le modele de reponse ; `make bench-api`, lui,
+    # passe par le modele mais n'appelait qu'une seule question, un comptage. Chaque banc
+    # couvrait ce que l'autre laissait de cote. Le banc de l'API mesure desormais une question
+    # par intention, ce qui est la seule facon de voir une forme de reponse non couverte.
+    lignes: list[dict[str, str | float | int | None | list[str]]] = Field(
+        default_factory=list,
+        description="Une ligne par resultat. Les cles dependent de l'intention : un titulaire "
+        "porte son nom, son nombre de marches, son total et ses citations",
+    )
     citations: list[str] = Field(
         default_factory=list,
         description="Numeros de marche cites, verifiables un par un sur /marches/{marche_id}",

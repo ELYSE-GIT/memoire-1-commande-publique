@@ -26,7 +26,8 @@ qualite (metriques ML, taux d'erreurs dans les donnees), cout en euros par mois.
 | `make bench-incertitude` | intervalle a 95 % de chaque pourcentage tire d'un echantillon | environ 1 s |
 | `make bench-stabilite` | la regle de detection calee sur 2019-2023, appliquee a 2024-2026 | environ 2 s |
 | `make bench-api` | l'API publique : latence par route, montee en charge, cout du classement | environ 4 min |
-| `make figures` | trace les 24 figures du memoire depuis ces agregats | environ 5 s |
+| `make bench-site` | le site : poids de chaque page, gain du fragment htmx, rendu sans JavaScript | environ 1 min |
+| `make figures` | trace les 25 figures du memoire depuis ces agregats | environ 5 s |
 
 Les resultats sont dans `resultats/`. Les figures du memoire sont tracees **depuis ces fichiers**,
 jamais saisies a la main : c'est ce qui garantit qu'un chiffre affiche dans le memoire existe dans

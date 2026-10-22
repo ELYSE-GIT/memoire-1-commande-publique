@@ -219,7 +219,7 @@ def recherche(texte: str | None, filtres: dict[str, Any]) -> tuple[sql.Composed,
             "  limit %s"
             ")"
             # `count(*) over ()` compte les candidats, pas les resultats : une fonction de
-            # fenetre est evaluee avant `limit`. Il porte donc sur les 20 000 lignes au plus de
+            # fenetre est evaluee avant `limit`. Il porte donc sur les 5 000 lignes au plus de
             # `candidats`, ce qui est gratuit, et il permet de dire au visiteur que son
             # classement est approche au lieu de le lui cacher.
             " select {colonnes}, ts_rank_cd(recherche, analysee.requete) as score,"
@@ -314,7 +314,8 @@ SIGNAUX = sql.SQL(
 STATISTIQUES = """
 select
     marches, marches_distincts, acheteurs, titulaires,
-    montant_total, premiere_annee, derniere_annee, marches_signales, calcule_a
+    montant_total, montant_total_marches,
+    premiere_annee, derniere_annee, marches_signales, calcule_a
 from statistiques
 """
 
@@ -349,6 +350,94 @@ where famille_cpv is not null
 group by famille_cpv
 order by marches desc
 """
+
+
+# Les requetes de prechauffage, lancees une fois au demarrage du service.
+#
+# === Pourquoi prechauffer =====================================================
+#
+# Observe le 22 octobre 2026, Mac venant de demarrer, conteneurs lances a l'instant : la
+# PREMIERE question posee a l'assistant a depasse les dix secondes du `statement_timeout`, et la
+# page a repondu 504. La meme question, posee ensuite, repond en 86 ms. Rien n'etait casse : la
+# base n'avait simplement aucune de ses pages en memoire, et le premier visiteur payait le
+# remplissage des caches pour tous les suivants.
+#
+#     Option envisagee          Avantage                   Limite                   Verdict
+#     ne rien faire             aucun code                 le premier visiteur       ecarte
+#                                                           apres chaque demarrage
+#                                                           recoit une erreur, donc
+#                                                           le jury le premier
+#     **prechauffer au          le cout est paye au         le demarrage s'allonge   **retenu**
+#     demarrage**               demarrage, ou personne       d'autant, et une mesure
+#                               n'attend                    a chaud ne dit plus ce
+#                                                           que coute le cas froid
+#     augmenter le delai        une seule ligne             un service qui met dix   ecarte
+#     de la requete                                          secondes a repondre est
+#                                                           un service casse
+#     charger toute la table    toute recherche serait       22 secondes de           ecarte,
+#     en memoire (pg_prewarm)   rapide, pas seulement        demarrage, et un gain    mesure
+#                               celles prechauffees          partiel : voir plus bas
+#
+# Ce qui a fait pencher : le cout ne disparait pas, il change de place, et la place ou il gene
+# le moins est le demarrage. `mesures/site.py` mesure les deux : le temps de demarrage, qui
+# monte, et le premier appel de chaque page, qui descend.
+#
+# === Ce que le prechauffage large aurait coute, mesure ========================
+#
+# `pg_prewarm('marches')` sur une base froide, le 22 octobre 2026, Mac M2 Pro, conteneurs
+# relances :
+#
+#     pg_prewarm de la table (1 386 Mo, 177 392 pages)              22 061 ms
+#     puis « travaux de voirie »                                       647 ms
+#     puis « entretien des espaces verts »                             479 ms
+#     puis « assurance dommages aux biens »                            260 ms
+#
+#     sans aucun prechauffage, meme base froide :
+#     « travaux de voirie »                                          1 766 ms
+#
+# Vingt-deux secondes de demarrage pour faire passer la premiere recherche de 1 766 ms a
+# 647 ms : le compte n'y est pas. Et le gain n'est que partiel, parce que `shared_buffers` vaut
+# 768 Mo pour une table de 1 386 Mo : la seconde moitie chargee evince la premiere.
+# L'extension a donc ete essayee, mesuree, et retiree de la base.
+#
+# Ce que cette mesure apprend d'autre : **prechauffer ne vaut que pour les requetes qu'on
+# prechauffe reellement.** Une recherche « travaux de voirie » lit 3 374 pages de la table, une
+# recherche « entretien des espaces verts » en lit 3 374 autres, et il y a 177 392 pages. Le
+# prechauffage cible ci-dessous rend donc rapides la page d'accueil, la liste des marches a
+# examiner et la premiere question posee a l'assistant, qui sont les trois chemins qu'un
+# visiteur emprunte en arrivant. Il ne rend pas rapide une recherche que personne n'a encore
+# faite, et c'est une limite assumee : 1,8 seconde est lent, mais c'est sous le delai du
+# service, donc c'est une attente et non une erreur.
+#
+# Le prechauffage peut etre coupe par `PRECHAUFFAGE=0` : c'est ce que fait `mesures/api.py`,
+# parce que mesurer un service prechauffe ne dirait plus rien du cas froid, qui est justement ce
+# que ce banc a servi a decouvrir.
+def prechauffage() -> list[tuple[str, sql.Composed | sql.SQL | str, tuple[Any, ...]]]:
+    """Les requetes du prechauffage : les vraies, avec leurs vrais parametres.
+
+    Elles sont construites a partir des requetes du service et non recopiees a la main. Une
+    approximation ecrite a cote (« un select sur marches avec un index plein texte ») a ete
+    essayee le 22 octobre 2026 et mesuree : elle reduisait bien le premier appel de la
+    recherche de 794 a 135 ms, mais ne changeait rien a /signaux (1 199 ms contre 1 379 ms) et
+    rien a l'assistant. La raison est simple : prechauffer ne charge en memoire que les pages
+    qu'on lit vraiment, donc il faut lire ce que le service lira, pas quelque chose qui y
+    ressemble.
+    """
+    corps, valeurs = recherche("travaux", {})
+    return [
+        # Le mot le plus frequent de la base : le pire cas du plein texte, et celui qui
+        # remplit le plus de pages d'un coup.
+        ("recherche plein texte", corps, (*valeurs, 10, 0)),
+        # L'index partiel des lignes signalees, et le tri par nombre de signaux.
+        ("marches signales", SIGNAUX, (1, 10, 0)),
+        # Les deux tables de comptage, minuscules : quelques pages, mais lues par la page
+        # d'accueil, donc par le premier visiteur.
+        ("comptages", STATISTIQUES, ()),
+        ("serie par annee", PAR_ANNEE, ()),
+        # Le vocabulaire, que l'assistant lit pour peser les mots rares.
+        ("vocabulaire", "select count(*) from vocabulaire", ()),
+    ]
+
 
 # Le test de vie. `select 1` et non une requete sur `marches` : le healthcheck doit dire si la
 # base repond, pas si elle est remplie. Les deux questions sont distinctes, et la seconde est

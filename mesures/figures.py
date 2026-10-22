@@ -1572,6 +1572,7 @@ def main() -> None:
     figure_incertitude()
     figure_stabilite()
     figure_api()
+    figure_site()
     print(f"\nDossier : {chemin_lisible(FIGURES)}")
 
 
@@ -1688,6 +1689,94 @@ def figure_api() -> None:
     )
     figure.tight_layout()
     enregistrer(figure, "24-api-latence-et-charge")
+
+
+def figure_site() -> None:
+    """Ce que pese une page, et ce que le rechargement partiel economise.
+
+    Deux panneaux, deux questions que la latence seule ne repond pas.
+
+    A gauche, le poids servi par page, brut et compresse, avec l'attente que cela represente sur
+    une connexion mobile mediocre. Une page de quelques kilo-octets ne demande aucune
+    optimisation ; le dire en chiffres evite d'en faire une par reflexe.
+
+    A droite, la page entiere contre le fragment renvoye a htmx, sur les pages qui se
+    rechargent partiellement. C'est la mesure qui justifie htmx, ou qui ne le justifie pas :
+    sans elle, le choix d'une bibliotheque serait une preference.
+    """
+    pages = lire("site-pages")
+    fragments = lire("site-fragments")
+
+    figure, (gauche, droite) = plt.subplots(1, 2, figsize=(11.6, 4.3), width_ratios=[1.3, 1])
+
+    # --- A gauche : le poids de chaque page -------------------------------
+    noms = [ligne["page"] for ligne in pages][::-1]
+    brut = [float(ligne["poids_ko"]) for ligne in pages][::-1]
+    comprime = [float(ligne["poids_comprime_ko"]) for ligne in pages][::-1]
+    positions = range(len(noms))
+
+    gauche.barh(positions, brut, color=SERIE_1, alpha=0.3, height=0.62, label="servi tel quel")
+    gauche.barh(positions, comprime, color=SERIE_1, height=0.62, label="compresse (gzip)")
+    gauche.set_yticks(list(positions))
+    gauche.set_yticklabels(noms, fontsize=8.5)
+    gauche.set_xlabel("kilo-octets", color=GRIS, fontsize=8.5)
+    for position, valeur in zip(positions, brut, strict=True):
+        gauche.text(
+            valeur + 0.3, position, f"{virgule(valeur)} ko", va="center", fontsize=8, color=GRIS
+        )
+    gauche.set_xlim(0, max(brut) * 1.22)
+    soigner(gauche, "Une page du site pese moins qu'une image")
+    gauche.grid(axis="x", color=FILET, linewidth=0.6)
+    gauche.grid(axis="y", visible=False)
+    gauche.legend(frameon=False, fontsize=8, loc="lower right", labelcolor=GRIS)
+
+    # --- A droite : page entiere contre fragment ---------------------------
+    etiquettes = [ligne["page"] for ligne in fragments]
+    entieres = [float(ligne["page_entiere_ko"]) for ligne in fragments]
+    morceaux = [float(ligne["fragment_ko"]) for ligne in fragments]
+    rangs = range(len(etiquettes))
+    largeur = 0.38
+
+    droite.bar(
+        [rang - largeur / 2 for rang in rangs],
+        entieres,
+        largeur,
+        color=SERIE_1,
+        label="page entiere",
+    )
+    droite.bar(
+        [rang + largeur / 2 for rang in rangs],
+        morceaux,
+        largeur,
+        color=SERIE_2,
+        label="fragment htmx",
+    )
+    for rang, (entiere, morceau) in enumerate(zip(entieres, morceaux, strict=True)):
+        droite.text(
+            rang,
+            max(entiere, morceau) + 0.35,
+            f"-{virgule(100 * (1 - morceau / entiere), 0)} %",
+            ha="center",
+            fontsize=8.5,
+            color=ENCRE,
+        )
+    droite.set_xticks(list(rangs))
+    droite.set_xticklabels([nom.replace(" ", "\n") for nom in etiquettes], fontsize=8.5)
+    droite.set_ylabel("kilo-octets", color=GRIS, fontsize=8.5)
+    droite.set_ylim(0, max(entieres) * 1.25)
+    soigner(droite, "Ce que le rechargement partiel evite de renvoyer")
+    droite.legend(frameon=False, fontsize=8, loc="upper right", labelcolor=GRIS)
+
+    legender(
+        figure,
+        "Source : make bench-site, 22 octobre 2026, Mac M2 Pro, base de 1 999 474 lignes, 10 "
+        "appels par page.\nLe fragment est la meme adresse appelee avec l'en-tete HX-Request : "
+        "le serveur rend alors la seule liste de resultats, sans entete ni formulaire.\nLes "
+        "fichiers charges une fois puis gardes par le navigateur (feuille de style, htmx, "
+        "icone) pesent 64,1 ko et ne sont pas comptes ici.",
+    )
+    figure.tight_layout()
+    enregistrer(figure, "25-site-poids-et-fragments")
 
 
 if __name__ == "__main__":

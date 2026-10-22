@@ -49,7 +49,7 @@ from contextlib import asynccontextmanager
 from typing import Annotated, Any
 
 import psycopg
-from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request, Response
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Path, Query, Request, Response
 from fastapi.responses import JSONResponse
 from psycopg_pool import PoolTimeout, TooManyRequests
 
@@ -65,9 +65,9 @@ from services.api.base import (
 from services.api.modeles import (
     MarcheDetaille,
     PageDeMarches,
+    PageDeSignaux,
     ReponseAssistant,
     Sante,
-    Signal,
     StatistiqueAnnuelle,
     Statistiques,
 )
@@ -99,6 +99,17 @@ PAGE_MAXIMUM = 40
 # `websearch_to_tsquery` sur un texte de plusieurs kilo-octets produit une requete enorme pour
 # un resultat vide.
 TEXTE_MAXIMUM = 200
+
+# Adresse de base des routes JSON. Les pages du site sont servies par le meme processus, a
+# la racine, et il faut donc que les deux jeux d'adresses ne se marchent pas dessus : une
+# page HTML et une reponse JSON ne peuvent pas repondre a la meme adresse. Le raisonnement
+# complet, avec les trois options envisagees, est dans `docs/adr/0012-site-public.md`.
+PREFIXE_API = "/api"
+
+# Le routeur porte les routes ; l'application les monte sous le prefixe. Ecrire
+# `@application.get("/marches")` aurait fige l'adresse dans le decorateur, et un prefixe
+# n'aurait plus ete possible sans reecrire les sept routes.
+routeur = APIRouter()
 
 
 @asynccontextmanager
@@ -151,9 +162,15 @@ async def en_tetes_de_securite(requete: Request, suite: Callable[[Request], Any]
     # Interdit l'affichage du site dans un cadre sur un autre domaine (clickjacking).
     reponse.headers["X-Frame-Options"] = "DENY"
     reponse.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    # L'API ne charge rien : aucune source externe n'est autorisee. La politique du site, qui
-    # charge htmx, sera plus large et declaree sur ses propres pages.
-    reponse.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
+    # La politique de contenu est posee par defaut seulement : une reponse JSON ne charge rien,
+    # donc tout est interdit. Les pages du site, elles, chargent leur feuille de style et htmx,
+    # et declarent donc leur propre politique, plus large mais toujours limitee a elles-memes
+    # (voir `services/site/pages.py`). `setdefault` et non une affectation : sans cela, ce
+    # middleware ecraserait la politique de la page apres que la route l'a posee, et le
+    # navigateur bloquerait la feuille de style du site. Teste.
+    reponse.headers.setdefault(
+        "Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"
+    )
     return reponse
 
 
@@ -196,7 +213,7 @@ LexiquesCharges = Annotated[Lexiques, Depends(lexiques_de)]
 # --- L'etat du service -------------------------------------------------------
 
 
-@application.get("/sante", response_model=Sante, tags=["service"])
+@routeur.get("/sante", response_model=Sante, tags=["service"])
 def sante(requete: Request) -> Sante:
     """Dit si le service repond et si sa base est joignable.
 
@@ -224,7 +241,7 @@ def sante(requete: Request) -> Sante:
 # --- Les marches -------------------------------------------------------------
 
 
-@application.get("/marches", response_model=PageDeMarches, tags=["marches"])
+@routeur.get("/marches", response_model=PageDeMarches, tags=["marches"])
 def chercher_des_marches(
     curseur_sql: Curseur,
     q: Annotated[
@@ -301,7 +318,7 @@ def chercher_des_marches(
     )
 
 
-@application.get("/marches/{marche_id}", response_model=MarcheDetaille, tags=["marches"])
+@routeur.get("/marches/{marche_id}", response_model=MarcheDetaille, tags=["marches"])
 def lire_un_marche(
     curseur_sql: Curseur,
     marche_id: Annotated[str, Path(min_length=1, max_length=64)],
@@ -324,7 +341,7 @@ def lire_un_marche(
 # --- Les signaux -------------------------------------------------------------
 
 
-@application.get("/signaux", response_model=list[Signal], tags=["signaux"])
+@routeur.get("/signaux", response_model=PageDeSignaux, tags=["signaux"])
 def lister_les_signaux(
     curseur_sql: Curseur,
     minimum: Annotated[
@@ -338,7 +355,7 @@ def lister_les_signaux(
     ] = 1,
     page: Annotated[int, Query(ge=1, le=PAGE_MAXIMUM)] = 1,
     taille: Annotated[int, Query(ge=1, le=TAILLE_MAXIMUM)] = TAILLE_PAR_DEFAUT,
-) -> list[Signal]:
+) -> PageDeSignaux:
     """Les marches a examiner, les plus signales d'abord.
 
     Un signal n'est pas une accusation. Il dit qu'un marche s'ecarte de ses pairs sur un point
@@ -346,14 +363,22 @@ def lister_les_signaux(
     regles avec les anomalies publiees par le producteur est de 69,3 pour cent hors echantillon,
     intervalle de 67,8 a 70,8 : utile pour trier, insuffisant pour conclure.
     """
-    curseur_sql.execute(requetes.SIGNAUX, (minimum, taille, (page - 1) * taille))
-    return curseur_sql.fetchall()  # type: ignore[return-value]
+    # Une ligne de plus que demande, comme sur /marches : sa seule presence dit qu'il existe
+    # une page suivante, et elle n'est pas renvoyee.
+    curseur_sql.execute(requetes.SIGNAUX, (minimum, taille + 1, (page - 1) * taille))
+    lignes = curseur_sql.fetchall()
+    return PageDeSignaux(
+        resultats=lignes[:taille],  # type: ignore[arg-type]
+        page=page,
+        taille=taille,
+        page_suivante=len(lignes) > taille,
+    )
 
 
 # --- Les comptages -----------------------------------------------------------
 
 
-@application.get("/statistiques", response_model=Statistiques, tags=["statistiques"])
+@routeur.get("/statistiques", response_model=Statistiques, tags=["statistiques"])
 def lire_les_statistiques(curseur_sql: Curseur) -> Statistiques:
     """Les comptages de la page d'accueil, lus dans une table d'une ligne.
 
@@ -375,7 +400,7 @@ def lire_les_statistiques(curseur_sql: Curseur) -> Statistiques:
     return Statistiques(**ligne)
 
 
-@application.get(
+@routeur.get(
     "/statistiques/annees", response_model=list[StatistiqueAnnuelle], tags=["statistiques"]
 )
 def lire_par_annee(curseur_sql: Curseur) -> list[StatistiqueAnnuelle]:
@@ -386,13 +411,22 @@ def lire_par_annee(curseur_sql: Curseur) -> list[StatistiqueAnnuelle]:
     des non-PME serait une erreur de 6,8 points, toujours dans le meme sens.
     """
     curseur_sql.execute(requetes.PAR_ANNEE)
-    return curseur_sql.fetchall()  # type: ignore[return-value]
+    # Les lignes sont converties en modeles ici, et non laissees en dictionnaires.
+    #
+    # Elles l'etaient, avec un `# type: ignore[return-value]` pour faire taire le verificateur
+    # de types : la fonction annoncait `list[StatistiqueAnnuelle]` et rendait des
+    # dictionnaires. FastAPI les convertissait au moment de serialiser, donc l'API etait juste
+    # et le mensonge invisible. Il a cesse de l'etre le 22 octobre 2026, quand une page du site
+    # a appele cette fonction directement : `annee.annee` sur un dictionnaire, et la page
+    # d'accueil repondait 500. Un `type: ignore` ne masque pas un detail de typage, il masque
+    # une affirmation fausse, et elle attend le second appelant.
+    return [StatistiqueAnnuelle(**ligne) for ligne in curseur_sql.fetchall()]
 
 
 # --- L'assistant -------------------------------------------------------------
 
 
-@application.get("/assistant", response_model=ReponseAssistant, tags=["assistant"])
+@routeur.get("/assistant", response_model=ReponseAssistant, tags=["assistant"])
 def interroger_l_assistant(
     curseur_sql: CurseurPositionnel,
     lexiques: LexiquesCharges,
@@ -428,3 +462,10 @@ def interroger_l_assistant(
         avertissement=reponse.avertissement,
         duree_ms=reponse.duree_ms,
     )
+
+
+# --- Montage -----------------------------------------------------------------
+#
+# A la fin du fichier et non au debut : `include_router` copie les routes declarees a cet
+# instant. Monte avant les decorateurs, il ne monterait rien du tout, sans erreur.
+application.include_router(routeur, prefix=PREFIXE_API)
