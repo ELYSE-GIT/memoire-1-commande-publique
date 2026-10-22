@@ -1,0 +1,7 @@
+poste,valeur,unite,mesure_par,commentaire
+base PostgreSQL,2481.0,Mo,"pg_database_size, base chargee",ce qu'il faut provisionner en disque pour la base
+donnees sources conservees,508.0,Mo,taille des dossiers brut et bronze,gardees pour pouvoir tout recharger sans recollecter
+memoire du service,37.3,Mo,make bench-api,"processus uvicorn, reserve de connexions et lexiques compris"
+memoire plafonnee de PostgreSQL,3072.0,Mo,"compose.yaml, limite explicite","plafond pose, pas consommation observee"
+processeurs plafonnes de PostgreSQL,2.0,vCPU,"compose.yaml, limite explicite",le service applicatif se contente du reste
+debit maximal mesure,89.3,requetes par seconde,make bench-api,"sur la route de recherche, aucun echec sur 300 appels"

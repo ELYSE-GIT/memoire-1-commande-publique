@@ -1,0 +1,7 @@
+scenario,fournisseur,detail,calcul,stockage,total_eur_mois,ce_qui_n_est_pas_inclus
+"VPS, tout sur une machine",OVHcloud,"vps-comfort-4-8-160, PostgreSQL et le service sur la meme machine",23.5,0.0,23.5,"sauvegardes, supervision et mises a jour a notre charge"
+"VPS minimal, tout sur une machine",OVHcloud,"vps-essential-2-8-80, au plus juste de l'empreinte mesuree",17.5,0.0,17.5,"idem, et aucune marge de croissance du disque"
+"service gere, base geree",AWS,EC2 t4g.medium + RDS db.t4g.large Single-AZ + 4 Go GP3,118.96,0.47,119.44,"Multi-AZ, transfert sortant, sauvegardes au-dela du volume de la base, supervision"
+"service gere, base geree",Azure,VM D2_v5 + PostgreSQL Flexible B2S + 4 Go + sauvegarde,120.81,0.82,121.64,"haute disponibilite, transfert sortant, supervision"
+"base geree seule, borne basse",Google Cloud,"Cloud SQL PostgreSQL 2 vCPU, 8 Gio, 4 Go SSD",90.3,0.61,90.9,"la machine qui sert les pages, la haute disponibilite, et la region n'est pas identifiable dans la source"
+"base geree seule, borne haute",Google Cloud,"Cloud SQL PostgreSQL 2 vCPU, 8 Gio, 4 Go SSD",175.12,1.21,176.34,"la machine qui sert les pages, la haute disponibilite, et la region n'est pas identifiable dans la source"

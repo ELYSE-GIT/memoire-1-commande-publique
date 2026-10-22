@@ -13,7 +13,7 @@ enferme dans un format proprietaire tant que ce choix n'est pas arrete.
 | `02-etat-des-lieux.md` | chapitre 2 : le probleme, en chiffres mesures | brouillon redige |
 | `09-recherche-et-assistant.md` | chapitre 9 : du mot-cle a la reponse sourcee | brouillon redige |
 | `11-mesures-et-incertitude.md` | chapitre 11, sections 11.1 et 11.2 : ce que vaut un pourcentage, et la validation hors echantillon | brouillon partiel |
-| `figures/` | les figures, produites par `make figures` depuis `mesures/resultats/` | 25 figures |
+| `figures/` | les figures, produites par `make figures` depuis `mesures/resultats/` | 26 figures |
 
 ## Regles tenues dans ces textes
 

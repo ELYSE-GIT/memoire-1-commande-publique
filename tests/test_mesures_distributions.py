@@ -568,6 +568,72 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
             "True",
         ],
     ]
+    # La figure 26 : les couts compares. Les valeurs sont celles du 22 octobre 2026.
+    contenus["couts-scenarios"] = [
+        [
+            "scenario",
+            "fournisseur",
+            "detail",
+            "calcul",
+            "stockage",
+            "total_eur_mois",
+            "ce_qui_n_est_pas_inclus",
+        ],
+        [
+            "VPS, tout sur une machine",
+            "OVHcloud",
+            "vps-comfort-4-8-160",
+            "23.5",
+            "0.0",
+            "23.5",
+            "sauvegardes a notre charge",
+        ],
+        [
+            "VPS minimal, tout sur une machine",
+            "OVHcloud",
+            "vps-essential-2-8-80",
+            "17.5",
+            "0.0",
+            "17.5",
+            "idem",
+        ],
+        [
+            "service gere, base geree",
+            "AWS",
+            "EC2 + RDS + 4 Go GP3",
+            "118.97",
+            "0.47",
+            "119.44",
+            "Multi-AZ, transfert sortant",
+        ],
+        [
+            "service gere, base geree",
+            "Azure",
+            "VM + Flexible B2S + 4 Go",
+            "120.82",
+            "0.82",
+            "121.64",
+            "haute disponibilite",
+        ],
+        [
+            "base geree seule, borne basse",
+            "Google Cloud",
+            "Cloud SQL 2 vCPU 8 Gio",
+            "90.09",
+            "0.81",
+            "90.9",
+            "la machine qui sert les pages",
+        ],
+        [
+            "base geree seule, borne haute",
+            "Google Cloud",
+            "Cloud SQL 2 vCPU 8 Gio",
+            "174.72",
+            "1.62",
+            "176.34",
+            "la machine qui sert les pages",
+        ],
+    ]
     for nom, lignes in contenus.items():
         with (agregats / f"{nom}.csv").open("w", newline="", encoding="utf-8") as sortie:
             csv.writer(sortie, lineterminator="\n").writerows(lignes)
@@ -578,5 +644,5 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     figures.main()
 
     produites = sorted(chemin.name for chemin in sorties.glob("*.svg"))
-    assert len(produites) == 25, f"vingt-cinq figures attendues, obtenu : {produites}"
+    assert len(produites) == 26, f"vingt-six figures attendues, obtenu : {produites}"
     assert all((sorties / nom.replace(".svg", ".png")).exists() for nom in produites)

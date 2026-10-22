@@ -258,6 +258,11 @@ bench-api:
 bench-site:
 	uv run --env-file .env python -m mesures.site
 
+## bench-couts : ce que le projet coute a faire tourner, et ce qu'il couterait chez AWS,
+## Azure et Google Cloud, a charge egale (necessite `make up` : la taille de la base est mesuree)
+bench-couts:
+	uv run python -m mesures.couts
+
 ## figures : trace les figures du memoire a partir des agregats mesures
 figures:
 	uv run python mesures/figures.py

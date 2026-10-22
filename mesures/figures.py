@@ -1573,6 +1573,7 @@ def main() -> None:
     figure_stabilite()
     figure_api()
     figure_site()
+    figure_couts()
     print(f"\nDossier : {chemin_lisible(FIGURES)}")
 
 
@@ -1777,6 +1778,91 @@ def figure_site() -> None:
     )
     figure.tight_layout()
     enregistrer(figure, "25-site-poids-et-fragments")
+
+
+def figure_couts() -> None:
+    """Ce que la meme charge coute chez chacun, et ce que l'ecart achete.
+
+    Un seul panneau, et c'est voulu : la comparaison tient en une rangee de barres, et lui
+    ajouter un second graphique diluerait le seul chiffre qui compte. Ce que l'argent achete en
+    plus (sauvegardes, bascule, correctifs, engagement de disponibilite) ne se dessine pas :
+    c'est ecrit dans la legende et developpe dans le memoire, parce qu'une barre plus courte
+    sans cette precision serait un argument malhonnete.
+
+    Les barres sont triees du moins cher au plus cher, et celles qui ne couvrent pas la meme
+    chose sont hachurees : les offres de Google Cloud ne comprennent que la base de donnees.
+    Melanger une offre partielle aux offres completes la ferait passer pour la moins chere.
+    """
+    lignes = lire("couts-scenarios")
+    ordonnees = sorted(lignes, key=lambda ligne: float(ligne["total_eur_mois"]))
+
+    figure, axes = plt.subplots(figsize=(9.2, 4.4))
+    etiquettes = [
+        f"{ligne['fournisseur']}\n{ligne['scenario']}".replace(", ", ",\n") for ligne in ordonnees
+    ]
+    totaux = [float(ligne["total_eur_mois"]) for ligne in ordonnees]
+    partielles = ["base geree seule" in ligne["scenario"] for ligne in ordonnees]
+    couleurs = [SERIE_3 if "OVH" in ligne["fournisseur"] else SERIE_1 for ligne in ordonnees]
+
+    positions = range(len(ordonnees))
+    barres = axes.barh(
+        positions,
+        totaux,
+        color=couleurs,
+        height=0.62,
+        hatch=["///" if p else "" for p in partielles],
+        edgecolor=[FILET if p else "none" for p in partielles],
+    )
+    axes.bar_label(
+        barres, labels=[f"{virgule(t, 0)} €" for t in totaux], padding=5, color=ENCRE, fontsize=9
+    )
+    axes.set_yticks(list(positions))
+    axes.set_yticklabels(etiquettes, fontsize=8.5)
+    axes.set_xlabel("euros par mois, hors taxes, sans engagement", color=GRIS, fontsize=9)
+    axes.set_xlim(0, max(totaux) * 1.22)
+    axes.invert_yaxis()
+    soigner(axes, "La meme charge, mesuree, chez quatre fournisseurs")
+    axes.grid(axis="x", color=FILET, linewidth=0.6)
+    axes.grid(axis="y", visible=False)
+
+    # Le scenario retenu, et non le moins cher : le projet tourne sur le VPS a 4 processeurs,
+    # pas sur le minimal. Annoncer un rapport calcule sur une machine qu'on n'utilise pas
+    # gonflerait l'ecart de 6,8 au lieu de 5,1.
+    retenu = next(
+        float(ligne["total_eur_mois"])
+        for ligne in ordonnees
+        if ligne["scenario"] == "VPS, tout sur une machine"
+    )
+    reference = min(
+        float(ligne["total_eur_mois"])
+        for ligne in ordonnees
+        if ligne["scenario"] == "service gere, base geree"
+    )
+    axes.annotate(
+        f"{virgule(reference / retenu, 1)} fois",
+        xy=(
+            reference,
+            [ligne["scenario"] for ligne in ordonnees].index("service gere, base geree"),
+        ),
+        xytext=(reference * 0.62, len(ordonnees) - 1.4),
+        color=ENCRE,
+        fontsize=9.5,
+        fontweight="bold",
+        arrowprops={"arrowstyle": "->", "color": FILET, "linewidth": 1.1},
+    )
+
+    legender(
+        figure,
+        "Sources : listes de prix officielles d'AWS (eu-west-3), d'Azure (francecentral), de "
+        "Google Cloud et catalogue public OVHcloud, relevees le 22 octobre 2026 ; taux de "
+        "change BCE du meme jour.\nLa charge est celle qui est mesuree : base PostgreSQL de "
+        "2,4 Go, service de 37 Mo, 89 requetes par seconde au plus. Hachure : offre qui ne "
+        "couvre que la base, sans la machine qui sert les pages.\nCe que l'ecart achete chez un "
+        "fournisseur gere, et que le VPS laisse a notre charge : sauvegardes automatiques, "
+        "bascule, correctifs appliques, engagement de disponibilite et support.",
+    )
+    figure.tight_layout()
+    enregistrer(figure, "26-couts-compares")
 
 
 if __name__ == "__main__":
