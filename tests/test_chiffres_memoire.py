@@ -247,3 +247,118 @@ def test_le_gain_du_tri_aligne_sur_l_index() -> None:
     for duree in ("28 636", "965"):
         assert duree in memoire, f"{duree} absent du memoire"
         assert duree in code, f"{duree} absent de requetes.py"
+
+
+# --- Chapitre 7 : ingenierie des donnees ---------------------------------------
+
+
+def test_les_trois_couches_citees_au_chapitre_7() -> None:
+    """Le chapitre 7 annonce 3 296 811, 2 121 908 et 1 999 474 lignes, et 94,2 % d'exploitable.
+
+    Ces trois nombres sont la colonne vertebrale du chapitre : tout le reste en est un
+    pourcentage. Si le jeu est retelecharge, ils bougent, et le texte doit bouger avec eux.
+    """
+    couches = {ligne["couche"]: ligne for ligne in agregat("nettoyage-couches")}
+    attendus = {"bronze": 3296811, "argent": 2121908, "or": 1999474}
+    texte = (MEMOIRE / "07-ingenierie-des-donnees.md").read_text(encoding="utf-8")
+    for couche, lignes in attendus.items():
+        assert int(couches[couche]["lignes"]) == lignes, couche
+        ecrit = f"{lignes:,}".replace(",", " ")
+        assert ecrit in texte, f"« {ecrit} » absent du chapitre 7"
+
+    exploitable = int(couches["or"]["lignes"]) / int(couches["argent"]["lignes"]) * 100
+    assert round(exploitable, 1) == 94.2
+    assert "94,2 %" in texte
+
+
+def test_les_neuf_regles_de_nettoyage_et_la_plus_frequente() -> None:
+    """Le chapitre 7 publie les neuf regles, et annonce 66 984 lignes pour la plus frequente."""
+    regles = agregat("nettoyage-regles")
+    assert len(regles) == 9
+    plus_frequente = max(regles, key=lambda ligne: int(ligne["lignes_marquees"]))
+    assert plus_frequente["regle"] == "montant_renseigne"
+    assert int(plus_frequente["lignes_marquees"]) == 66984
+    texte = (MEMOIRE / "07-ingenierie-des-donnees.md").read_text(encoding="utf-8")
+    assert "66 984" in texte and "3,157 %" in texte
+
+
+def test_douze_ecritures_ramenees_a_six_notions() -> None:
+    """Le chapitre 7 affirme que douze ecritures deviennent six notions.
+
+    C'est l'exemple qui montre que la marche la plus basse de l'escalier suffit : deux fonctions
+    SQL, pas un modele. L'affirmation doit donc rester vraie.
+    """
+    notions = agregat("nettoyage-normalisation")
+    assert len(notions) == 6
+    assert sum(int(ligne["ecritures_regroupees"]) for ligne in notions) == 12
+
+
+def test_le_seuil_de_rapprochement_sous_lequel_on_n_ajoute_que_du_faux() -> None:
+    """Le chapitre 7 annonce que les seuils 0,4 et 0,5 donnent le meme nombre de liens justes.
+
+    C'est le resultat le plus contre-intuitif du chapitre, donc celui qu'un lecteur verifiera.
+    """
+    par_seuil = {ligne["seuil_objet"]: ligne for ligne in agregat("rapprochement-precision")}
+    justes = "rapprochements_justes_attendus"
+    assert float(par_seuil["0.4"][justes]) == float(par_seuil["0.5"][justes]) == 54.8
+    # Et le seuil retenu, 0,6, est bien celui qui donne 94,1 % de justesse pour 16 % de couverture.
+    assert float(par_seuil["0.6"]["justesse_estimee_pourcent"]) == 94.1
+    assert float(par_seuil["0.6"]["couverture_pourcent"]) == 16.0
+
+
+# --- Chapitre 8 : detection ----------------------------------------------------
+
+
+def test_les_cinq_signaux_et_le_cumul_annonces_au_chapitre_8() -> None:
+    """Le chapitre 8 annonce 57 409 marches, soit 2,87 %, portant au moins un signal fort.
+
+    « Au moins un signal fort » exclut les deux niveaux faibles : le test verifie l'arithmetique
+    de cette definition, parce que c'est exactement ce qu'un jury demanderait.
+    """
+    signaux = {ligne["signal"]: ligne for ligne in agregat("detection-signaux")}
+    forts = ("prix_tres_eleve", "offre_unique", "titulaire_dominant")
+    somme = sum(int(signaux[nom]["marches"]) for nom in forts)
+    assert somme - int(signaux["au_moins_deux"]["marches"]) == int(
+        signaux["au_moins_un"]["marches"]
+    )
+    assert int(signaux["au_moins_un"]["marches"]) == 57409
+    assert float(signaux["au_moins_un"]["part_pourcent"]) == 2.87
+
+
+def test_la_precision_du_signal_de_prix_et_le_signal_non_evalue() -> None:
+    """Le chapitre 8 annonce 75,8 % au seuil 4, et zero concordance sur les montants bas.
+
+    La seconde moitie est la plus importante : c'est elle qui justifie d'exposer un signal en le
+    marquant « non evalue » plutot que de le supprimer.
+    """
+    seuils = {(ligne["sens"], ligne["seuil"]): ligne for ligne in agregat("detection-seuils")}
+    cher = seuils[("trop cher", "4.0")]
+    assert float(cher["precision_pourcent"]) == 75.8
+    assert int(cher["signales"]) == 8331
+    bas = seuils[("trop bas", "4.0")]
+    assert float(bas["precision_pourcent"]) == 0.0
+    assert int(bas["concordants"]) == 0
+    assert int(bas["signales"]) == 18208
+    # Et melanger les deux directions fait tomber la precision de 75,8 a 23,8 : c'est l'erreur
+    # racontee en 8.5, et le chiffre qui la mesure.
+    assert float(seuils[("les deux", "4.0")]["precision_pourcent"]) == 23.8
+
+
+def test_la_regle_bat_le_meilleur_modele_a_budget_egal() -> None:
+    """Le chapitre 8 annonce 96,1 % pour la regle contre 65,7 % pour le modele a 1 000 alertes.
+
+    Et, plus genant pour le modele : il reste sous le hasard sur les trois premiers budgets.
+    """
+    par_budget: dict[int, dict[str, float]] = {}
+    for ligne in agregat("modele-vs-regles"):
+        budget = int(ligne["budget_alertes"])
+        par_budget.setdefault(budget, {})[ligne["methode"]] = float(ligne["precision_pourcent"])
+
+    assert par_budget[1000]["regle"] == 96.1
+    assert par_budget[1000]["modele_oriente"] == 65.7
+    for budget in (100, 500, 1000):
+        assert par_budget[budget]["regle"] > par_budget[budget]["modele_oriente"]
+        assert par_budget[budget]["modele"] < par_budget[budget]["hasard"]
+    # A tous les budgets mesures, la regle reste devant : c'est l'affirmation du chapitre.
+    for mesures in par_budget.values():
+        assert mesures["regle"] > mesures["modele_oriente"]

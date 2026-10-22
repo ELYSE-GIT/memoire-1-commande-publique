@@ -11,8 +11,14 @@ enferme dans un format proprietaire tant que ce choix n'est pas arrete.
 | `00-plan.md` | plan des 13 chapitres, pagination cible, principes de redaction | a jour |
 | `01-vocabulaire.md` | chapitre 1 : tous les termes du domaine et de la technique | brouillon redige |
 | `02-etat-des-lieux.md` | chapitre 2 : le probleme, en chiffres mesures | brouillon redige |
+| `03-etat-de-l-art.md` | chapitre 3 : ce qui existe deja, outils publics, libres et commerciaux | brouillon redige |
+| `04-marche-et-etudes-de-cas.md` | chapitre 4 : qui utilise ces outils, et ce que l'alternative payante coute | brouillon redige |
+| `05-histoire-des-pratiques.md` | chapitre 5 : d'ou viennent ces outils, et les echecs qui ont change les pratiques | brouillon redige |
+| `06-architecture.md` | chapitre 6 : l'architecture retenue, service par service | brouillon redige |
+| `07-ingenierie-des-donnees.md` | chapitre 7 : collecter, nettoyer, relier les sources | brouillon redige |
+| `08-detection.md` | chapitre 8 : detecter les marches atypiques, et refuser un modele par la mesure | brouillon redige |
 | `09-recherche-et-assistant.md` | chapitre 9 : du mot-cle a la reponse sourcee | brouillon redige |
-| `11-mesures-et-incertitude.md` | chapitre 11, sections 11.1 et 11.2 : ce que vaut un pourcentage, et la validation hors echantillon | brouillon partiel |
+| `11-mesures-et-incertitude.md` | chapitre 11 : ce que vaut un pourcentage, la validation hors echantillon, les couts compares | brouillon redige |
 | `figures/` | les figures, produites par `make figures` depuis `mesures/resultats/` | 26 figures |
 
 ## Regles tenues dans ces textes
