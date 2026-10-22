@@ -1,0 +1,8 @@
+mesure,valeur,unite,commentaire
+solution retenue,23.5,EUR par mois hors taxes,"vps-comfort-4-8-160, PostgreSQL et le service sur la meme machine"
+offre geree complete la moins chere,119.44,EUR par mois hors taxes,AWS : EC2 t4g.medium + RDS db.t4g.large Single-AZ + 4 Go GP3
+offre geree complete la plus chere,121.64,EUR par mois hors taxes,Azure : VM D2_v5 + PostgreSQL Flexible B2S + 4 Go + sauvegarde
+rapport au moins cher des geres complets,5.1,fois,"a charge egale, hors ce que l'offre geree apporte en plus"
+base geree seule chez Google Cloud,90.9,EUR par mois hors taxes,"borne basse, et elle ne couvre que la base : la machine qui sert les pages n'est pas comprise"
+cout annuel de la solution retenue,282.0,EUR par an hors taxes,sans compter le nom de domaine ni le temps d'exploitation
+offres non chiffrees,3,fournisseurs,"Databricks, Snowflake et OpenAI ne publient pas de tarif verifiable sans compte : aucun chiffre plutot qu'un chiffre invente"

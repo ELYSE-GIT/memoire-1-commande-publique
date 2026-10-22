@@ -1,0 +1,25 @@
+fournisseur,service,reference,region,unite,prix,devise,source,consulte_le
+OVHcloud,VPS,"vps-essential-2-8-80 : 2 vCPU, 8 Go, 80 Go SSD",FR,mois,17.5,EUR,https://api.ovh.com/v1/order/catalog/public/vps?ovhSubsidiary=FR,2026-10-22
+OVHcloud,VPS,"vps-comfort-4-8-160 : 4 vCPU, 8 Go, 160 Go SSD",FR,mois,23.5,EUR,https://api.ovh.com/v1/order/catalog/public/vps?ovhSubsidiary=FR,2026-10-22
+OVHcloud,VPS,"vps-comfort-4-16-160 : 4 vCPU, 16 Go, 160 Go SSD",FR,mois,41.1,EUR,https://api.ovh.com/v1/order/catalog/public/vps?ovhSubsidiary=FR,2026-10-22
+AWS,EC2,"t4g.medium : 2 vCPU, 4 Gio",eu-west-3,heure,0.0376,USD,https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/eu-west-3/index.csv,2026-10-22
+AWS,EC2,"t4g.large : 2 vCPU, 8 Gio",eu-west-3,heure,0.0752,USD,https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/eu-west-3/index.csv,2026-10-22
+AWS,EC2,"m7g.large : 2 vCPU, 8 Gio",eu-west-3,heure,0.0952,USD,https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/eu-west-3/index.csv,2026-10-22
+AWS,RDS PostgreSQL,"db.t4g.medium Single-AZ : 2 vCPU, 4 Gio",eu-west-3,heure,0.072,USD,https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/eu-west-3/index.csv,2026-10-22
+AWS,RDS PostgreSQL,"db.t4g.large Single-AZ : 2 vCPU, 8 Gio",eu-west-3,heure,0.145,USD,https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/eu-west-3/index.csv,2026-10-22
+AWS,RDS PostgreSQL,"db.m7g.large Single-AZ : 2 vCPU, 8 Gio",eu-west-3,heure,0.195,USD,https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/eu-west-3/index.csv,2026-10-22
+AWS,RDS stockage,General Purpose GP3,eu-west-3,Go-mois,0.133,USD,https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/eu-west-3/index.csv,2026-10-22
+AWS,S3,"Standard, premier palier (0 a 50 To)",eu-west-3,Go-mois,0.024,USD,https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonS3/current/eu-west-3/index.csv,2026-10-22
+Azure,Machine virtuelle,"Standard_D2_v5 Linux : 2 vCPU, 8 Gio",francecentral,heure,0.0986,EUR,https://prices.azure.com/api/retail/prices,2026-10-22
+Azure,PostgreSQL Flexible Server,B2S burstable : 2 vCore,francecentral,heure,0.0669,EUR,https://prices.azure.com/api/retail/prices,2026-10-22
+Azure,PostgreSQL Flexible Server,B4ms burstable : 4 vCore,francecentral,heure,0.2675,EUR,https://prices.azure.com/api/retail/prices,2026-10-22
+Azure,PostgreSQL Flexible Server,D2ds_v5 General Purpose : 2 vCore,francecentral,heure,0.1813,EUR,https://prices.azure.com/api/retail/prices,2026-10-22
+Azure,PostgreSQL stockage,Flex Server Storage Data Stored,francecentral,Go-mois,0.117,EUR,https://prices.azure.com/api/retail/prices,2026-10-22
+Azure,PostgreSQL sauvegarde,Backup Storage LRS,francecentral,Go-mois,0.088,EUR,https://prices.azure.com/api/retail/prices,2026-10-22
+Google Cloud,Cloud SQL PostgreSQL,vCPU : tarif le plus bas publie,non identifiable,heure,0.0413,USD,https://cloud.google.com/sql/pricing,2026-10-22
+Google Cloud,Cloud SQL PostgreSQL,vCPU : tarif le plus haut publie,non identifiable,heure,0.07,USD,https://cloud.google.com/sql/pricing,2026-10-22
+Google Cloud,Cloud SQL PostgreSQL,RAM : tarif le plus bas publie,non identifiable,Gio-heure,0.007,USD,https://cloud.google.com/sql/pricing,2026-10-22
+Google Cloud,Cloud SQL PostgreSQL,RAM : tarif le plus haut publie,non identifiable,Gio-heure,0.0161,USD,https://cloud.google.com/sql/pricing,2026-10-22
+Google Cloud,Cloud SQL stockage,SSD : tarif le plus bas publie,non identifiable,Gio-heure,0.000232877,USD,https://cloud.google.com/sql/pricing,2026-10-22
+Google Cloud,Cloud SQL stockage,SSD : tarif le plus haut publie,non identifiable,Gio-heure,0.000465753,USD,https://cloud.google.com/sql/pricing,2026-10-22
+Banque centrale europeenne,Change,1 USD en EUR,-,USD,0.89246,EUR,https://api.frankfurter.dev/v1/latest?base=USD&symbols=EUR,2026-10-22

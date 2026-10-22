@@ -18,7 +18,7 @@ Cible : 40 à 60 pages, hors annexes.
 | 8 | Détection des marchés atypiques | de la règle au modèle, et ce que la mesure justifie | 6 | phase 5, matière réunie ; la validation hors échantillon est en 11.2 |
 | 9 | Recherche et assistant | du mot-clé à la réponse sourcée, l'escalier de complexité | 5 | **rédigé** |
 | 10 | Mise en production et sécurité | l'API et l'interface, puis VPS, conteneurs, supervision, sauvegardes | 6 | **10.1 et 10.2 rédigées**, le reste en phase 9 |
-| 11 | Mesures, coûts et comparaison au marché | performance, qualité, euros par mois, face aux offres payantes | 5 | **11.1 et 11.2 rédigées**, le reste en phase 8 |
+| 11 | Mesures, coûts et comparaison au marché | performance, qualité, euros par mois, face aux offres payantes | 5 | **11.1, 11.2 et 11.3 rédigées** |
 | 12 | Difficultés rencontrées et solutions | le journal de bord, transformé en enseignements | 4 | alimenté en continu |
 | 13 | Conclusion et limites | ce qui est démontré, ce qui ne l'est pas, ce qui reste à faire | 2 | à écrire |
 

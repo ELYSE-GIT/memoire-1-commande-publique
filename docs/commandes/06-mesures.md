@@ -36,7 +36,8 @@ make transformer         # construit les couches argent et or, et les variables 
 | `make bench-stabilite` | la regle de detection calee sur 2019-2023, appliquee a 2024-2026 | environ 2 s | `stabilite-*.csv` |
 | `make bench-api` | l'API publique, route par route, puis sous charge | environ 4 min | `api-latences.csv`, `api-charge.csv`, `api-classement.csv`, `api-resume.csv` |
 | `make bench-site` | le site : poids de chaque page, gain du fragment, rendu sans JavaScript | environ 1 min | `site-pages.csv`, `site-fragments.csv`, `site-statique.csv`, `site-resume.csv` |
-| `make figures` | trace les 25 figures du memoire depuis les CSV | environ 5 s | `memoire/figures/` |
+| `make bench-couts` | cout mensuel de la charge mesuree, sur VPS et chez trois fournisseurs | environ 5 s | `couts-empreinte.csv`, `couts-scenarios.csv`, `couts-resume.csv` |
+| `make figures` | trace les 26 figures du memoire depuis les CSV | environ 5 s | `memoire/figures/` |
 
 ---
 
@@ -395,3 +396,49 @@ make bench-site
 - **Les en-tetes servis.** Le banc relit la politique de securite reellement envoyee et verifie
   qu'elle n'autorise ni `unsafe-inline` ni aucun domaine tiers. Une politique ecrite dans le
   code et jamais relue dans une reponse reelle est une intention, pas une mesure.
+
+
+---
+
+## `make bench-couts` : ce que ca coute ici, et ce que ca couterait ailleurs
+
+Mesure l'empreinte reelle du service, puis calcule ce que la **meme charge** couterait chez AWS,
+Azure et Google Cloud, a partir de tarifs releves aux sources officielles.
+
+```bash
+make up
+make bench-couts
+```
+
+**Duree** : environ 5 secondes. `make up` est necessaire : la taille de la base est demandee a
+PostgreSQL, pas estimee.
+
+**Resultat attendu**, tarifs du 22 octobre 2026 :
+
+| Scenario | Fournisseur | EUR par mois HT |
+|---|---|---|
+| VPS minimal, tout sur une machine | OVHcloud | 17,50 |
+| **VPS retenu**, tout sur une machine | OVHcloud | **23,50** |
+| Base geree seule, borne basse | Google Cloud | 90,90 |
+| Service gere et base geree | AWS | 119,44 |
+| Service gere et base geree | Azure | 121,64 |
+| Base geree seule, borne haute | Google Cloud | 176,34 |
+
+**Ce qu'il faut savoir en expliquer** :
+
+- **Le rapport est de 5,1**, pas davantage, et il se compare a l'offre **complete** la moins
+  chere. Les deux lignes de Google Cloud ne couvrent que la base de donnees : les melanger aux
+  offres completes ferait passer une offre partielle pour la moins chere.
+- **Les tarifs viennent de sources officielles et machine-lisibles**, versionnees dans
+  `mesures/reference/prix-cloud.csv` avec leur region, leur devise et leur date. Aucun prix de
+  comparateur tiers.
+- **Google Cloud est donne en fourchette** : sa page publie plusieurs jeux de prix sans que la
+  source permette d'identifier la region de chacun. La borne basse est celle qui l'avantage.
+- **L'ecart achete quelque chose** : sauvegardes automatiques, bascule, correctifs appliques,
+  engagement de disponibilite, support. Le chiffrage retient des configurations a une seule
+  zone ; en haute disponibilite, la facture geree double a peu pres, donc l'ecart se creuse.
+- **Trois offres ne sont pas chiffrees** : Databricks, Snowflake et OpenAI ne publient pas de
+  tarif verifiable sans compte. Le projet n'en publie aucun chiffre plutot qu'un chiffre
+  invente, et cette asymetrie entre fournisseurs est elle-meme un resultat.
+- **Ce qui ne figure dans aucune colonne** : le temps d'ingenierie. Il ne disparait pas parce
+  qu'il n'est pas facture.

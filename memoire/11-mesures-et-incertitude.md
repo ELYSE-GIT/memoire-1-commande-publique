@@ -1,8 +1,7 @@
 # Chapitre 11. Mesures, coûts et comparaison au marché
 
-> Brouillon partiel. Les sections 11.1 et 11.2 sont rédigées ; les sections sur les coûts en euros
-> et la comparaison aux offres payantes viendront de la phase 8. Les faits, chiffres et mesures
-> sont vérifiés et reproductibles ; la formulation reste à reprendre dans la voix de l'auteur.
+> Brouillon partiel. Les sections 11.1 à 11.3 sont rédigées. Les faits, chiffres et mesures sont
+> vérifiés et reproductibles ; la formulation reste à reprendre dans la voix de l'auteur.
 
 ---
 
@@ -266,3 +265,131 @@ mérite sa propre mesure. Il est inscrit au carnet, et il illustre un enseigneme
 le mémoire : **chercher une faiblesse en révèle d'autres**. Cette session cherchait des intervalles
 de confiance. Elle a trouvé une fuite de données, un décrochage annuel inexpliqué, et un défaut du
 modèle de production. Aucun des trois n'était visible sans la mesure.
+
+
+---
+
+## 11.3 Ce que cela coûte, et ce que cela coûterait ailleurs
+
+La thèse de ce mémoire tient en une phrase : une plateforme de qualité professionnelle, sécurisée
+et maintenable, pour une fraction du coût des offres gérées. Une affirmation pareille se vérifie
+ou s'effondre sur la manière dont la comparaison est posée. Cette section pose la comparaison,
+puis la chiffre, puis dit ce qu'elle ne prouve pas.
+
+### 11.3.1 Trois façons de tricher, et comment la mesure les évite
+
+**Comparer deux choses différentes.** « AWS contre un serveur privé virtuel » ne veut rien dire
+dans l'absolu : tout dépend de ce qu'on y met. La comparaison porte ici sur une charge précise et
+mesurée, celle de ce projet : une base PostgreSQL de 2 481 mégaoctets, un service applicatif de
+37 mégaoctets de mémoire résidente, un plafond mesuré de 89 requêtes par seconde, et les limites
+de processeur et de mémoire réellement déclarées dans la configuration des conteneurs. Aucun de
+ces chiffres n'est estimé : ils sont lus par le script de mesure, qui interroge la base pour sa
+taille et reprend les autres dans les résultats des bancs d'essai précédents.
+
+**Comparer des prix invérifiables.** Les tarifs du nuage changent, varient par région et
+diffèrent fortement entre la vitrine commerciale et la facture. Chaque tarif utilisé ici provient
+d'une **source officielle et lisible par une machine**, avec sa référence exacte, sa région, sa
+devise et sa date de relevé : la liste de prix publique d'AWS pour la région de Paris, l'interface
+de tarification au détail d'Azure pour la région France Centre, la page de tarification de Google
+Cloud, et le catalogue public d'OVHcloud. Ils sont versionnés dans le dépôt, de sorte qu'un
+lecteur peut les reprendre un par un. Aucun prix ne provient d'un comparateur tiers ni d'un
+article de blog.
+
+**Oublier ce que l'argent achète.** C'est la tricherie la plus fréquente et la plus grave. Une
+base de données gérée n'est pas un serveur plus cher : elle apporte des sauvegardes automatiques
+et testées, un basculement en cas de panne, des correctifs de sécurité appliqués sans
+intervention, un engagement contractuel de disponibilité et un interlocuteur à appeler. Le
+tableau ci-dessous chiffre le prix ; le paragraphe qui le suit dit ce que ce prix couvre, car un
+chiffre seul mentirait par omission.
+
+### 11.3.2 Le résultat
+
+| Scénario | Fournisseur | Euros par mois, hors taxes |
+|---|---|---|
+| Serveur privé virtuel minimal, tout sur une machine | OVHcloud | **17,50** |
+| **Serveur privé virtuel retenu**, tout sur une machine | OVHcloud | **23,50** |
+| Base gérée seule, borne basse | Google Cloud | 90,90 |
+| Service géré et base gérée | AWS | **119,44** |
+| Service géré et base gérée | Azure | **121,64** |
+| Base gérée seule, borne haute | Google Cloud | 176,34 |
+
+*Source : `make bench-couts`, tarifs relevés le 22 octobre 2026, taux de change de la Banque
+centrale européenne du même jour. Sans engagement, sans réservation, sans remise de volume.
+Figure 26.*
+
+La solution retenue coûte **23,50 euros par mois**, soit 282 euros par an, contre 119,44 euros
+pour l'offre gérée complète la moins chère : un rapport de **5,1**. Les deux lignes de Google
+Cloud sont marquées à part et hachurées sur la figure, parce qu'elles ne couvrent **que la base
+de données** : la machine qui sert les pages n'y est pas comprise. Les confondre avec les offres
+complètes ferait passer une offre partielle pour la moins chère.
+
+Deux précisions de méthode s'imposent sur Google Cloud. Sa page de tarification publie plusieurs
+jeux de prix sans que le code source de la page permette de déterminer à quelle région chacun
+correspond ; le projet publie donc une fourchette plutôt qu'un chiffre, et la borne basse est
+celle qui avantage le fournisseur. Cette fourchette va du simple à près du double, ce qui est en
+soi une information sur la difficulté de comparer des tarifs de nuage.
+
+### 11.3.3 Ce que l'écart achète réellement
+
+Les 96 euros mensuels d'écart entre le serveur privé virtuel et l'offre AWS ne sont pas une
+marge sans contrepartie. Ils achètent quatre choses que le projet devra assurer lui-même :
+
+**Les sauvegardes.** Une base gérée les prend, les conserve et permet une restauration à un
+instant donné. Sur le serveur privé virtuel, c'est un travail de la phase 9, et une sauvegarde
+qui n'a jamais été restaurée n'est pas une sauvegarde.
+
+**Le basculement.** Une offre en haute disponibilité redémarre le service sur une autre machine
+quand la première tombe. Le chiffrage ci-dessus retient délibérément les configurations à une
+seule zone, qui n'offrent pas cette garantie : les prendre en haute disponibilité doublerait
+approximativement la facture gérée, et creuserait l'écart au lieu de le réduire. Le serveur
+privé virtuel, lui, n'offre aucune garantie de ce type à aucun prix.
+
+**Les correctifs.** Les mises à jour du système et du moteur de base de données sont appliquées
+par le fournisseur. Sur le serveur privé virtuel, elles relèvent de l'exploitation.
+
+**Un interlocuteur.** Un engagement contractuel de disponibilité et un support technique. Un
+projet d'étude peut s'en passer ; une organisation qui dépendrait de ce service, non.
+
+À cela s'ajoute le coût le plus souvent omis dans ce genre de comparaison, et qui ne figure dans
+aucune des deux colonnes : **le temps d'ingénierie**. Les heures consacrées à écrire la collecte,
+le nettoyage, la détection, la recherche, l'interface et leur exploitation ne disparaissent pas
+parce qu'elles ne sont pas facturées. Elles sont simplement payées en temps plutôt qu'en euros.
+Le chapitre 13 y revient, parce que c'est la limite honnête de la thèse défendue ici.
+
+### 11.3.4 L'échelle à laquelle ce résultat s'inverse
+
+Ce calcul porte sur **un** service, deux millions de lignes et une centaine de requêtes par
+seconde au plus. Trois seuils renverseraient la conclusion.
+
+**Le volume.** Au-delà de quelques téraoctets, la gestion du stockage, des sauvegardes et des
+restaurations cesse d'être une tâche annexe. Le projet en est à 2,4 gigaoctets.
+
+**La charge.** Au-delà de quelques milliers de requêtes par seconde, l'élasticité d'une offre
+gérée cesse d'être un confort et devient la seule réponse praticable. Le plafond mesuré de ce
+service est de 89 requêtes par seconde sur une machine de développement.
+
+**Le coût du temps.** Dès que le temps d'exploitation est facturé au prix d'un ingénieur, les
+96 euros d'écart mensuel représentent moins d'une heure de travail. Une organisation qui paie ce
+temps a tout intérêt à acheter ce qu'elle peut acheter.
+
+Autrement dit, le résultat de cette section ne dit pas que les offres gérées sont chères. Il dit
+qu'**à cette échelle, pour cet usage, elles ne sont pas nécessaires**, et il chiffre de combien.
+
+### 11.3.5 Trois offres que ce mémoire ne chiffre pas
+
+Databricks, Snowflake et OpenAI figurent dans le cahier des charges de ce mémoire parmi les
+offres auxquelles l'approche doit être comparée. Elles ne sont pas chiffrées ici, et la raison
+mérite d'être dite plutôt que contournée : **aucune des trois ne publie de tarif sous une forme
+vérifiable sans ouvrir un compte**. Leurs pages de tarification construisent leurs tableaux dans
+le navigateur, et aucune n'expose de liste de prix publique comparable à celle d'AWS ou
+d'Azure. Vérifié le 22 octobre 2026.
+
+Le projet ne publie donc aucun chiffre pour ces trois offres, plutôt qu'un chiffre repris d'un
+comparateur tiers. Cette absence est elle-même un résultat : parmi six fournisseurs examinés,
+trois rendent leurs prix vérifiables par un tiers et trois non, et cette asymétrie est une donnée
+pour quiconque compare avant d'acheter.
+
+Une comparaison qualitative reste possible et sera faite dans le chapitre d'architecture : le
+projet n'a lancé aucun traitement distribué, n'a jamais eu recours à un entrepôt de données
+séparé, et n'a appelé aucun modèle de langue. Les trois offres répondent à des besoins que ce
+projet, à sa taille, n'a pas rencontrés. Le chiffrer demanderait d'abord d'inventer ces besoins.
