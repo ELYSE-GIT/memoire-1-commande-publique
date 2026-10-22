@@ -71,7 +71,7 @@ vingt fois plus rapide, DuckDB occupe cinq fois moins de place.
 | **Mesures** | tout chiffrer, et ecrire les resultats en CSV | `mesures/` |
 | **Figures** | tracer depuis les CSV, jamais depuis les donnees | `mesures/figures.py` |
 | **Exploration** | montrer la demarche, code visible et execute | `analyses/*.ipynb` |
-| **Tests** | 235 tests, dont 20 qui executent la vraie chaine | `tests/` |
+| **Tests** | 239 tests, dont 20 qui executent la vraie chaine | `tests/` |
 | **Decisions** | pourquoi tel choix, et ce qui a ete ecarte | `docs/adr/` |
 | **Journal** | ce qui a mal tourne, et la lecon | `docs/journal/` |
 
@@ -109,7 +109,7 @@ Ou il s'applique deja :
 | Relier deux sources sans identifiant commun | quatre criteres empiles | de 0 % a 14,7 % de liens surs |
 | **Monter a l'apprentissage automatique** | dix methodes comparees a budget egal | **refuse** : aucun modele ne depasse la statistique |
 | Chercher dans deux millions d'objets | mots cles, tous les mots puis au moins un mot | 7 ms de mediane, aucune question sans reponse |
-| Servir cette recherche a des visiteurs | classement borne a 5 000 candidats, annonce dans la reponse | 22 ms de mediane, 94 requetes par seconde |
+| Servir cette recherche a des visiteurs | classement borne a 5 000 candidats, annonce dans la reponse | 22 ms de mediane, une centaine de requetes par seconde |
 | Afficher des comptages sur deux millions de lignes | calcul deplace au chargement, dans une table | de 10,7 s a la demande a 0,5 ms |
 | **Monter aux plongements lexicaux** | pas encore mesure | **en attente** : pgvector est installe, aucune colonne vectorielle creee |
 

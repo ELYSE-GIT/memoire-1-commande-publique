@@ -105,6 +105,34 @@ Trois consequences assumees :
 - **Pas de cache HTTP.** Mettre en cache une route qui repond en 2 ms n'apporterait rien. A
   remesurer quand le site existera et que les pages assembleront plusieurs appels.
 
+## Deux bornes ajoutees apres relecture de securite
+
+Elles ne changent pas la decision, mais elles manquaient, et toutes deux decoulent du fait
+nouveau que ce code est desormais expose au public.
+
+**L'attente d'une connexion et la taille de la file.** Avec quatre connexions et dix secondes par
+requete, quatre requetes lentes occupent toute la reserve. Le defaut de psycopg_pool fait alors
+patienter trente secondes chaque visiteur suivant, chacun immobilisant un fil d'execution : le
+service reste debout en apparence et ne repond plus a personne. C'est le mode de panne le plus
+difficile a diagnostiquer, parce qu'il ne ressemble pas a une panne. L'attente est bornee a cinq
+secondes et la file a trente-deux visiteurs, ce qui absorbe une pointe et refuse tot une charge
+soutenue. Elargir la reserve aurait ete la mauvaise reponse : sur un petit VPS, cela remplace une
+file d'attente par une panne de memoire.
+
+**Le cache des mots de l'assistant.** La fonction qui cherche la frequence d'un mot garde ses
+resultats dans un dictionnaire. Tant qu'elle ne servait qu'a `make bench-assistant`, elle voyait
+40 questions ecrites a la main dans un processus qui s'arrete. Exposee par l'API, elle recoit ce
+qu'un inconnu tape, et un dictionnaire sans borne grandit d'une entree par mot jamais vu, dans un
+service qui tourne des semaines. Il est desormais borne a 20 000 entrees, le plus anciennement
+utilise sortant en premier.
+
+Ce que cette seconde borne ne protege pas, et qu'il faut dire : chaque mot inconnu coute une
+requete a la base, en cache ou non. Limiter le nombre d'appels appartient au reverse-proxy, seul
+a voir la vraie adresse de l'appelant, et c'est la meme raison que pour la limitation de debit.
+
+La lecon generale est que du code sur, parce qu'il ne voyait que des entrees connues, cesse de
+l'etre le jour ou on l'expose, sans qu'une seule de ses lignes ait change.
+
 ## Consequences
 
 - Les comptages sont desormais un **etat a reconstruire** : `make indexer` doit suivre tout
@@ -129,7 +157,8 @@ Trois consequences assumees :
   Qdrant). Ni l'un ni l'autre n'est justifie avant d'avoir mesure ce que l'approximation gene
   reellement, ce qui demande les jugements de pertinence encore a rendre.
 - **Plusieurs dizaines de visiteurs simultanes** rendraient l'avantage a un pilote asynchrone.
-  `make bench-api` mesure le palier : 94 requetes par seconde, sans aucun echec sur 300 appels.
+  `make bench-api` mesure le palier : de 95 a 111 requetes par seconde selon l'execution,
+  sans aucun echec sur 300 appels.
   Tant qu'il n'est pas atteint, reecrire l'assistant en asynchrone serait un cout sans
   contrepartie.
 - **Des donnees arrivant en continu** plutot que par lots rendraient les tables de comptages

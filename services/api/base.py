@@ -72,6 +72,36 @@ journal = logging.getLogger("api")
 CONNEXIONS_MINIMUM = 1
 CONNEXIONS_MAXIMUM = 4
 
+# Combien de temps un visiteur attend une connexion libre avant d'etre econduit, et combien de
+# visiteurs au plus patientent dans cette file.
+#
+# Ces deux bornes sont la contrepartie d'une reserve volontairement petite. Avec quatre
+# connexions et un delai de dix secondes par requete, quatre requetes lentes suffisent a
+# occuper toute la reserve. Sans borne sur l'attente, les visiteurs suivants patienteraient
+# trente secondes (le defaut de psycopg_pool), chacun en immobilisant un fil d'execution : le
+# service resterait debout en apparence et ne repondrait plus a personne. C'est le mode de
+# panne le plus desagreable, parce qu'il ne ressemble pas a une panne.
+#
+#     Option envisagee          Avantage                    Limite                    Verdict
+#     attente sans borne        aucun visiteur econduit     une file qui grandit sans  exclu
+#                                                            limite, et des fils
+#                                                            immobilises a attendre
+#     **attente courte et       le service dit « trop de    des visiteurs recoivent    **retenu**
+#     file bornee**             monde » au lieu de ne       une erreur pendant une
+#                               plus repondre               pointe
+#     elargir la reserve        plus de requetes            chaque connexion est un
+#                              simultanees                  processus serveur avec son  ecarte
+#                                                           `work_mem` : sur un petit
+#                                                           VPS, c'est une panne de
+#                                                           memoire au lieu d'une file
+#
+# Cinq secondes : au-dela, un visiteur a de toute facon referme la page. Trente-deux en
+# attente : quatre fois ce que la reserve peut servir, donc une pointe est absorbee, une charge
+# soutenue est refusee tot. Les deux erreurs derivent de `psycopg.Error`, donc le service
+# repond 503 et non une trace d'execution.
+ATTENTE_CONNEXION_S = 5.0
+VISITEURS_EN_ATTENTE = 32
+
 # Delai au-dela duquel une requete est abandonnee par la base elle-meme. Sans ce plafond, une
 # requete pathologique garde un fil et une connexion pour toujours, et le service devient
 # indisponible sans etre tombe. Dix secondes : c'est quarante fois la plus lente des requetes
@@ -130,6 +160,8 @@ def ouvrir(commande: str = "make api") -> ConnectionPool[psycopg.Connection[dict
         conninfo=chaine_de_connexion(commande),
         min_size=CONNEXIONS_MINIMUM,
         max_size=CONNEXIONS_MAXIMUM,
+        timeout=ATTENTE_CONNEXION_S,
+        max_waiting=VISITEURS_EN_ATTENTE,
         # Les lignes arrivent en dictionnaires, pour que le nom des colonnes soit porte par la
         # donnee et non par la position. Une colonne ajoutee au milieu d'un `select` ne decale
         # alors rien.

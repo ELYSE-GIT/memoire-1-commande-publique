@@ -202,7 +202,10 @@ def test_le_debit_annonce_pour_l_api() -> None:
     """
     charge = agregat("api-charge")
     debit = max(float(ligne["debit_par_seconde"]) for ligne in charge)
-    assert 90 <= debit <= 100, f"le memoire annonce environ 94 req/s, mesure : {debit}"
+    # Une fourchette et non une valeur : deux executions du banc donnent 95 et 111 req/s selon
+    # ce que la base garde en memoire. Le memoire annonce donc la fourchette, et ce test la tient
+    # large assez pour ne pas echouer sur du bruit, serree assez pour attraper un effondrement.
+    assert 80 <= debit <= 150, f"le memoire annonce 95 a 111 req/s, mesure : {debit}"
     assert sum(int(ligne["echecs"]) for ligne in charge) == 0
     assert sum(int(ligne["appels"]) for ligne in charge) == 300
 

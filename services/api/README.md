@@ -18,12 +18,12 @@ Mesures : `make bench-api`.
 | Route | Ce qu'elle rend | p50 mesure |
 |---|---|---|
 | `GET /sante` | etat du service et de sa base | 2 ms |
-| `GET /marches` | recherche par texte et par filtres | 22 ms |
+| `GET /marches` | recherche par texte et par filtres | 24 ms |
 | `GET /marches/{marche_id}` | toutes les lignes d'un marche et ses signaux | 2 ms |
 | `GET /signaux` | les marches a examiner, les plus signales d'abord | 62 ms |
 | `GET /statistiques` | les comptages de la page d'accueil | 2 ms |
 | `GET /statistiques/annees` | la serie par annee, avec la part de PME | 2 ms |
-| `GET /assistant` | une question en francais, avec ses citations | 36 ms |
+| `GET /assistant` | une question en francais, avec ses citations | 32 ms |
 
 Mesures du 22 octobre 2026, sur le Mac, base chargee de 1 999 474 lignes, a chaud. Le detail,
 premier appel a froid compris, est dans `mesures/resultats/api-latences.csv`.
@@ -38,12 +38,12 @@ les visiter. Le service rend une ligne de plus que demande : sa presence suffit 
 
 **Le classement porte sur 5 000 candidats au plus.** Classer les 348 748 lignes qui contiennent
 « travaux » prenait 9 656 ms a chaud et 7 219 ms a froid au plafond de 20 000, contre 436 ms a
-froid et 22 ms a chaud au plafond retenu. La contrepartie est mesuree et annoncee : au-dela du
+froid et 24 ms a chaud au plafond retenu. La contrepartie est mesuree et annoncee : au-dela du
 plafond, les dix marches affiches ne sont pas les dix du classement exact, et la reponse porte
 `classement_approche` pour que le site l'ecrive. Voir `PLAFOND_CANDIDATS` dans `requetes.py`.
 
 **Les comptages ne sont pas calcules a la demande.** Entre 10,7 s et 61,5 s selon l'etat des
-caches, contre 0,5 ms une fois lus dans une table d'une ligne remplie au chargement. Voir
+caches, contre moins de 3 ms une fois lus dans une table d'une ligne remplie au chargement. Voir
 `base/schema/008-table-statistiques.sql`.
 
 **Les routes sont ecrites en `def` et non en `async def`.** Le pilote PostgreSQL utilise ici est
@@ -56,14 +56,15 @@ synchrone ; dans une route asynchrone il bloquerait toutes les requetes en cours
 
 | Clients simultanes | Debit | p50 | p95 | Echecs |
 |---|---|---|---|---|
-| 1 | 46 req/s | 21 ms | 26 ms | 0 |
-| 2 | 94 req/s | 21 ms | 25 ms | 0 |
-| 4 | 93 req/s | 30 ms | 71 ms | 0 |
-| 8 | 83 req/s | 92 ms | 161 ms | 0 |
-| 16 | 92 req/s | 152 ms | 210 ms | 0 |
+| 1 | 53 req/s | 19 ms | 21 ms | 0 |
+| 2 | 95 req/s | 21 ms | 25 ms | 0 |
+| 4 | 111 req/s | 23 ms | 67 ms | 0 |
+| 8 | 107 req/s | 83 ms | 89 ms | 0 |
+| 16 | 99 req/s | 154 ms | 197 ms | 0 |
 
-Le debit plafonne vers 90 requetes par seconde des deux clients, et au-dela la latence croit
-proportionnellement au nombre de clients. C'est le comportement attendu d'une file d'attente :
+Le debit plafonne entre 95 et 111 requetes par seconde selon l'execution, des deux clients, et
+au-dela la latence croit proportionnellement au nombre de clients. L'ecart entre deux executions
+du banc est reel et vaut d'etre note : il depend de ce que la base garde en memoire. C'est le comportement attendu d'une file d'attente :
 le service ne s'effondre pas, il fait patienter. Le plafond vient de la reserve de connexions,
 volontairement limitee a quatre pour un VPS de petite taille, et des deux processeurs alloues a
 la VM des conteneurs.
@@ -83,6 +84,15 @@ dira s'il faut elargir la reserve ou ajouter un processus.
   sans etre tombe.
 - Toutes les entrees sont bornees : longueur du texte, annee, format du departement, taille de
   page, profondeur de pagination. Les bornes sont testees une par une.
+- **L'attente d'une connexion est bornee** a cinq secondes, et la file a trente-deux visiteurs.
+  Avec quatre connexions et dix secondes par requete, quatre requetes lentes saturent la reserve ;
+  sans ces bornes, les visiteurs suivants patienteraient trente secondes chacun en immobilisant un
+  fil, et le service resterait debout sans repondre a personne. Il repond « service sature »
+  plutot que de ne plus repondre.
+- **Le cache des mots de l'assistant est borne** a 20 000 entrees, le plus anciennement utilise
+  sortant en premier. Tant que cette fonction ne servait qu'au banc de mesure, elle voyait
+  40 questions ecrites a la main dans un processus qui s'arrete ; exposee au public, elle recoit
+  un mot nouveau par appel si quelqu'un le decide.
 - Un message d'erreur de PostgreSQL ne part jamais dans une reponse HTTP : il contient le texte
   de la requete, parfois l'hote et l'utilisateur. Il va dans le journal du serveur, et le
   visiteur recoit 503 ou 504.

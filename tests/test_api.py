@@ -513,3 +513,101 @@ def test_une_liste_sans_texte_ne_pretend_pas_avoir_classe() -> None:
     corps = client(FauxCurseur([[sans]])).get("/marches", params={"departement": "35"}).json()
     assert corps["candidats_examines"] is None
     assert corps["classement_approche"] is False
+
+
+def test_la_file_d_attente_des_connexions_est_bornee() -> None:
+    """Quatre connexions et dix secondes par requete : quatre requetes lentes saturent tout.
+
+    Sans borne sur l'attente, les visiteurs suivants patienteraient trente secondes, le defaut de
+    psycopg_pool, chacun en immobilisant un fil d'execution. Le service resterait debout en
+    apparence sans repondre a personne, ce qui est le mode de panne le plus difficile a
+    diagnostiquer parce qu'il ne ressemble pas a une panne.
+    """
+    from services.api.base import ATTENTE_CONNEXION_S, CONNEXIONS_MAXIMUM, VISITEURS_EN_ATTENTE
+
+    assert 0 < ATTENTE_CONNEXION_S <= 10, "au-dela, le visiteur a referme la page"
+    assert 0 < VISITEURS_EN_ATTENTE <= 16 * CONNEXIONS_MAXIMUM
+    source = (RACINE / "services" / "api" / "base.py").read_text(encoding="utf-8")
+    # Les deux bornes doivent etre passees a la reserve, pas seulement declarees.
+    assert "timeout=ATTENTE_CONNEXION_S" in source
+    assert "max_waiting=VISITEURS_EN_ATTENTE" in source
+
+
+def test_une_saturation_se_distingue_d_une_base_absente() -> None:
+    """503 dans les deux cas, mais pas la meme phrase ni le meme en-tete.
+
+    La consigne n'est pas la meme : une base absente demande d'aller la demarrer, une saturation
+    demande d'attendre. Les deux erreurs de la reserve derivent de `psycopg.Error`, donc elles
+    passent par le meme gestionnaire et pourraient facilement recevoir le meme message.
+    """
+    import psycopg
+    from psycopg_pool import PoolTimeout, TooManyRequests
+
+    source = (RACINE / "services" / "api" / "main.py").read_text(encoding="utf-8")
+    assert "PoolTimeout | TooManyRequests" in source
+    assert '"Retry-After": "5"' in source
+    # Les deux derivent de psycopg.Error, donc le gestionnaire les attrape deja. Si cela changeait
+    # dans une version future, elles deviendraient des erreurs 500 avec une trace dans le journal.
+    for erreur in (PoolTimeout, TooManyRequests):
+        assert issubclass(erreur, psycopg.Error)
+
+
+def test_le_cache_des_mots_de_l_assistant_est_borne() -> None:
+    """Un dictionnaire alimente par ce qu'un inconnu tape doit avoir une borne.
+
+    Tant que cette fonction ne servait qu'au banc de mesure, elle voyait 40 questions ecrites a la
+    main dans un processus qui s'arrete. Exposee par l'API, elle recoit un mot nouveau par appel
+    si quelqu'un le decide, et un cache sans borne grandit alors indefiniment dans un service qui
+    tourne des semaines.
+    """
+    from services.assistant.reponse_sourcee import MOTS_EN_CACHE
+
+    assert 0 < MOTS_EN_CACHE <= 100_000
+    source = (RACINE / "services" / "assistant" / "reponse_sourcee.py").read_text(encoding="utf-8")
+    assert "OrderedDict" in source
+    # Le plus anciennement utilise sort, et un mot qui ressert est remis en fin de file.
+    assert "popitem(last=False)" in source
+    assert "move_to_end" in source
+
+
+def test_le_cache_des_mots_oublie_les_plus_anciens() -> None:
+    """La borne doit se verifier sur le comportement, pas seulement sur le texte du fichier.
+
+    Le test construit un faux curseur qui racinise en renvoyant le mot tel quel, demande plus de
+    mots que la borne, et verifie que la memoire ne grandit pas indefiniment.
+    """
+    from services.assistant import reponse_sourcee
+
+    class CurseurRacinisation:
+        """Racinise en rendant le mot lui-meme, au format d'un tsvector."""
+
+        def __init__(self) -> None:
+            self.dernier = ""
+            self.appels = 0
+
+        def execute(self, requete: str, valeurs: tuple[Any, ...] = ()) -> None:
+            self.appels += 1
+            self.dernier = str(valeurs[0]) if valeurs else ""
+
+        def fetchall(self) -> list[tuple[Any, ...]]:
+            return []
+
+        def fetchone(self) -> tuple[Any, ...]:
+            if "to_tsvector" in self.dernier or not self.dernier:
+                return (2019, 2026)
+            return (f"'{self.dernier}':1",)
+
+    faux = CurseurRacinisation()
+    lexiques = reponse_sourcee.charger_lexiques(faux)  # type: ignore[arg-type]
+
+    borne = reponse_sourcee.MOTS_EN_CACHE
+    for numero in range(borne + 50):
+        lexiques.frequence(f"mot{numero}")
+
+    # Le cache vit dans la fermeture ; on l'observe par le nombre d'appels a la base. Redemander
+    # les derniers mots ne doit rien couter, redemander les premiers doit couter a nouveau.
+    appels_avant = faux.appels
+    lexiques.frequence(f"mot{borne + 10}")
+    assert faux.appels == appels_avant, "un mot recent doit encore etre en cache"
+    lexiques.frequence("mot0")
+    assert faux.appels == appels_avant + 1, "le plus ancien doit avoir ete oublie"

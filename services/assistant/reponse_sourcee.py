@@ -41,6 +41,7 @@ du sujet. Le modele de langue, lui, ameliorerait la forme en retirant cette gara
 from __future__ import annotations
 
 import time
+from collections import OrderedDict
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
@@ -83,6 +84,10 @@ from services.assistant.lecture_question import (
 #
 # Les valeurs ne traversent jamais la composition : elles sont liees en parametres, dans le meme
 # ordre que les fragments. Seuls des litteraux ecrits dans ce fichier deviennent du SQL.
+
+# Nombre de mots dont la frequence est gardee en memoire. La justification complete est a
+# l'endroit ou le cache est cree, dans `charger_lexiques`.
+MOTS_EN_CACHE = 20_000
 
 FILTRE_TEXTE = "{p}recherche @@ websearch_to_tsquery('public.francais', %s)"
 FILTRE_ANNEE = "{p}annee = %s"
@@ -330,7 +335,34 @@ def charger_lexiques(
     # Le mot de la question doit etre racinise avant d'etre cherche dans le vocabulaire, qui ne
     # contient que des lexemes. On demande la racinisation a PostgreSQL plutot que de la
     # reimplementer : c'est la meme que celle de l'index, par construction.
-    cache: dict[str, float] = {}
+    # Cache **borne**, et la borne n'est pas decorative.
+    #
+    # Tant que cette fonction ne servait qu'a `make bench-assistant`, elle voyait 40 questions
+    # ecrites a la main : quelques centaines de mots, dans un processus qui s'arrete. Depuis que
+    # l'API l'expose, elle voit ce qu'un inconnu tape. Un dictionnaire sans borne grandit alors
+    # d'une entree par mot jamais vu, indefiniment, dans un service qui tourne des semaines.
+    # C'est une facon simple de faire consommer de la memoire a un serveur, et elle ne demande
+    # aucun privilege : il suffit d'envoyer des mots differents.
+    #
+    #     Option envisagee        Avantage                   Limite                    Verdict
+    #     aucun cache             rien a borner              une requete a la base par  ecarte
+    #                                                        mot, a chaque question
+    #     cache sans borne        le plus simple             grandit avec ce qu'on lui  exclu
+    #                                                        envoie : c'est le defaut
+    #     **cache borne, le       memoire plafonnee, et les  les mots rares sont        **retenu**
+    #     plus ancien sort**      mots courants restent      recalcules s'ils reviennent
+    #     cache avec expiration   suit l'evolution du        une date par entree pour   ecarte
+    #     par duree               vocabulaire                un vocabulaire qui ne
+    #                                                        change qu'a la recollecte
+    #
+    # 20 000 entrees : largement au-dessus du vocabulaire reel des questions, et tres en dessous
+    # des 74 055 lexemes de la table. Une entree est un mot court et un flottant, donc quelques
+    # mega-octets au pire.
+    #
+    # Ce que cette borne ne protege pas : chaque mot inconnu coute une requete a la base, cache
+    # ou non. Limiter le **nombre d'appels** appartient au reverse-proxy, qui est le seul a voir
+    # la vraie adresse de l'appelant. Voir l'ADR 0011.
+    cache: OrderedDict[str, float] = OrderedDict()
 
     def raciniser(mot: str) -> str | None:
         """Demande la racinisation a PostgreSQL, sur un curseur encore valide."""
@@ -343,16 +375,25 @@ def charger_lexiques(
             return str(frais.fetchone()[0])  # type: ignore[index]
 
     def frequence(mot: str) -> float:
-        if mot not in cache:
-            vecteur = raciniser(mot)
-            if not vecteur:
-                # Mot vide pour PostgreSQL : il n'entrerait pas dans la requete de toute facon,
-                # et la raison affichee a l'utilisateur doit le dire ainsi.
-                cache[mot] = MOT_VIDE
-            else:
-                lexeme = vecteur.split("'")[1]
-                cache[mot] = frequences.get(lexeme, 0.0)
-        return cache[mot]
+        if mot in cache:
+            # Remis en fin de file : un mot qui ressert ne doit pas etre le prochain a sortir.
+            cache.move_to_end(mot)
+            return cache[mot]
+
+        vecteur = raciniser(mot)
+        if not vecteur:
+            # Mot vide pour PostgreSQL : il n'entrerait pas dans la requete de toute facon,
+            # et la raison affichee a l'utilisateur doit le dire ainsi.
+            valeur = MOT_VIDE
+        else:
+            lexeme = vecteur.split("'")[1]
+            valeur = frequences.get(lexeme, 0.0)
+
+        cache[mot] = valeur
+        if len(cache) > MOTS_EN_CACHE:
+            # Le plus anciennement utilise sort. `last=False` prend le debut de la file.
+            cache.popitem(last=False)
+        return valeur
 
     return Lexiques(
         regions=regions,

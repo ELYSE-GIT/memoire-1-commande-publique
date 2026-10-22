@@ -51,6 +51,7 @@ from typing import Annotated, Any
 import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request, Response
 from fastapi.responses import JSONResponse
+from psycopg_pool import PoolTimeout, TooManyRequests
 
 from services.api import requetes
 from services.api.base import (
@@ -164,6 +165,16 @@ async def erreur_de_base(requete: Request, erreur: Exception) -> JSONResponse:
     l'utilisateur. Il part dans le journal du serveur, jamais dans la reponse.
     """
     journal.error("erreur de base sur %s : %s", requete.url.path, erreur)
+    if isinstance(erreur, PoolTimeout | TooManyRequests):
+        # La base va bien, c'est le service qui est sature : toutes ses connexions servent
+        # quelqu'un. Le dire plutot que de laisser patienter indefiniment, et le dire
+        # differemment d'une base absente, parce que la consigne n'est pas la meme pour celui
+        # qui exploite le service.
+        return JSONResponse(
+            status_code=503,
+            content={"detail": "Service sature, trop de requetes simultanees. Reessayer."},
+            headers={"Retry-After": "5"},
+        )
     if isinstance(erreur, psycopg.errors.QueryCanceled):
         # La requete a depasse `statement_timeout`. 504 et non 503 : le service repond, c'est
         # la requete qui etait trop longue, et l'appelant peut la preciser.

@@ -94,9 +94,9 @@ pas. C'est la barre rouge de la figure 24.
 
 ![Latence par route et comportement sous charge](figures/24-api-latence-et-charge.svg)
 
-Le panneau de droite dit l'autre moitié de l'histoire. Le débit plafonne vers 94 requêtes par
-seconde dès deux clients simultanés, et au-delà la latence croît proportionnellement au nombre de
-clients, sans aucun échec sur 300 appels. C'est le comportement attendu d'une file d'attente : le
+Le panneau de droite dit l'autre moitié de l'histoire. Le débit plafonne entre 95 et 111 requêtes
+par seconde selon l'exécution, dès deux clients simultanés, et au-delà la latence croît
+proportionnellement au nombre de clients, sans aucun échec sur 300 appels. C'est le comportement attendu d'une file d'attente : le
 service ne s'effondre pas, il fait patienter. La limite vient de la réserve de connexions, fixée à
 quatre volontairement, parce que chaque connexion PostgreSQL est un processus serveur et que la
 machine de production sera petite.

@@ -310,8 +310,10 @@ pour montrer ce qu'elle coute.
 | `/statistiques/annees` | 6 ms | 2 ms | 3 ms |
 | `/assistant` | 744 ms | 36 ms | 51 ms |
 
-Le service tient 94 requetes par seconde, sans aucun echec sur 300 appels, et sa memoire est de
-36 Mo.
+Le service tient entre 95 et 111 requetes par seconde selon l'execution, sans aucun echec sur
+300 appels, et sa memoire est de 37 Mo. L'ecart entre deux executions n'est pas du bruit de
+mesure : il depend de ce que PostgreSQL garde en memoire, et c'est la meme raison qui fait varier
+le calcul des comptages de 10,7 s a 61,5 s.
 
 **Les trois colonnes a savoir lire** :
 
