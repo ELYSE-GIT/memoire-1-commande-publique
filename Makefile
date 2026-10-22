@@ -88,7 +88,7 @@ PSQL = docker compose exec -T base sh -c 'psql -q -v ON_ERROR_STOP=1 -U "$$POSTG
 ## base-init : cree extensions, configuration plein texte francaise et tables (sans les index)
 base-init:
 	@for fichier in base/schema/001-* base/schema/002-* base/schema/003-* base/schema/004-* \
-	                base/schema/006-*; do \
+	                base/schema/006-* base/schema/008-*; do \
 		echo "--- $$fichier"; \
 		$(PSQL) < $$fichier; \
 	done
@@ -105,10 +105,12 @@ indexer:
 	@$(PSQL) < base/schema/005-index.sql
 	@echo "--- base/schema/007-remplir-vocabulaire.sql"
 	@$(PSQL) < base/schema/007-remplir-vocabulaire.sql
+	@echo "--- base/schema/009-remplir-statistiques.sql"
+	@$(PSQL) < base/schema/009-remplir-statistiques.sql
 
 ## base-vider : vide les deux tables sans toucher au schema, pour recharger proprement
 base-vider:
-	@echo 'truncate table marches, signaux, vocabulaire restart identity;' | $(PSQL)
+	@echo 'truncate table marches, signaux, vocabulaire, statistiques restart identity;' | $(PSQL)
 	@echo "tables videes"
 
 ## psql : ouvre une console SQL sur la base (quitter avec \q)
@@ -166,6 +168,20 @@ transformer-doc:
 	$(DBT) docs generate --vars '{"chemin_decp": "$(CHEMIN_DECP)"}'
 	@echo "Ouvrir : cd services/transformation && uv run dbt docs serve"
 
+# --- API et site ----------------------------------------------------------
+
+## api : demarre l'API publique en local, rechargee a chaque modification
+## (necessite `make up` avant : l'API a besoin de PostgreSQL. Arreter avec Ctrl-C)
+## Documentation interactive : http://localhost:8000/docs
+api:
+	uv run --env-file .env uvicorn services.api.main:application \
+		--host 127.0.0.1 --port $${API_PORT:-8000} --reload
+
+## api-une-fois : demarre l'API sans rechargement automatique, comme en production
+api-une-fois:
+	uv run --env-file .env uvicorn services.api.main:application \
+		--host 127.0.0.1 --port $${API_PORT:-8000}
+
 ## bench-decp : mesure la qualite et les performances sur le jeu DECP
 bench-decp:
 	uv run python mesures/decp_qualite.py
@@ -211,6 +227,11 @@ bench-incertitude:
 ## bench-stabilite : la regle de detection calee sur 2019-2023, appliquee a 2024-2026
 bench-stabilite:
 	uv run python -m mesures.stabilite
+
+## bench-api : mesure l'API publique, route par route, puis sous charge
+## (demarre l'API lui-meme, mesure, et l'arrete. Necessite `make up` avant)
+bench-api:
+	uv run --env-file .env python -m mesures.api
 
 ## figures : trace les figures du memoire a partir des agregats mesures
 figures:

@@ -427,6 +427,54 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
             "0.238",
         ],
     ]
+    # La figure 24 : l'API. Les valeurs reprennent la mesure du 22 octobre 2026, en plus court.
+    contenus["api-latences"] = [
+        [
+            "route",
+            "chemin",
+            "ce_que_ca_represente",
+            "appels",
+            "premier_appel_ms",
+            "premier_appel_code",
+            "p50_ms",
+            "p95_ms",
+            "minimum_ms",
+            "maximum_ms",
+        ],
+        ["sante", "/sante", "le test de vie", "20", "2.6", "200", "2.3", "2.9", "2.1", "3.1"],
+        [
+            "recherche",
+            "/marches?q=travaux",
+            "du texte libre",
+            "20",
+            "234.2",
+            "200",
+            "22.3",
+            "54.8",
+            "18.0",
+            "61.2",
+        ],
+        [
+            "signaux",
+            "/signaux",
+            "les marches a examiner",
+            "20",
+            "5788.0",
+            "200",
+            "61.8",
+            "497.2",
+            "52.0",
+            "612.0",
+        ],
+    ]
+    contenus["api-charge"] = [
+        ["clients_simultanes", "appels", "echecs", "debit_par_seconde", "p50_ms", "p95_ms"],
+        ["1", "60", "0", "45.6", "21.4", "26.1"],
+        ["2", "60", "0", "94.2", "20.6", "25.1"],
+        ["4", "60", "0", "93.3", "29.5", "70.9"],
+        ["8", "60", "0", "83.1", "92.0", "160.6"],
+        ["16", "60", "0", "92.2", "152.2", "209.8"],
+    ]
     for nom, lignes in contenus.items():
         with (agregats / f"{nom}.csv").open("w", newline="", encoding="utf-8") as sortie:
             csv.writer(sortie, lineterminator="\n").writerows(lignes)
@@ -437,5 +485,5 @@ def test_les_figures_se_tracent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     figures.main()
 
     produites = sorted(chemin.name for chemin in sorties.glob("*.svg"))
-    assert len(produites) == 23, f"vingt-trois figures attendues, obtenu : {produites}"
+    assert len(produites) == 24, f"vingt-quatre figures attendues, obtenu : {produites}"
     assert all((sorties / nom.replace(".svg", ".png")).exists() for nom in produites)

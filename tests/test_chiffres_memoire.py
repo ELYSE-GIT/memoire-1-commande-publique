@@ -192,3 +192,55 @@ def test_chaque_figure_citee_existe() -> None:
                 if not (MEMOIRE / nom).exists():
                     manquantes.append(f"{texte.name} : {nom}")
     assert manquantes == [], f"figures citees mais absentes : {manquantes}"
+
+
+def test_le_debit_annonce_pour_l_api() -> None:
+    """Le memoire annonce 94 requetes par seconde et aucun echec sur 300 appels.
+
+    Les deux vont ensemble : un debit sans son taux d'echec ne veut rien dire, puisqu'un service
+    qui refuse la moitie des appels repond tres vite aux autres.
+    """
+    charge = agregat("api-charge")
+    debit = max(float(ligne["debit_par_seconde"]) for ligne in charge)
+    assert 90 <= debit <= 100, f"le memoire annonce environ 94 req/s, mesure : {debit}"
+    assert sum(int(ligne["echecs"]) for ligne in charge) == 0
+    assert sum(int(ligne["appels"]) for ligne in charge) == 300
+
+
+def test_ce_que_le_plafond_de_candidats_change_vraiment() -> None:
+    """Le memoire affirme que l'ordre est exact sous le plafond et peut differer au-dessus.
+
+    C'est l'affirmation la plus genante de la section 10.1, donc celle qu'il faut tenir. Si une
+    remesure la contredisait, le texte devrait changer, pas la mesure.
+    """
+    from services.api.requetes import PLAFOND_CANDIDATS
+
+    classement = agregat("api-classement")
+    sous = [ligne for ligne in classement if int(ligne["lignes_qui_repondent"]) < PLAFOND_CANDIDATS]
+    au_dessus = [
+        ligne for ligne in classement if int(ligne["lignes_qui_repondent"]) > PLAFOND_CANDIDATS
+    ]
+    assert sous and au_dessus, "la mesure doit couvrir les deux cotes du plafond"
+
+    for ligne in sous:
+        assert int(ligne["communs_sur_dix"]) == 10, (
+            f"sous le plafond, l'ordre doit etre exact : {ligne['question']}"
+        )
+    # Au-dessus, le memoire ne promet rien, et c'est le point : il annonce que l'ordre peut etre
+    # entierement different. Au moins une question doit le montrer, sinon la mise en garde serait
+    # excessive et il faudrait la nuancer.
+    assert min(int(ligne["communs_sur_dix"]) for ligne in au_dessus) == 0
+
+
+def test_le_gain_du_tri_aligne_sur_l_index() -> None:
+    """Le memoire cite un facteur 965 entre les deux ordres de tri de la liste recente.
+
+    Les deux durees sont dans le commentaire de `requetes.py`, pas dans un CSV : elles viennent
+    d'un `explain analyze` et non d'un banc. Ce test verifie au moins que le texte du memoire et
+    celui du code racontent la meme chose, pour qu'une correction d'un cote n'oublie pas l'autre.
+    """
+    memoire = (MEMOIRE / "10-mise-en-production.md").read_text(encoding="utf-8")
+    code = (RACINE / "services" / "api" / "requetes.py").read_text(encoding="utf-8")
+    for duree in ("28 636", "965"):
+        assert duree in memoire, f"{duree} absent du memoire"
+        assert duree in code, f"{duree} absent de requetes.py"

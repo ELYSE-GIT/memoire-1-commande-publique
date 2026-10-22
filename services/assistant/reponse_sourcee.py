@@ -41,6 +41,8 @@ du sujet. Le modele de langue, lui, ameliorerait la forme en retirant cette gara
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
+from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -254,12 +256,44 @@ select valeur from valeurs where valeur is not null
 """
 
 
-def charger_lexiques(curseur: psycopg.Cursor[Any]) -> Lexiques:
+def charger_lexiques(
+    curseur: psycopg.Cursor[Any],
+    curseur_pour_les_mots: Callable[[], AbstractContextManager[psycopg.Cursor[Any]]] | None = None,
+) -> Lexiques:
     """Lire dans la base ce dont l'analyseur a besoin.
 
     Appele une fois au demarrage du service, pas a chaque question : ce sont 131 noms de lieux et
     73 722 lexemes, qui ne changent qu'a la recollecte. La frequence est servie depuis un
     dictionnaire en memoire, soit environ 3 Mo, ce qui evite une lecture par mot.
+
+    === Pourquoi un second argument ============================================
+
+    La fonction `frequence` rendue dans les lexiques a besoin de la base : elle demande a
+    PostgreSQL de raciniser un mot inconnu, pour le chercher sous la meme forme que l'index.
+    Tant que l'appelant est un banc de mesure, le curseur de chargement reste ouvert pendant
+    toute l'execution et peut servir.
+
+    Dans un service, non : le curseur du demarrage est rendu a la reserve des que les lexiques
+    sont charges, et la premiere question recoit « the cursor is closed ». Le defaut a ete
+    trouve par `make bench-api` le 22 octobre 2026, apres vingt-et-un appels en erreur 503.
+
+        Option envisagee          Avantage                   Limite                    Verdict
+        garder le curseur du      aucun changement           une connexion monopolisee  ecarte
+        demarrage ouvert                                      pour toute la duree du
+                                                              service, et un seul
+                                                              curseur partage entre
+                                                              tous les visiteurs
+        raciniser en Python       aucune base a interroger   ce ne serait plus la meme  ecarte
+                                                              racinisation que l'index,
+                                                              donc des mots introuvables
+        precharger la             tout en memoire            on ne connait pas a        ecarte
+        racinisation de tous                                  l'avance les mots que les
+        les mots possibles                                    visiteurs taperont
+        **laisser l'appelant      le banc garde son          un argument de plus, avec  **retenu**
+        fournir un curseur**      comportement, le service   une valeur par defaut
+
+    Sans ce second argument, le comportement est exactement celui d'avant : le curseur de
+    chargement est reutilise.
     """
     from services.assistant.lecture_question import plier
 
@@ -298,10 +332,19 @@ def charger_lexiques(curseur: psycopg.Cursor[Any]) -> Lexiques:
     # reimplementer : c'est la meme que celle de l'index, par construction.
     cache: dict[str, float] = {}
 
+    def raciniser(mot: str) -> str | None:
+        """Demande la racinisation a PostgreSQL, sur un curseur encore valide."""
+        requete = "select to_tsvector('public.francais', %s)::text"
+        if curseur_pour_les_mots is None:
+            curseur.execute(requete, (mot,))
+            return str(curseur.fetchone()[0])  # type: ignore[index]
+        with curseur_pour_les_mots() as frais:
+            frais.execute(requete, (mot,))
+            return str(frais.fetchone()[0])  # type: ignore[index]
+
     def frequence(mot: str) -> float:
         if mot not in cache:
-            curseur.execute("select to_tsvector('public.francais', %s)::text", (mot,))
-            vecteur = curseur.fetchone()[0]  # type: ignore[index]
+            vecteur = raciniser(mot)
             if not vecteur:
                 # Mot vide pour PostgreSQL : il n'entrerait pas dans la requete de toute facon,
                 # et la raison affichee a l'utilisateur doit le dire ainsi.

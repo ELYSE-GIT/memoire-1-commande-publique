@@ -38,7 +38,6 @@ Lancement : `make charger`.
 
 from __future__ import annotations
 
-import os
 import sys
 import time
 from pathlib import Path
@@ -46,6 +45,8 @@ from typing import Any
 
 import duckdb
 import psycopg
+
+from services.configuration import chaine_de_connexion
 
 RACINE = Path(__file__).resolve().parent.parent.parent
 BASE_DUCKDB = RACINE / "donnees" / "commande_publique.duckdb"
@@ -114,33 +115,6 @@ COLONNES_SIGNAUX = [
 ]
 
 
-def chaine_de_connexion() -> str:
-    """Fabrique la chaine de connexion depuis l'environnement.
-
-    Aucune valeur par defaut pour le mot de passe : un script qui se connecte avec un mot de
-    passe vide finit par le faire en production. Les variables viennent de `.env`, passe par
-    `uv run --env-file .env`, et `.env` n'est pas versionne.
-    """
-    manquantes = [
-        nom
-        for nom in ("POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB")
-        if not os.environ.get(nom)
-    ]
-    if manquantes:
-        raise SystemExit(
-            f"Variables absentes : {', '.join(manquantes)}.\n"
-            "Lancer par `make charger`, qui passe le fichier .env a uv."
-        )
-    hote = os.environ.get("POSTGRES_HOST", "localhost")
-    port = os.environ.get("POSTGRES_PORT", "5432")
-    return (
-        f"host={hote} port={port}"
-        f" dbname={os.environ['POSTGRES_DB']}"
-        f" user={os.environ['POSTGRES_USER']}"
-        f" password={os.environ['POSTGRES_PASSWORD']}"
-    )
-
-
 def copier(
     source: duckdb.DuckDBPyConnection,
     cible: psycopg.Connection[Any],
@@ -182,7 +156,7 @@ def main() -> None:
 
     source = duckdb.connect(str(BASE_DUCKDB), read_only=True)
 
-    with psycopg.connect(chaine_de_connexion()) as cible:
+    with psycopg.connect(chaine_de_connexion("make charger")) as cible:
         with cible.cursor() as curseur:
             # Refus de charger par-dessus des donnees existantes. Un second chargement
             # doublerait tout en silence, et la cle technique ne l'empecherait pas : elle est

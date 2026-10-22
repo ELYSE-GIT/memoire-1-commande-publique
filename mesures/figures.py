@@ -1571,7 +1571,123 @@ def main() -> None:
     figure_assistant()
     figure_incertitude()
     figure_stabilite()
+    figure_api()
     print(f"\nDossier : {chemin_lisible(FIGURES)}")
+
+
+def figure_api() -> None:
+    """Ce que l'API coute, et ce que le premier appel coute en plus.
+
+    Deux panneaux qui repondent a deux questions differentes, et c'est le second qui a change le
+    code. A gauche, la latence par route : ce qu'un visiteur attend quand le service tourne
+    depuis un moment. A droite, la montee en charge : le service plie-t-il, et comment.
+
+    Le premier appel sur base froide est trace a gauche, en marqueur separe et sur une echelle
+    logarithmique, parce que c'est la seule facon de montrer ensemble 2 ms et 5 788 ms. Mesurer
+    seulement la mediane a chaud aurait valide un service qui echoue a chaque deploiement.
+    """
+    latences = lire("api-latences")
+    charge = lire("api-charge")
+
+    figure, (gauche, droite) = plt.subplots(1, 2, figsize=(11.6, 4.3), width_ratios=[1.35, 1])
+
+    # --- A gauche : la latence par route, en echelle logarithmique ---------
+    noms = [ligne["route"] for ligne in latences][::-1]
+    p50 = [float(ligne["p50_ms"]) for ligne in latences][::-1]
+    p95 = [float(ligne["p95_ms"]) for ligne in latences][::-1]
+    froid = [float(ligne["premier_appel_ms"]) for ligne in latences][::-1]
+    positions = range(len(noms))
+
+    gauche.barh(positions, p95, color=SERIE_1, alpha=0.3, height=0.6, label="p95")
+    gauche.barh(positions, p50, color=SERIE_1, height=0.6, label="p50 (mediane)")
+    gauche.scatter(
+        froid,
+        positions,
+        marker="D",
+        s=26,
+        color=SERIE_2,
+        zorder=3,
+        label="premier appel, base froide",
+    )
+    gauche.set_xscale("log")
+    gauche.set_yticks(list(positions))
+    gauche.set_yticklabels(noms, fontsize=8.5)
+    gauche.set_xlabel("millisecondes, echelle logarithmique", color=GRIS, fontsize=8.5)
+    gauche.set_xlim(1, 20_000)
+    # Le delai au-dela duquel la base abandonne la requete. Deux routes l'ont depasse avant
+    # correction, et c'est ce trait qui a fait changer le code.
+    gauche.axvline(10_000, color=SERIE_2, linestyle=":", linewidth=1.1)
+    gauche.text(
+        10_000,
+        len(noms) - 0.35,
+        " delai du service : 10 s",
+        color=SERIE_2,
+        fontsize=8,
+        va="center",
+    )
+    gauche.grid(axis="y", visible=False)
+    gauche.grid(axis="x", color=FILET, linewidth=0.6)
+    soigner(gauche, "Ce qu'un visiteur attend, route par route")
+    gauche.legend(frameon=False, fontsize=8, loc="lower right", labelcolor=GRIS)
+
+    # --- A droite : la montee en charge -----------------------------------
+    clients = [int(ligne["clients_simultanes"]) for ligne in charge]
+    debit = [float(ligne["debit_par_seconde"]) for ligne in charge]
+    p95_charge = [float(ligne["p95_ms"]) for ligne in charge]
+
+    droite.plot(clients, debit, marker="o", color=SERIE_1, linewidth=1.6, label="debit")
+    droite.set_xlabel("clients simultanes", color=GRIS, fontsize=8.5)
+    droite.set_ylabel("requetes par seconde", color=SERIE_1, fontsize=8.5)
+    droite.set_ylim(0, max(debit) * 1.3)
+    droite.set_xticks(clients)
+    droite.set_xticklabels([str(nombre) for nombre in clients])
+
+    # Deuxieme axe : la latence. Les deux courbes ensemble disent la seule chose qui compte,
+    # qu'un debit plafonne et une latence qui croit sont le meme fait, celui d'une file
+    # d'attente. Separees, chacune se lirait a l'envers.
+    latence = droite.twinx()
+    latence.plot(
+        clients, p95_charge, marker="s", color=SERIE_2, linewidth=1.6, linestyle="--", label="p95"
+    )
+    latence.set_ylabel("p95, millisecondes", color=SERIE_2, fontsize=8.5)
+    latence.set_ylim(0, max(p95_charge) * 1.3)
+    latence.tick_params(colors=GRIS, labelsize=8.5)
+    for bord in ("top", "left"):
+        latence.spines[bord].set_visible(False)
+    latence.spines["right"].set_color(FILET)
+
+    sommet = max(range(len(debit)), key=lambda indice: debit[indice])
+    droite.annotate(
+        f"{virgule(debit[sommet])} req/s\na {clients[sommet]} clients",
+        xy=(clients[sommet], debit[sommet]),
+        xytext=(clients[sommet] + 1.2, debit[sommet] * 0.62),
+        color=ENCRE,
+        fontsize=8.5,
+        arrowprops={"arrowstyle": "-", "color": FILET, "linewidth": 0.9},
+    )
+    soigner(droite, "Le service ne tombe pas, il fait patienter")
+    droite.grid(axis="y", color=FILET, linewidth=0.6)
+    lignes_debit, etiquettes_debit = droite.get_legend_handles_labels()
+    lignes_p95, etiquettes_p95 = latence.get_legend_handles_labels()
+    droite.legend(
+        lignes_debit + lignes_p95,
+        etiquettes_debit + etiquettes_p95,
+        frameon=False,
+        fontsize=8,
+        loc="upper left",
+        labelcolor=GRIS,
+    )
+
+    legender(
+        figure,
+        "Source : make bench-api, 22 octobre 2026, Mac M2 Pro, base de 1 999 474 lignes, 20 "
+        "appels par route.\nLe premier appel est mesure sur une base froide, juste apres le "
+        "demarrage du service : c'est ce que vit le premier visiteur apres un deploiement. "
+        "La charge\nporte sur la route de recherche, 60 appels par palier, aucun echec sur 300 "
+        "appels.",
+    )
+    figure.tight_layout()
+    enregistrer(figure, "24-api-latence-et-charge")
 
 
 if __name__ == "__main__":

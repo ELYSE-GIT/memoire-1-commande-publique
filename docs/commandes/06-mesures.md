@@ -34,7 +34,8 @@ make transformer         # construit les couches argent et or, et les variables 
 | `make bench-precision` | justesse du rapprochement, par relecture de 60 paires | environ 5 s | `rapprochement-precision.csv` |
 | `make bench-incertitude` | intervalle de confiance de chaque pourcentage tire d'un echantillon | environ 1 s | `incertitude-*.csv` |
 | `make bench-stabilite` | la regle de detection calee sur 2019-2023, appliquee a 2024-2026 | environ 2 s | `stabilite-*.csv` |
-| `make figures` | trace les 23 figures du memoire depuis les CSV | environ 5 s | `memoire/figures/` |
+| `make bench-api` | l'API publique, route par route, puis sous charge | environ 4 min | `api-latences.csv`, `api-charge.csv`, `api-classement.csv`, `api-resume.csv` |
+| `make figures` | trace les 24 figures du memoire depuis les CSV | environ 5 s | `memoire/figures/` |
 
 ---
 
@@ -276,3 +277,60 @@ make bench-stabilite
 lignes pour estimer une mediane, ce qui aide reellement. Une partie des 4 points vient de la, et
 un decoupage unique ne sait pas dire laquelle. Une validation glissante, qui recalerait les
 references chaque annee, est la suite inscrite au carnet.
+
+---
+
+## `make bench-api`
+
+**Ou** : sur le Mac, apres `make up` et avec les donnees chargees. Le banc demarre l'API
+lui-meme, sur le port 8099 pour ne pas tomber sur une API deja lancee a la main, puis l'arrete.
+
+**Ce que ca fait** : mesure la latence de chaque route, par HTTP reel et non par un client de
+test, parce que la question posee est « combien de temps attend un visiteur » et qu'elle inclut
+la validation des entrees, la serialisation et le reseau. Puis fait monter la concurrence de 1 a
+16 clients. Puis compare, en SQL direct, le classement borne de la recherche au classement exact.
+
+```bash
+make up
+make bench-api
+```
+
+**Duree** : environ 4 minutes, dont une bonne partie pour la requete de comptage exacte, gardee
+pour montrer ce qu'elle coute.
+
+**Resultat attendu**, mesures du 22 octobre 2026 :
+
+| Route | Premier appel, base froide | p50 | p95 |
+|---|---|---|---|
+| `/sante` | 3 ms | 2 ms | 3 ms |
+| `/marches?q=...` | 234 ms | 22 ms | 55 ms |
+| `/marches/{id}` | 43 ms | 2 ms | 3 ms |
+| `/signaux` | 5 788 ms | 62 ms | 497 ms |
+| `/statistiques` | 8 ms | 2 ms | 3 ms |
+| `/statistiques/annees` | 6 ms | 2 ms | 3 ms |
+| `/assistant` | 744 ms | 36 ms | 51 ms |
+
+Le service tient 94 requetes par seconde, sans aucun echec sur 300 appels, et sa memoire est de
+36 Mo.
+
+**Les trois colonnes a savoir lire** :
+
+- **Le premier appel** est mesure a part et non jete. C'est ce que vit le premier visiteur apres
+  un deploiement, et c'est lui qui a fait abaisser le plafond de candidats de la recherche de
+  20 000 a 5 000 : la mediane a chaud etait de 57 ms, mais le premier appel depassait les dix
+  secondes du service et renvoyait une erreur. Mesurer seulement a chaud aurait valide un
+  service qui echoue a chaque deploiement.
+- **Le p50** dit ce que vit la moitie des visiteurs.
+- **Le p95** dit ce que vit le vingtieme le plus malchanceux, et c'est lui qui fait abandonner
+  une page. Une moyenne cacherait les deux.
+
+**Ce que le banc a trouve et qu'aucun test n'aurait pu trouver** : quatre defauts, parce
+qu'aucun test ne mesure une duree. Le tri de la liste recente qui renoncait a son index
+(28 636 ms contre 30 ms), les comptages de la page d'accueil abandonnes par la base, le
+classement de la recherche trop large a froid, et la serie par annee a 2,4 secondes au 95e
+centile. Le detail est dans l'ADR 0011.
+
+**Ce que `api-classement.csv` contient** : pour dix questions, le nombre de marches qui
+repondent, la duree du classement exact, celle du classement borne, et combien des dix marches
+affiches sont les memes dans les deux cas. C'est la contrepartie du plafond, chiffree : exacte
+sous 5 000 reponses, et jusqu'a zero sur dix au-dela.
