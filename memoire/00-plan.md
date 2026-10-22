@@ -10,12 +10,12 @@ Cible : 40 à 60 pages, hors annexes.
 | 0 | Introduction | le sujet, la thèse, la méthode, le plan | 2 | à écrire |
 | 1 | Le vocabulaire du sujet | tous les termes du domaine et de la technique, définis avant usage | 4 | **rédigé** |
 | 2 | État des lieux : le problème | la commande publique, ses données, leurs défauts mesurés | 8 | **rédigé** |
-| 3 | État de l'art : les solutions existantes | outils publics, projets associatifs, plateformes commerciales | 5 | à écrire |
-| 4 | Étude du marché et études de cas | qui utilise quoi, avec sources vérifiables | 4 | matière réunie |
-| 5 | Histoire des pratiques | d'où viennent ces outils, et pourquoi ils ont remplacé les précédents | 4 | matière réunie |
-| 6 | Architecture retenue | le trajet de la donnée, service par service, avec les alternatives écartées | 6 | à écrire |
-| 7 | Ingénierie des données | collecte, stockage, transformation, qualité | 6 | phase 3 et 4 |
-| 8 | Détection des marchés atypiques | de la règle au modèle, et ce que la mesure justifie | 6 | phase 5, matière réunie ; la validation hors échantillon est en 11.2 |
+| 3 | État de l'art : les solutions existantes | outils publics, projets associatifs, plateformes commerciales | 5 | **rédigé** |
+| 4 | Étude du marché et études de cas | qui utilise quoi, avec sources vérifiables | 4 | **rédigé** |
+| 5 | Histoire des pratiques | d'où viennent ces outils, et pourquoi ils ont remplacé les précédents | 4 | **rédigé** |
+| 6 | Architecture retenue | le trajet de la donnée, service par service, avec les alternatives écartées | 6 | **rédigé** |
+| 7 | Ingénierie des données | collecte, stockage, transformation, qualité, rapprochement des sources | 6 | **rédigé** |
+| 8 | Détection des marchés atypiques | de la règle au modèle, et ce que la mesure justifie | 6 | **rédigé** ; la validation hors échantillon est en 11.2 |
 | 9 | Recherche et assistant | du mot-clé à la réponse sourcée, l'escalier de complexité | 5 | **rédigé** |
 | 10 | Mise en production et sécurité | l'API et l'interface, puis VPS, conteneurs, supervision, sauvegardes | 6 | **10.1 et 10.2 rédigées**, le reste en phase 9 |
 | 11 | Mesures, coûts et comparaison au marché | performance, qualité, euros par mois, face aux offres payantes | 5 | **11.1, 11.2 et 11.3 rédigées** |
