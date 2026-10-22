@@ -1,0 +1,11 @@
+route,chemin,ce_que_ca_represente,appels,premier_appel_ms,premier_appel_code,p50_ms,p95_ms,minimum_ms,maximum_ms
+sante,/sante,"le test de vie, lu par le conteneur",20,2.2,200,2.4,3.4,2.0,3.6
+recherche,/marches?q=travaux+de+voirie,la question la plus courante : du texte libre,20,1689.4,200,23.8,32.6,21.0,51.9
+recherche filtree,/marches?q=travaux+de+voirie&annee=2024&departement=35,"du texte et deux filtres, soit la page de resultats reelle",20,228.8,200,11.4,13.6,10.8,13.8
+recherche page 5,/marches?q=travaux&page=5,"la pagination profonde, ou offset coute",20,423.2,200,56.4,135.7,50.1,304.0
+liste recente,/marches?taille=10,sans texte : l'index sur la date,20,16.1,200,2.4,4.1,1.9,4.2
+un marche,/marches/211300553062862026S22341_80500000,la fiche d'un marche et ses signaux,20,21.8,200,2.3,3.2,1.9,3.7
+signaux,/signaux?taille=10,"les marches a examiner, par l'index partiel",20,7238.7,200,59.1,97.6,51.4,163.8
+statistiques,/statistiques,les comptages de la page d'accueil,20,5.7,200,1.8,2.4,1.4,3.5
+par annee,/statistiques/annees,la courbe de la page d'accueil,20,3.6,200,1.6,2.0,1.4,2.1
+assistant,/assistant?question=combien+de+marches+de+voirie+en+Bretagne+en+2024,"une question en francais, traduite en SQL",20,607.9,200,31.5,45.2,26.9,54.0

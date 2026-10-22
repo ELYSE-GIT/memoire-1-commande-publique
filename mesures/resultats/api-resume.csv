@@ -1,0 +1,11 @@
+mesure,valeur,unite,commentaire
+demarrage,1472.0,ms,ouverture de la reserve et chargement des lexiques
+"recherche, p50",23.8,ms,"texte libre, HTTP comprise"
+"recherche, p95",32.6,ms,le vingtieme visiteur le plus malchanceux
+pire premier appel,7238.7,ms,"base froide, juste apres le demarrage : ce que vit le premier visiteur apres un deploiement"
+comptages calcules a la demande,33137.0,ms,count(distinct) sur deux millions de lignes : au-dela du delai de dix secondes de l'API
+comptages lus dans la table,2.18,ms,"une table d'une ligne, remplie par make indexer"
+debit maximal mesure,111.2,requetes par seconde,a 4 clients simultanes
+questions bornees par le plafond,8,questions sur 10,"au-dela de 5000 lignes qui repondent, le classement est approche"
+pire ecart du classement borne,0,marches communs sur dix,entre les dix affiches et les dix du classement exact
+memoire du service,36.9,Mo,"processus uvicorn, reserve de connexions et lexiques compris"

@@ -42,7 +42,6 @@ Lancement : `make bench-recherche`, apres `make charger` et `make indexer`.
 from __future__ import annotations
 
 import csv
-import os
 import statistics
 import time
 import unicodedata
@@ -51,6 +50,8 @@ from typing import Any
 
 import duckdb
 import psycopg
+
+from services.configuration import chaine_de_connexion
 
 RACINE = Path(__file__).resolve().parent.parent
 BASE_DUCKDB = RACINE / "donnees" / "commande_publique.duckdb"
@@ -69,27 +70,6 @@ PROFONDEUR = 10
 # Repetitions par question. La premiere est jetee : elle paie le remplissage des caches, et ne
 # represente pas l'usage reel d'un site ou les pages s'enchainent.
 REPETITIONS = 6
-
-
-def chaine_de_connexion() -> str:
-    """Chaine de connexion PostgreSQL, construite depuis l'environnement."""
-    manquantes = [
-        nom
-        for nom in ("POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB")
-        if not os.environ.get(nom)
-    ]
-    if manquantes:
-        raise SystemExit(
-            f"Variables absentes : {', '.join(manquantes)}.\n"
-            "Lancer par `make bench-recherche`, qui passe le fichier .env a uv."
-        )
-    return (
-        f"host={os.environ.get('POSTGRES_HOST', 'localhost')}"
-        f" port={os.environ.get('POSTGRES_PORT', '5432')}"
-        f" dbname={os.environ['POSTGRES_DB']}"
-        f" user={os.environ['POSTGRES_USER']}"
-        f" password={os.environ['POSTGRES_PASSWORD']}"
-    )
 
 
 def lire_questions() -> list[dict[str, str]]:
@@ -365,7 +345,7 @@ def main() -> None:
 
     con_duckdb, duree_index_duckdb, taille_duckdb = preparer_duckdb()
 
-    with psycopg.connect(chaine_de_connexion()) as cx, cx.cursor() as curseur:
+    with psycopg.connect(chaine_de_connexion("make bench-recherche")) as cx, cx.cursor() as curseur:
         tailles = tailles_postgres(curseur)
 
         vides = set(mots_vides())

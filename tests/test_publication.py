@@ -86,8 +86,13 @@ def test_le_chargeur_n_ecrit_aucune_colonne_calculee() -> None:
 
 
 def test_le_mot_de_passe_n_a_aucune_valeur_par_defaut() -> None:
-    """Un script qui se connecte avec un mot de passe vide finit par le faire en production."""
-    source = (RACINE / "services" / "publication" / "vers_postgres.py").read_text(encoding="utf-8")
+    """Un script qui se connecte avec un mot de passe vide finit par le faire en production.
+
+    Le 22 octobre 2026, la chaine de connexion a ete sortie d'ici vers `services/configuration.py`
+    parce que trois modules en tenaient une copie. Ce test suit le code : il verifie le module
+    partage, et `test_api.py` verifie qu'aucune quatrieme copie ne reapparait.
+    """
+    source = (RACINE / "services" / "configuration.py").read_text(encoding="utf-8")
     sans_guillemets = source.replace("'", '"')
     # L'acces direct leve une erreur si la variable manque. `environ.get` renverrait None, et la
     # connexion partirait avec un mot de passe vide.

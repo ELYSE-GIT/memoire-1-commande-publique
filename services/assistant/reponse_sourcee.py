@@ -41,6 +41,9 @@ du sujet. Le modele de langue, lui, ameliorerait la forme en retirant cette gara
 from __future__ import annotations
 
 import time
+from collections import OrderedDict
+from collections.abc import Callable
+from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -81,6 +84,10 @@ from services.assistant.lecture_question import (
 #
 # Les valeurs ne traversent jamais la composition : elles sont liees en parametres, dans le meme
 # ordre que les fragments. Seuls des litteraux ecrits dans ce fichier deviennent du SQL.
+
+# Nombre de mots dont la frequence est gardee en memoire. La justification complete est a
+# l'endroit ou le cache est cree, dans `charger_lexiques`.
+MOTS_EN_CACHE = 20_000
 
 FILTRE_TEXTE = "{p}recherche @@ websearch_to_tsquery('public.francais', %s)"
 FILTRE_ANNEE = "{p}annee = %s"
@@ -254,12 +261,44 @@ select valeur from valeurs where valeur is not null
 """
 
 
-def charger_lexiques(curseur: psycopg.Cursor[Any]) -> Lexiques:
+def charger_lexiques(
+    curseur: psycopg.Cursor[Any],
+    curseur_pour_les_mots: Callable[[], AbstractContextManager[psycopg.Cursor[Any]]] | None = None,
+) -> Lexiques:
     """Lire dans la base ce dont l'analyseur a besoin.
 
     Appele une fois au demarrage du service, pas a chaque question : ce sont 131 noms de lieux et
     73 722 lexemes, qui ne changent qu'a la recollecte. La frequence est servie depuis un
     dictionnaire en memoire, soit environ 3 Mo, ce qui evite une lecture par mot.
+
+    === Pourquoi un second argument ============================================
+
+    La fonction `frequence` rendue dans les lexiques a besoin de la base : elle demande a
+    PostgreSQL de raciniser un mot inconnu, pour le chercher sous la meme forme que l'index.
+    Tant que l'appelant est un banc de mesure, le curseur de chargement reste ouvert pendant
+    toute l'execution et peut servir.
+
+    Dans un service, non : le curseur du demarrage est rendu a la reserve des que les lexiques
+    sont charges, et la premiere question recoit « the cursor is closed ». Le defaut a ete
+    trouve par `make bench-api` le 22 octobre 2026, apres vingt-et-un appels en erreur 503.
+
+        Option envisagee          Avantage                   Limite                    Verdict
+        garder le curseur du      aucun changement           une connexion monopolisee  ecarte
+        demarrage ouvert                                      pour toute la duree du
+                                                              service, et un seul
+                                                              curseur partage entre
+                                                              tous les visiteurs
+        raciniser en Python       aucune base a interroger   ce ne serait plus la meme  ecarte
+                                                              racinisation que l'index,
+                                                              donc des mots introuvables
+        precharger la             tout en memoire            on ne connait pas a        ecarte
+        racinisation de tous                                  l'avance les mots que les
+        les mots possibles                                    visiteurs taperont
+        **laisser l'appelant      le banc garde son          un argument de plus, avec  **retenu**
+        fournir un curseur**      comportement, le service   une valeur par defaut
+
+    Sans ce second argument, le comportement est exactement celui d'avant : le curseur de
+    chargement est reutilise.
     """
     from services.assistant.lecture_question import plier
 
@@ -296,20 +335,65 @@ def charger_lexiques(curseur: psycopg.Cursor[Any]) -> Lexiques:
     # Le mot de la question doit etre racinise avant d'etre cherche dans le vocabulaire, qui ne
     # contient que des lexemes. On demande la racinisation a PostgreSQL plutot que de la
     # reimplementer : c'est la meme que celle de l'index, par construction.
-    cache: dict[str, float] = {}
+    # Cache **borne**, et la borne n'est pas decorative.
+    #
+    # Tant que cette fonction ne servait qu'a `make bench-assistant`, elle voyait 40 questions
+    # ecrites a la main : quelques centaines de mots, dans un processus qui s'arrete. Depuis que
+    # l'API l'expose, elle voit ce qu'un inconnu tape. Un dictionnaire sans borne grandit alors
+    # d'une entree par mot jamais vu, indefiniment, dans un service qui tourne des semaines.
+    # C'est une facon simple de faire consommer de la memoire a un serveur, et elle ne demande
+    # aucun privilege : il suffit d'envoyer des mots differents.
+    #
+    #     Option envisagee        Avantage                   Limite                    Verdict
+    #     aucun cache             rien a borner              une requete a la base par  ecarte
+    #                                                        mot, a chaque question
+    #     cache sans borne        le plus simple             grandit avec ce qu'on lui  exclu
+    #                                                        envoie : c'est le defaut
+    #     **cache borne, le       memoire plafonnee, et les  les mots rares sont        **retenu**
+    #     plus ancien sort**      mots courants restent      recalcules s'ils reviennent
+    #     cache avec expiration   suit l'evolution du        une date par entree pour   ecarte
+    #     par duree               vocabulaire                un vocabulaire qui ne
+    #                                                        change qu'a la recollecte
+    #
+    # 20 000 entrees : largement au-dessus du vocabulaire reel des questions, et tres en dessous
+    # des 74 055 lexemes de la table. Une entree est un mot court et un flottant, donc quelques
+    # mega-octets au pire.
+    #
+    # Ce que cette borne ne protege pas : chaque mot inconnu coute une requete a la base, cache
+    # ou non. Limiter le **nombre d'appels** appartient au reverse-proxy, qui est le seul a voir
+    # la vraie adresse de l'appelant. Voir l'ADR 0011.
+    cache: OrderedDict[str, float] = OrderedDict()
+
+    def raciniser(mot: str) -> str | None:
+        """Demande la racinisation a PostgreSQL, sur un curseur encore valide."""
+        requete = "select to_tsvector('public.francais', %s)::text"
+        if curseur_pour_les_mots is None:
+            curseur.execute(requete, (mot,))
+            return str(curseur.fetchone()[0])  # type: ignore[index]
+        with curseur_pour_les_mots() as frais:
+            frais.execute(requete, (mot,))
+            return str(frais.fetchone()[0])  # type: ignore[index]
 
     def frequence(mot: str) -> float:
-        if mot not in cache:
-            curseur.execute("select to_tsvector('public.francais', %s)::text", (mot,))
-            vecteur = curseur.fetchone()[0]  # type: ignore[index]
-            if not vecteur:
-                # Mot vide pour PostgreSQL : il n'entrerait pas dans la requete de toute facon,
-                # et la raison affichee a l'utilisateur doit le dire ainsi.
-                cache[mot] = MOT_VIDE
-            else:
-                lexeme = vecteur.split("'")[1]
-                cache[mot] = frequences.get(lexeme, 0.0)
-        return cache[mot]
+        if mot in cache:
+            # Remis en fin de file : un mot qui ressert ne doit pas etre le prochain a sortir.
+            cache.move_to_end(mot)
+            return cache[mot]
+
+        vecteur = raciniser(mot)
+        if not vecteur:
+            # Mot vide pour PostgreSQL : il n'entrerait pas dans la requete de toute facon,
+            # et la raison affichee a l'utilisateur doit le dire ainsi.
+            valeur = MOT_VIDE
+        else:
+            lexeme = vecteur.split("'")[1]
+            valeur = frequences.get(lexeme, 0.0)
+
+        cache[mot] = valeur
+        if len(cache) > MOTS_EN_CACHE:
+            # Le plus anciennement utilise sort. `last=False` prend le debut de la file.
+            cache.popitem(last=False)
+        return valeur
 
     return Lexiques(
         regions=regions,

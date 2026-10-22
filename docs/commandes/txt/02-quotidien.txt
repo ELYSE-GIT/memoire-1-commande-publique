@@ -9,6 +9,7 @@ Les commandes d'une session de travail normale. Toutes se lancent a la racine du
 | `make install` | remet le `.venv` a jour si les dependances ont change | 5 s a 2 min |
 | `make vm-up` | demarre la VM des conteneurs (4 CPU, 6 Go) | 30 s |
 | `make up` | demarre les services du projet | 10 s |
+| `make api` | demarre l'API publique (necessite `make up`) | 1 s |
 | `make etat` | montre la VM et les conteneurs en cours | 2 s |
 
 Tant qu'on ne travaille pas sur les services, `make vm-up` est inutile. Le code Python, les tests et
@@ -111,3 +112,74 @@ message trompeur (`role "commande_publique" does not exist`) alors que le conten
 
 Le conteneur, lui, ecoute toujours sur 5432 a l'interieur. Seul le port cote machine change, et il
 est defini par `POSTGRES_PORT` dans `.env`.
+
+## L'API publique
+
+Depuis la phase 7, le projet a un second service : l'API, qui sert les marches, les signaux, les
+comptages et l'assistant. Elle a besoin de PostgreSQL, donc de `make up` avant.
+
+### Demarrer
+
+```bash
+make up        # PostgreSQL d'abord, sinon l'API demarre en mode degrade
+make api       # l'API, rechargee a chaque modification du code
+```
+
+**Duree** : moins d'une seconde pour le demarrage, dont le chargement des lexiques de
+l'assistant (74 055 lexemes, 24 regions, 107 departements).
+
+**Resultat attendu** : `Uvicorn running on http://127.0.0.1:8000`. Ouvrir
+<http://localhost:8000/docs> : la documentation interactive est generee depuis le code, donc
+toujours a jour. Chaque route y est essayable directement dans le navigateur, ce qui est le plus
+court chemin pour montrer l'API en soutenance.
+
+**Arreter** : Ctrl-C dans le terminal. L'API ne redemarre pas toute seule, comme le reste.
+
+### Verifier qu'elle va bien
+
+```bash
+curl -s http://localhost:8000/sante
+```
+
+**Resultat attendu** :
+
+```json
+{"etat":"pret","base_accessible":true,"marches_charges":1999474,"lexiques_charges":true}
+```
+
+Les deux cas a savoir lire :
+
+- `"etat":"degrade"` avec `"base_accessible":false` : PostgreSQL n'est pas demarre. L'API
+  fonctionne quand meme et le dit, plutot que de refuser de demarrer. C'est voulu : en
+  demonstration, un service qui refuse de demarrer ne permet meme plus de comprendre ce qui
+  manque.
+- `"marches_charges":null` : la base est joignable mais la table des comptages est vide. Il
+  manque `make indexer` apres le chargement.
+
+### Trois appels pour la demonstration
+
+```bash
+curl -s "http://localhost:8000/marches?q=travaux+de+voirie&annee=2024" | head -40
+curl -s "http://localhost:8000/signaux?taille=3"
+curl -s "http://localhost:8000/assistant?question=combien+de+marches+de+voirie+en+Bretagne+en+2024"
+```
+
+Le troisieme est celui a montrer : la reponse porte la phrase, les chiffres, le filtre applique
+en francais et les numeros de marche cites, verifiables un par un sur `/marches/{marche_id}`.
+
+### `classement_approche`, et pourquoi il faut savoir l'expliquer
+
+La reponse d'une recherche contient deux champs qu'il faut pouvoir justifier devant un jury :
+
+```json
+{"classement_approche": true, "candidats_examines": 5000}
+```
+
+Le service ne classe que 5 000 marches au plus. Classer les 348 748 qui contiennent « travaux »
+prenait 9,7 secondes a chaud, et 7,2 secondes a froid au plafond precedent de 20 000, ce qui
+depassait le delai que l'API s'impose. Quand `classement_approche` vaut `true`, les marches
+affiches sont les mieux classes **parmi les 5 000 plus recents qui contiennent les mots**, et non
+parmi tous.
+
+Le raisonnement complet, avec le tableau de ce que l'approximation change vraiment, est dans
+`services/api/requetes.py` et dans l'ADR 0011.

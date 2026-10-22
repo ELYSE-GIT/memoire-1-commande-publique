@@ -43,7 +43,6 @@ Lancement : `make bench-assistant`, apres `make charger` et `make indexer`.
 from __future__ import annotations
 
 import csv
-import os
 import statistics
 import time
 from pathlib import Path
@@ -61,6 +60,7 @@ from services.assistant.reponse_sourcee import (
     construire_filtre,
     repondre,
 )
+from services.configuration import chaine_de_connexion
 
 RACINE = Path(__file__).resolve().parent.parent
 QUESTIONS = RACINE / "mesures" / "verification" / "questions-assistant.csv"
@@ -74,27 +74,6 @@ REPETITIONS = 6
 # d'un millier de questions, pour la comparaison aux offres payantes du chapitre 11.
 EUROS_PAR_MOIS = 12.0
 SECONDES_PAR_MOIS = 30 * 24 * 3600
-
-
-def chaine_de_connexion() -> str:
-    """Chaine de connexion PostgreSQL, construite depuis l'environnement."""
-    manquantes = [
-        nom
-        for nom in ("POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB")
-        if not os.environ.get(nom)
-    ]
-    if manquantes:
-        raise SystemExit(
-            f"Variables absentes : {', '.join(manquantes)}.\n"
-            "Lancer par `make bench-assistant`, qui passe le fichier .env a uv."
-        )
-    return (
-        f"host={os.environ.get('POSTGRES_HOST', 'localhost')}"
-        f" port={os.environ.get('POSTGRES_PORT', '5432')}"
-        f" dbname={os.environ['POSTGRES_DB']}"
-        f" user={os.environ['POSTGRES_USER']}"
-        f" password={os.environ['POSTGRES_PASSWORD']}"
-    )
 
 
 def lire_questions() -> list[dict[str, str]]:
@@ -357,7 +336,8 @@ def main() -> None:
     par_question: list[dict[str, Any]] = []
     extraits: list[dict[str, Any]] = []
 
-    with psycopg.connect(chaine_de_connexion()) as connexion, connexion.cursor() as curseur:
+    connexion_sql = psycopg.connect(chaine_de_connexion("make bench-assistant"))
+    with connexion_sql as connexion, connexion.cursor() as curseur:
         depart_lexiques = time.perf_counter()
         lexiques = charger_lexiques(curseur)
         duree_lexiques = (time.perf_counter() - depart_lexiques) * 1000

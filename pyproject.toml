@@ -6,10 +6,13 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "dbt-duckdb>=1.9",
     "duckdb>=1.5.5",
+    "fastapi>=0.120",
     "matplotlib>=3.11.2",
     "pandas>=3.0.6",
+    "psycopg-pool>=3.2",
     "psycopg[binary]>=3.3.6",
     "scikit-learn>=1.9.1",
+    "uvicorn[standard]>=0.38",
 ]
 
 [dependency-groups]
@@ -23,6 +26,7 @@ dev = [
     "pytest-cov>=5.0",
     "ipykernel>=7.3.0",
     "nbclient>=0.11.0",
+    "httpx>=0.28",
 ]
 
 [tool.ruff]
