@@ -5,7 +5,7 @@ visiteur, puis gardes par son navigateur.
 
 | Fichier | Poids | Origine |
 |---|---|---|
-| `site.css` | 12,5 ko | ecrit pour ce projet |
+| `site.css` | 15,4 ko | ecrit pour ce projet |
 | `htmx-2.0.11.min.js` | 51,0 ko | **tiers**, recopie tel quel |
 | `marque.svg` | 0,6 ko | ecrit pour ce projet |
 

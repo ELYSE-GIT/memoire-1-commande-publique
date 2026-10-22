@@ -39,7 +39,7 @@ from services.api.base import (
     curseur_positionnel,
 )
 from services.api.main import PREFIXE_API, application
-from services.site import pages
+from services.site import pages, referentiel
 from services.site.main import application as application_du_site
 from tests.test_api import LIGNE, LIGNE_SIGNAL, FauxCurseur
 
@@ -71,6 +71,62 @@ ANNEE = {
 }
 
 
+# Une famille d'achat, telle que la table `statistiques_familles` la rend. Les valeurs sont
+# celles de la division 45, mesurees le 22 octobre 2026, arrondies.
+FAMILLE = {
+    "famille_cpv": "45",
+    "marches": 821_967,
+    "montant_total": 400_000_000_000.0,
+    "marches_avec_montant": 800_000,
+    "montant_q1": 40_000.0,
+    "montant_median": 146_538.0,
+    "montant_q3": 520_000.0,
+    "attributions_resolues": 700_000,
+    "attributions_pme": 450_000,
+    "part_pme_pourcent": 64.3,
+    "marches_signales": 12_000,
+}
+
+
+class FauxCurseurDuSite(FauxCurseur):
+    """Le faux curseur des tests de l'API, qui sait en plus rendre les familles d'achat.
+
+    Les pages du site lisent les familles en plus de ce que le test leur donne : le menu de
+    recherche les affiche, l'accueil en fait un diagramme, la fiche s'en sert pour situer un
+    marche. Sans cette interception, chaque test devrait fournir un lot de familles en premier,
+    dans le bon ordre, et un lot oublie decalerait silencieusement tous les suivants.
+
+    L'interception se fait sur le nom de la table et non sur un compteur d'appels : l'ordre dans
+    lequel une page lit ses donnees est un detail d'implementation, et un test ne doit pas en
+    dependre.
+    """
+
+    def __init__(
+        self,
+        lots: list[list[dict[str, Any]]] | None = None,
+        familles: list[dict[str, Any]] | None = None,
+    ) -> None:
+        super().__init__(lots)
+        self.familles = [FAMILLE] if familles is None else familles
+        self._sur_les_familles = False
+
+    def execute(self, requete: Any, valeurs: Any = None) -> FauxCurseurDuSite:
+        texte = requete.as_string(None) if hasattr(requete, "as_string") else str(requete)
+        self._sur_les_familles = "statistiques_familles" in texte
+        super().execute(requete, valeurs)
+        return self
+
+    def fetchall(self) -> list[dict[str, Any]]:
+        if self._sur_les_familles:
+            return list(self.familles)
+        return super().fetchall()
+
+    def fetchone(self) -> dict[str, Any] | None:
+        if self._sur_les_familles:
+            return self.familles[0] if self.familles else None
+        return super().fetchone()
+
+
 def client(lots: list[list[dict[str, Any]]] | None = None) -> TestClient:
     """Un client de test sur l'application deployee, pages comprises.
 
@@ -79,7 +135,7 @@ def client(lots: list[list[dict[str, Any]]] | None = None) -> TestClient:
     ce qui est deploye.
     """
     application_du_site.state.etat = Etat()
-    faux = FauxCurseur(lots)
+    faux = FauxCurseurDuSite(lots)
     application_du_site.dependency_overrides[curseur] = lambda: faux
     application_du_site.dependency_overrides[curseur_positionnel] = lambda: faux
     return TestClient(application_du_site, raise_server_exceptions=False)
@@ -130,6 +186,52 @@ def test_la_figure_de_l_accueil_est_un_svg_sans_style_en_ligne() -> None:
     assert "style=" not in svg
 
 
+def test_la_page_d_accueil_dit_ce_qui_est_achete_et_non_seulement_combien() -> None:
+    """Deux millions de marches sans dire de quoi il s'agit, cela n'informe pas.
+
+    Le diagramme des familles repond a « qu'achete-t-on ? », que les comptages ne repondent
+    pas, et il affiche des libelles et non des codes : « CPV 45 » ne veut rien dire pour qui ne
+    connait pas la nomenclature europeenne, et un jury n'a aucune raison de la connaitre.
+    """
+    texte = client([[COMPTAGES], [ANNEE]]).get("/").text
+    assert "Travaux de construction" in texte
+    assert '<rect class="barre-famille"' in texte
+
+
+def test_la_fiche_situe_le_marche_parmi_ceux_de_sa_famille() -> None:
+    """« Ecart normalise 6,53 » est la bonne mesure, et personne ne sait la lire.
+
+    La reglette montre la moitie centrale de la famille, sa mediane, et la position de ce
+    marche, sur une echelle logarithmique. Elle n'apparait que si la famille est connue et que
+    ses quartiles existent : mieux vaut pas de figure qu'une figure fausse.
+    """
+    cher = {**LIGNE, "montant": 50_000_000.0, "famille_cpv": "45"}
+    texte = client([[cher], [LIGNE_SIGNAL]]).get(f"/fiche/{LIGNE['marche_id']}").text
+    assert "parmi ceux de sa famille" in texte
+    assert '<rect class="boite"' in texte
+    # Le rapport a la mediane est dit en francais a cote de la figure : c'est la question que le
+    # lecteur pose, et un dessin seul n'y repond pas.
+    assert "fois le montant médian" in texte
+
+
+def test_la_reglette_disparait_quand_la_famille_est_inconnue() -> None:
+    """Une figure sans reperes serait une figure fausse, donc il n'y en a pas."""
+    sans_famille = {**LIGNE, "famille_cpv": None}
+    faux = FauxCurseurDuSite([[sans_famille], [LIGNE_SIGNAL]], familles=[])
+    application_du_site.state.etat = Etat()
+    application_du_site.dependency_overrides[curseur] = lambda: faux
+    texte = TestClient(application_du_site).get(f"/fiche/{LIGNE['marche_id']}").text
+    assert "parmi ceux de sa famille" not in texte
+
+
+def test_le_filtre_de_famille_est_un_menu_et_non_un_code_a_taper() -> None:
+    """Saisir « 45 » demande de connaitre la nomenclature europeenne pour se servir du site."""
+    texte = client([[LIGNE]]).get("/recherche").text
+    assert '<select id="famille"' in texte
+    assert "toutes les familles" in texte
+    assert "Travaux de construction" in texte
+
+
 def test_une_recherche_affiche_ses_resultats_et_le_lien_vers_la_fiche() -> None:
     reponse = client([[LIGNE]]).get("/recherche", params={"q": "travaux de voirie"})
     assert reponse.status_code == 200
@@ -177,7 +279,7 @@ def test_la_page_a_propos_ne_touche_pas_a_la_base() -> None:
 
     C'est exactement le moment ou l'on veut savoir ce que le site affiche d'habitude.
     """
-    faux = FauxCurseur()
+    faux = FauxCurseurDuSite()
     application_du_site.state.etat = Etat()
     application_du_site.dependency_overrides[curseur] = lambda: faux
     reponse = TestClient(application_du_site).get("/a-propos")
@@ -538,6 +640,86 @@ def test_un_marche_a_montants_differents_n_est_pas_totalise() -> None:
     assert pages.somme_des_montants([Ligne(100.0), Ligne(100.0)]) == 100
     assert pages.somme_des_montants([Ligne(100.0), Ligne(50.0)]) is None
     assert pages.somme_des_montants([]) is None
+
+
+@pytest.mark.parametrize(
+    ("montant", "attendu"),
+    [
+        (146_538.0, "proche du montant médian"),
+        (800_000_000.0, "fois le montant médian"),
+        (1_000.0, "de moins que le montant médian"),
+        (160_000.0, "de plus que le montant médian"),
+    ],
+)
+def test_le_rapport_a_la_mediane_est_dit_en_francais(montant: float, attendu: str) -> None:
+    """« 5 460 fois plus cher » se lit, « rapport 5460,2 » se dechiffre."""
+    assert attendu in pages.comparaison_a_la_mediane(montant / 146_538.0)
+
+
+def test_la_reglette_tient_sur_une_famille_tres_serree() -> None:
+    """Une famille dont les quartiles sont presque egaux donnerait une largeur nulle.
+
+    Sans le plancher sur la marge, c'est une division par zero au moment de placer le premier
+    repere, donc une page en erreur sur un cas de donnees parfaitement normal.
+    """
+
+    class FamilleSerree:
+        montant_q1 = 100.0
+        montant_median = 100.0
+        montant_q3 = 100.0
+        marches_avec_montant = 42
+
+    situation = pages.situation_dans_la_famille(100.0, FamilleSerree())
+    assert situation is not None
+    assert 0 <= situation["x_median"] <= situation["largeur"]
+
+
+@pytest.mark.parametrize(
+    ("montant", "famille"),
+    [(None, "presente"), (0.0, "presente"), (184_000.0, None)],
+)
+def test_la_reglette_refuse_de_dessiner_sans_reperes(montant: float | None, famille: Any) -> None:
+    """Un montant nul ou absent, ou une famille inconnue : pas de figure plutot qu'une fausse.
+
+    Un montant de zero euro ne se place pas sur une echelle logarithmique, et le forcer
+    donnerait une position inventee.
+    """
+
+    class FamilleConnue:
+        montant_q1 = 40_000.0
+        montant_median = 146_538.0
+        montant_q3 = 520_000.0
+        marches_avec_montant = 800_000
+
+    assert pages.situation_dans_la_famille(montant, FamilleConnue() if famille else None) is None
+
+
+def test_chaque_famille_des_donnees_a_son_libelle() -> None:
+    """Une division sans libelle s'afficherait « Division 12 » : honnete, mais a completer.
+
+    La liste de reference est comparee aux familles que la detection a reellement rencontrees,
+    enregistrees dans les mesures versionnees : c'est la seule source disponible hors ligne qui
+    dise quelles divisions existent dans les donnees.
+    """
+    mesures = RACINE / "mesures" / "resultats" / "familles-cpv.csv"
+    with mesures.open(encoding="utf-8") as fichier:
+        presentes = {ligne["famille_cpv"] for ligne in csv.DictReader(fichier)}
+    manquantes = sorted(code for code in presentes if code not in referentiel.FAMILLES)
+    assert not manquantes, f"divisions sans libelle dans base/reference : {manquantes}"
+
+
+def test_les_libelles_courts_tiennent_dans_une_etiquette() -> None:
+    """Un libelle court sert d'etiquette de graphique et d'entree de menu.
+
+    Les libelles officiels font jusqu'a deux cents caracteres ; au-dela d'une quarantaine, ils
+    debordent de leur colonne ou forcent le menu a s'elargir hors de l'ecran.
+    """
+    trop_longs = {
+        famille.code: famille.libelle_court
+        for famille in referentiel.FAMILLES.values()
+        if len(famille.libelle_court) > 40
+    }
+    assert not trop_longs, trop_longs
 
 
 def test_une_part_sans_denominateur_ne_vaut_pas_zero() -> None:

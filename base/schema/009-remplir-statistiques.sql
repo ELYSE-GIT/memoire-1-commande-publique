@@ -95,3 +95,67 @@ commit;
 select annee, attributions, attributions_resolues, round(part_pme_pourcent::numeric, 1) as part_pme
 from statistiques_annuelles
 order by annee;
+
+
+-- La table par famille d'achat. Reconstruite entierement, comme la serie annuelle : les familles
+-- ne disparaissent pas, mais leurs quartiles bougent a chaque collecte.
+--
+-- La jointure avec `signaux` est a gauche : une famille sans aucun marche signale doit rester
+-- dans la table avec un zero, et non disparaitre. C'est la difference entre « aucun signal » et
+-- « famille inconnue », et la page d'accueil affiche les deux differemment.
+begin;
+
+delete from statistiques_familles;
+
+insert into statistiques_familles (
+    famille_cpv, marches, montant_total,
+    marches_avec_montant, montant_q1, montant_median, montant_q3,
+    attributions_resolues, attributions_pme, part_pme_pourcent,
+    marches_signales
+)
+with comptes as (
+    select
+        famille_cpv,
+        count(*)                                                    as marches,
+        sum(montant)                                                as montant_total,
+        count(montant)                                              as marches_avec_montant,
+        -- `percentile_cont` interpole entre deux valeurs encadrantes, `percentile_disc` rendrait
+        -- une valeur reellement presente. L'interpolation est le bon choix ici : c'est la meme
+        -- definition que celle utilisee par la detection, donc les deux chiffres se comparent.
+        percentile_cont(0.25) within group (order by montant)       as montant_q1,
+        percentile_cont(0.50) within group (order by montant)       as montant_median,
+        percentile_cont(0.75) within group (order by montant)       as montant_q3,
+        count(*) filter (where titulaire_categorie is not null)     as attributions_resolues,
+        count(*) filter (where titulaire_categorie = 'PME')         as attributions_pme,
+        100.0 * count(*) filter (where titulaire_categorie = 'PME')
+              / nullif(count(*) filter (where titulaire_categorie is not null), 0)
+                                                                    as part_pme_pourcent
+    from marches
+    where famille_cpv is not null
+    group by famille_cpv
+),
+signales as (
+    select m.famille_cpv, count(*) as marches_signales
+    from signaux as s
+    join marches as m on m.marche_id = s.marche_id
+    where s.signaux_forts > 0 and m.famille_cpv is not null
+    group by m.famille_cpv
+)
+select
+    comptes.famille_cpv, comptes.marches, comptes.montant_total,
+    comptes.marches_avec_montant, comptes.montant_q1, comptes.montant_median, comptes.montant_q3,
+    comptes.attributions_resolues, comptes.attributions_pme, comptes.part_pme_pourcent,
+    coalesce(signales.marches_signales, 0)
+from comptes
+left join signales on signales.famille_cpv = comptes.famille_cpv;
+
+commit;
+
+select
+    famille_cpv, marches,
+    round(montant_median) as montant_median,
+    round(part_pme_pourcent::numeric, 1) as part_pme,
+    marches_signales
+from statistiques_familles
+order by marches desc
+limit 10;

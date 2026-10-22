@@ -216,6 +216,30 @@ class StatistiqueAnnuelle(BaseModel):
     )
 
 
+class Famille(BaseModel):
+    """Une famille d'achat, telle que le site l'affiche.
+
+    Les quartiles sont servis parce qu'un montant seul ne dit pas si un marche est cher : il
+    faut savoir comment sa famille se disperse. C'est ce qui permet au site de montrer la
+    position d'un marche au lieu d'afficher un ecart normalise que personne ne sait lire.
+    """
+
+    famille_cpv: str = Field(description="Les deux premiers chiffres du code CPV")
+    marches: int
+    montant_total: Decimal | None = None
+    marches_avec_montant: int = Field(
+        description="Denominateur des quartiles. Une ligne sans montant n'est pas un marche a "
+        "zero euro, elle est exclue"
+    )
+    montant_q1: Decimal | None = None
+    montant_median: Decimal | None = None
+    montant_q3: Decimal | None = None
+    attributions_resolues: int
+    attributions_pme: int
+    part_pme_pourcent: float | None = None
+    marches_signales: int = 0
+
+
 class ReponseAssistant(BaseModel):
     """Une reponse en francais, et tout ce qu'il faut pour la verifier sans faire confiance."""
 

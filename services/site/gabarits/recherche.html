@@ -36,11 +36,17 @@
            maxlength="3" pattern="[0-9AB]{2,3}" placeholder="35">
   </div>
   <div class="champ">
-    <label for="famille">Famille d'achat (CPV)</label>
-    <input type="text" id="famille" name="famille" value="{{ brut.famille }}"
-           maxlength="2" pattern="[0-9]{2}" placeholder="45">
-    <span class="aide">Deux premiers chiffres du code CPV. 45 pour les travaux de
-    construction, 72 pour l'informatique.</span>
+    <label for="famille">Famille d'achat</label>
+    {# Un menu et non un champ libre : saisir « 45 » demande de connaitre la nomenclature
+       europeenne, et les libelles viennent de base/reference/familles-cpv.csv. #}
+    <select id="famille" name="famille">
+      <option value="">toutes les familles</option>
+      {% for famille in familles %}
+      <option value="{{ famille.famille_cpv }}" {% if criteres.famille == famille.famille_cpv %}selected{% endif %}>
+        {{ libelle_famille(famille.famille_cpv, court=True) }} ({{ famille.marches | nombre }})
+      </option>
+      {% endfor %}
+    </select>
   </div>
   <div class="champ">
     <label for="montant_minimum">Montant minimum (€)</label>

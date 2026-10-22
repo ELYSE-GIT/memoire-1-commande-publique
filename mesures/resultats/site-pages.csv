@@ -1,11 +1,11 @@
 page,chemin,ce_que_ca_represente,code,temoin_present,premier_appel_ms,p50_ms,p95_ms,poids_ko,poids_comprime_ko,attente_mobile_ms
-accueil,/,"la premiere page, avec ses comptages et sa figure",200,True,53.7,5.0,6.6,10.3,3.0,12.0
-recherche vide,/recherche,le formulaire et les marches les plus recents,200,True,28.3,4.3,7.1,10.7,3.5,14.0
-recherche texte,/recherche?q=travaux+de+voirie,la recherche la plus courante : du texte libre,200,True,179.6,31.4,52.9,11.4,3.5,14.0
-recherche filtree,/recherche?q=travaux+de+voirie&annee=2024&departement=35,"du texte et deux filtres, soit la page de resultats reelle",200,True,50.2,16.5,20.2,10.5,2.8,11.0
-recherche large,/recherche?q=travaux,un mot seul tres frequent : le cas ou le classement est approche,200,True,94.3,79.8,103.7,12.0,4.0,16.0
-fiche,/fiche/211300553062862026S22341_80500000,"la fiche d'un marche, ses titulaires et ses signaux",200,True,24.4,4.6,7.8,4.4,1.9,8.0
-a examiner,/a-examiner,"les marches signales, par l'index partiel",200,True,164.2,68.6,97.9,8.3,1.9,8.0
-questions,/questions?question=combien+de+marches+de+voirie+en+2023,"une question en francais, avec ses citations",200,True,113.5,64.7,91.5,5.5,2.1,9.0
-a propos,/a-propos,"les sources et les limites, sans toucher a la base",200,True,3.9,0.7,1.6,8.7,3.6,14.0
-page inconnue,/adresse-qui-n-existe-pas,une adresse inconnue : une page et non un objet JSON,404,True,3.6,0.6,1.1,1.8,0.9,4.0
+accueil,/,"la premiere page, avec ses comptages et sa figure",200,True,22.4,6.0,8.9,17.0,4.3,17.0
+recherche vide,/recherche,le formulaire et les marches les plus recents,200,True,19.5,4.3,6.6,14.8,4.4,18.0
+recherche texte,/recherche?q=travaux+de+voirie,la recherche la plus courante : du texte libre,200,True,82.5,24.6,27.1,15.5,4.4,18.0
+recherche filtree,/recherche?q=travaux+de+voirie&annee=2024&departement=35,"du texte et deux filtres, soit la page de resultats reelle",200,True,26.0,14.5,17.0,14.6,3.7,15.0
+recherche large,/recherche?q=travaux,un mot seul tres frequent : le cas ou le classement est approche,200,True,84.2,64.0,76.9,16.1,4.9,19.0
+fiche,/fiche/211300553062862026S22341_80500000,"la fiche d'un marche, ses titulaires et ses signaux",200,True,16.3,3.5,5.3,6.5,2.6,11.0
+a examiner,/a-examiner,"les marches signales, par l'index partiel",200,True,276.9,66.8,88.1,8.4,1.9,8.0
+questions,/questions?question=combien+de+marches+de+voirie+en+2023,"une question en francais, avec ses citations",200,True,108.4,55.4,92.7,5.5,2.1,9.0
+a propos,/a-propos,"les sources et les limites, sans toucher a la base",200,True,4.6,0.6,0.8,9.5,3.9,16.0
+page inconnue,/adresse-qui-n-existe-pas,une adresse inconnue : une page et non un objet JSON,404,True,2.5,0.6,0.9,1.8,0.9,4.0

@@ -175,3 +175,68 @@ comment on table statistiques_annuelles is
     'Serie par annee, calculee au chargement. Unite de comptage : l''attribution.';
 comment on column statistiques_annuelles.part_pme_pourcent is
     'Part des attributions revenant a une PME, parmi les attributions_resolues seulement.';
+
+
+-- === La troisieme table : une ligne par famille d'achat =======================
+--
+-- Pourquoi elle existe. Le site doit pouvoir repondre a deux questions qu'un tableau de chiffres
+-- ne repond pas : « qu'achete-t-on, en fait ? » sur la page d'accueil, et « ce marche est-il
+-- cher ? » sur la fiche d'un marche signale. Les deux demandent les memes agregats par famille,
+-- et les deux sont des pages publiques, donc elles doivent repondre en millisecondes.
+--
+-- Pourquoi precalculee, comme les autres. Mesure du 22 octobre 2026 sur les 1 999 474 lignes,
+-- base chaude, trois executions :
+--
+--     group by famille_cpv avec les trois quartiles        62 a 110 ms
+--     lecture des 91 lignes de cette table                0,1 a 0,6 ms
+--
+-- L'ecart est de deux ordres de grandeur, et il faut etre honnete sur ce qu'il signifie :
+-- soixante-dix millisecondes ne rendent pas une page inutilisable, contrairement aux dix
+-- secondes du comptage general. Ce qui justifie quand meme la table, c'est que ces agregats
+-- sont lus par les **deux** pages les plus visitees, l'accueil et le formulaire de recherche :
+-- les y calculer a la demande multiplierait par sept le temps de reponse de la recherche
+-- filtree, mesure a 11 ms. Et cette mesure est faite a chaud ; `percentile_cont` trie
+-- l'ensemble de chaque groupe, donc sur une base froide elle paie en plus la lecture du disque.
+--
+-- Le raisonnement complet sur le choix « calculer au chargement plutot qu'a la demande » est en
+-- tete de ce fichier.
+--
+-- Pourquoi les quartiles et pas seulement la mediane. Un montant seul ne dit pas si un marche
+-- est cher : il faut savoir comment sa famille se disperse. La fiche d'un marche signale affiche
+-- donc l'intervalle interquartile, la mediane, et la position du marche. C'est ce qui transforme
+-- « ecart normalise 6,53 », que personne ne sait lire, en une image que tout le monde lit.
+--
+-- Les montants sont en euros et non en logarithmes, contrairement a la table `signaux` : la
+-- detection travaille en log10 parce que les montants s'etalent sur huit ordres de grandeur,
+-- mais une page affiche des euros. La conversion est faite ici, une fois, plutot qu'a chaque
+-- affichage.
+create table if not exists statistiques_familles (
+
+    -- Les deux premiers chiffres du code CPV, le zero initial compris.
+    famille_cpv                 text primary key,
+
+    marches                     bigint not null,
+    montant_total               numeric(20, 2),
+
+    -- Les trois quartiles des montants publies, en euros. Calcules sur les seules lignes qui
+    -- portent un montant : une ligne sans montant n'est pas un marche a zero euro.
+    marches_avec_montant        bigint not null,
+    montant_q1                  numeric(18, 2),
+    montant_median              numeric(18, 2),
+    montant_q3                  numeric(18, 2),
+
+    -- De quoi afficher une part de PME par famille, avec son denominateur, comme ailleurs.
+    attributions_resolues       bigint not null,
+    attributions_pme            bigint not null,
+    part_pme_pourcent           double precision,
+
+    -- Lignes de cette famille portant au moins un signal fort.
+    marches_signales            bigint not null default 0
+);
+
+comment on table statistiques_familles is
+    'Une ligne par division CPV, calculee au chargement. Les libelles sont dans '
+    'base/reference/familles-cpv.csv, pas ici : une nomenclature officielle n''est pas une '
+    'donnee collectee, et elle doit rester lisible dans une revue de code.';
+comment on column statistiques_familles.montant_median is
+    'Mediane des montants publies de la famille, en euros. Denominateur : marches_avec_montant.';

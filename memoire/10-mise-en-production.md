@@ -267,11 +267,11 @@ donc le poids servi, compressé et non compressé.
 | question à l'assistant | 5,5 ko | 2,1 ko | 8 ms |
 | marchés à examiner | 8,2 ko | 1,9 ko | 8 ms |
 | accueil | 10,3 ko | 3,0 ko | 12 ms |
-| recherche large | 12,0 ko | 5,5 ko | 22 ms |
+| recherche large | 17,0 ko | 5,5 ko | 22 ms |
 
 *Source : `make bench-site`, 22 octobre 2026.*
 
-S'y ajoutent soixante-cinq kilo-octets de feuille de style, de bibliothèque et d'icône,
+S'y ajoutent soixante-sept kilo-octets de feuille de style, de bibliothèque et d'icône,
 téléchargés une seule fois puis conservés par le navigateur.
 
 La conclusion est qu'il n'y a **rien à optimiser**, et c'est une conclusion qui a de la valeur :
@@ -360,7 +360,54 @@ conserve du disque de la machine virtuelle. Redémarrer la machine virtuelle ne 
 refroidir réellement. Les valeurs publiées sont donc données sous forme d'intervalles, ce qui est
 moins élégant qu'un nombre unique et plus proche de ce qui a été observé.
 
-### 10.2.6 Afficher ce que les données ne disent pas
+### 10.2.6 Montrer plutôt qu'énoncer
+
+Trois figures sont rendues par le serveur, sans aucune bibliothèque de graphiques. Ce choix
+mérite d'être justifié : une bibliothèque JavaScript de visualisation pèse de quatre-vingt-dix
+kilo-octets à trois mégaoctets, exige dans la plupart des cas l'autorisation d'évaluer du code
+construit dynamiquement, et affiche une page vide si elle ne se charge pas. Les trois figures
+ici sont des images vectorielles dont la géométrie est calculée dans le code de la page et
+transmise par des attributs. Elles arrivent remplies, se lisent sans JavaScript et s'impriment.
+
+La troisième est la plus utile, et elle existe à cause d'un constat simple : la fiche d'un
+marché signalé affichait « écart normalisé 6,53 ». C'est la mesure exacte, celle que la règle
+de détection calcule, et personne ne sait la lire. La question que le lecteur se pose est
+ailleurs : ce marché est-il cher, et par rapport à quoi ?
+
+La figure y répond en plaçant trois repères sur un axe : la moitié centrale des marchés de la
+même famille d'achat, la médiane de cette famille, et le montant du marché consulté. Sur le
+marché de location de véhicules pris en exemple, elle montre d'un coup d'œil un montant de
+800 millions d'euros face à une médiane de 106 000 euros, soit **7 547 fois** la médiane, et la
+phrase qui accompagne la figure le dit en toutes lettres.
+
+L'axe est **logarithmique**, et ce n'est pas une préférence de présentation. Les montants de la
+commande publique s'étalent sur huit ordres de grandeur. Sur un axe ordinaire, la moitié
+centrale d'une famille entière se tasserait en un trait contre le bord gauche, et toute la
+largeur de la figure servirait à représenter un seul marché. L'échelle logarithmique est par
+ailleurs celle dans laquelle la règle de détection travaille : la figure montre donc exactement
+ce que la règle calcule, et non une illustration approchante.
+
+Le coût de ces figures est mesuré. La page d'accueil passe de 10,3 à 17,0 kilo-octets et de 3 à
+6 millisecondes, la fiche de 4,4 à 6,5 kilo-octets. Ce sont les deux pages qu'un visiteur ouvre
+en premier, et le supplément reste sous le seuil où le poids d'une page compte.
+
+Une nomenclature a dû être introduite pour que ces figures soient lisibles. La famille d'achat
+d'un marché est codée par les deux premiers chiffres de son code CPV, le vocabulaire commun
+européen des marchés publics : le site affichait « CPV 45 » et « CPV 71 », qui ne signifient
+rien pour qui ne connaît pas cette nomenclature, et un jury n'a aucune raison de la connaître.
+Les libellés des quarante-six divisions sont donc versionnés dans un fichier de référence, lu au
+démarrage, et non stockés en base : une nomenclature officielle n'est pas une donnée collectée,
+elle ne change pas d'une collecte à l'autre, et elle doit rester relisible dans une revue de
+code. Le champ de filtre, qui demandait de taper « 45 », est devenu un menu déroulant.
+
+Cette nomenclature a révélé au passage un défaut de données qui n'avait pas été mesuré : la
+colonne contient **91 valeurs distinctes pour 46 divisions réelles**. Les 45 autres ne
+correspondent à aucune division, ni de la nomenclature de 2008 ni de celle de 2003 ; elles
+portent 0,50 % des attributions. S'y ajoutent 4 539 marchés codés sous une division supprimée en
+2008. Ces marchés ne sont ni supprimés ni réaffectés : ils restent cherchables, ils sont écartés
+des menus, et la page « à propos » dit ce qu'ils représentent.
+
+### 10.2.7 Afficher ce que les données ne disent pas
 
 Le chapitre 2 a établi que ces données sont incomplètes et ambiguës. Une interface qui l'ignorerait
 produirait des chiffres faux avec une confiance parfaite. Six mentions sont donc portées à l'écran,
@@ -398,7 +445,7 @@ plafond de candidats est atteint, avec l'indication de ce qu'il faut faire pour 
 et le pied de chaque page cite l'adresse de l'interface de programmation qui l'a produite, car
 « vérifiable » signifie que l'on peut obtenir la même chose sans ce site.
 
-### 10.2.7 Sécurité : une politique sans exception, vérifiée dans un navigateur
+### 10.2.8 Sécurité : une politique sans exception, vérifiée dans un navigateur
 
 La politique de contenu du site interdit tout par défaut, puis autorise uniquement ce qui est
 nécessaire, et uniquement depuis le site lui-même. Aucun domaine tiers n'y figure, puisque aucun
@@ -427,7 +474,7 @@ façon inexploitable ; et l'absence totale d'authentification, assumée, parce q
 servies sont publiques par nature. L'espace d'administration, qui n'est pas dans ce périmètre, en
 aura une, et c'est la raison pour laquelle il est construit séparément.
 
-### 10.2.8 Une adresse pour les pages, une autre pour les données
+### 10.2.9 Une adresse pour les pages, une autre pour les données
 
 Une page HTML et une réponse JSON ne peuvent pas répondre à la même adresse. L'interface de
 programmation occupait les adresses les plus naturelles, et les pages en avaient besoin.

@@ -1,9 +1,9 @@
 mesure,valeur,unite,commentaire
-demarrage du site,26611.0,ms,"reserve de connexions, lexiques et gabarits"
-page la plus lourde,12.0,ko,"recherche large, soit 4.0 ko comprime"
-"page la plus lente, p95",103.7,ms,recherche large
-pire premier appel,179.6,ms,"recherche texte, base froide : ce que vit le premier visiteur apres un demarrage"
-economie du fragment htmx,36.2,pour cent du poids,mediane sur les pages a rechargement partiel
-poids du statique,65.0,ko,"feuille de style, htmx et icone, telecharges une seule fois puis gardes par le navigateur"
+demarrage du site,15188.0,ms,"reserve de connexions, lexiques et gabarits"
+page la plus lourde,17.0,ko,"accueil, soit 4.3 ko comprime"
+"page la plus lente, p95",92.7,ms,questions
+pire premier appel,276.9,ms,"a examiner, base froide : ce que vit le premier visiteur apres un demarrage"
+economie du fragment htmx,51.8,pour cent du poids,mediane sur les pages a rechargement partiel
+poids du statique,67.0,ko,"feuille de style, htmx et icone, telecharges une seule fois puis gardes par le navigateur"
 pages completes sans JavaScript,10,pages sur 10,"demandees sans l'en-tete HX-Request, comme un navigateur sans JavaScript"
 politique de securite sans unsafe-inline,True,vrai ou faux,default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'

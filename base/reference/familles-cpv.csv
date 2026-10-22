@@ -1,0 +1,47 @@
+code,libelle,libelle_court
+03,"Produits agricoles, de l'élevage, de la pêche et de la sylviculture",Agriculture et pêche
+09,"Produits pétroliers, combustibles, électricité et autres sources d'énergie",Énergie et carburants
+14,"Produits d'exploitation des mines, métaux de base et produits connexes",Mines et métaux
+15,"Produits alimentaires, boissons et tabac",Alimentation
+16,Machines agricoles,Machines agricoles
+18,"Vêtements, articles chaussants, bagages et accessoires",Habillement
+19,"Cuir, textiles, matières plastiques et caoutchouc",Textiles et plastiques
+22,Imprimés et produits connexes,Imprimés
+24,Produits chimiques,Produits chimiques
+30,"Machines, matériel et fourniture informatique et de bureau",Matériel de bureau et informatique
+31,"Machines, appareils, équipements et consommables électriques ; éclairage",Électricité et éclairage
+32,"Équipements de radiodiffusion, de télévision et de télécommunication",Télécommunications
+33,"Matériels médicaux, pharmaceutiques et produits de soins personnels",Matériel médical
+34,Matériel de transport et produits auxiliaires pour le transport,Matériel de transport
+35,"Équipements de sécurité, de lutte contre l'incendie, de police et de défense",Sécurité et défense
+37,"Instruments de musique, articles de sport, jeux et jouets","Sport, culture et jeux"
+38,"Équipements de laboratoire, d'optique et de précision",Laboratoire et optique
+39,"Meubles, aménagements, appareils électroménagers et produits de nettoyage",Mobilier et nettoyage
+41,Eau captée et épurée,Eau
+42,Machines industrielles,Machines industrielles
+43,Machines pour l'exploitation minière et matériel de construction,Engins de chantier
+44,Structures et matériaux de construction et produits auxiliaires,Matériaux de construction
+45,Travaux de construction,Travaux de construction
+48,Logiciels et systèmes d'information,Logiciels
+50,Services de réparation et d'entretien,Réparation et entretien
+51,Services d'installation (à l'exception des logiciels),Installation
+55,"Services d'hôtellerie, de restauration et de commerce au détail",Hôtellerie et restauration
+60,Services de transport (à l'exclusion du transport des déchets),Services de transport
+63,Services d'appui dans le domaine des transports et agences de voyages,Appui au transport et voyages
+64,Services des postes et télécommunications,Postes et télécommunications
+65,Services publics,Services publics (réseaux)
+66,Services financiers et d'assurance,Finance et assurance
+70,Services immobiliers,Immobilier
+71,"Services d'architecture, d'ingénierie, de construction et d'inspection",Architecture et ingénierie
+72,"Services de technologies de l'information : conseil, développement, internet",Services informatiques
+73,Services de recherche et développement et services de conseil connexes,Recherche et développement
+74,"Services d'architecture et d'ingénierie (nomenclature 2003, remplacée par 71)",Architecture (ancien code)
+75,"Services de l'administration publique, de la défense et de la sécurité sociale",Administration et défense
+76,Services relatifs à l'industrie du pétrole et du gaz,Pétrole et gaz
+77,"Services agricoles, sylvicoles, horticoles et d'aquaculture",Agriculture et espaces verts
+79,"Services aux entreprises : droit, marketing, conseil, recrutement, impression",Services aux entreprises
+80,Services d'enseignement et de formation,Enseignement et formation
+85,Services de santé et services sociaux,Santé et action sociale
+90,"Services d'assainissement, d'élimination des déchets et relatifs à l'environnement",Déchets et environnement
+92,"Services récréatifs, culturels et sportifs","Loisirs, culture et sport"
+98,"Autres services communautaires, sociaux et personnels",Autres services

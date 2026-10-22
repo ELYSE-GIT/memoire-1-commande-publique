@@ -13,7 +13,7 @@
       {# « signaux » et non « signal » + « ux » : le pluriel de signal n'est pas regulier, et
          coller un suffixe donnait « signalux ». Vu a l'ecran, pas par un test. #}
       <span>{{ signal.signaux_forts }} {{ 'signaux forts' if signal.signaux_forts > 1 else 'signal fort' }}</span>
-      {% if signal.famille_cpv %}<span>CPV {{ signal.famille_cpv }}</span>{% endif %}
+      {% if signal.famille_cpv %}<span>{{ libelle_famille(signal.famille_cpv, court=True) }}</span>{% endif %}
       {% if signal.marches_dans_la_famille is not none %}
       <span>comparé à {{ signal.marches_dans_la_famille | nombre }} marchés de la même famille</span>
       {% endif %}

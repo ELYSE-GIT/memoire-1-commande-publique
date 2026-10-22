@@ -122,6 +122,46 @@ Limite assumee : une recherche que personne n'a encore faite reste a environ 1,8
 base froide. C'est lent, mais c'est sous le delai du service, donc c'est une attente et non une
 erreur.
 
+## Les figures, et pourquoi aucune bibliotheque de graphiques
+
+Trois figures sont rendues par le serveur : les attributions par annee, les familles d'achat, et
+la position d'un marche parmi ceux de sa famille.
+
+| Option | Avantage | Limite | Verdict |
+|---|---|---|---|
+| **SVG calcule en Python** | arrive rempli, se lit sans JavaScript, s'imprime, aucune dependance | la geometrie est a ecrire, environ cinquante lignes par figure | **retenu** |
+| Chart.js, Plotly ou equivalent | tres rapide a ecrire, interactif | de 90 ko a 3 Mo, `'unsafe-eval'` ou script en ligne pour la plupart, et une page vide si le fichier ne se charge pas | ecarte |
+| une image produite par `mesures/figures.py` | le meme rendu que le memoire | elle montrerait l'etat de la base au moment de la generation, pas celui de la visite | ecarte |
+| un tableau de chiffres | aucune figure a maintenir | « ecart normalise 6,53 » est exact et illisible | ecarte |
+
+La troisieme figure est celle qui justifie l'effort. La fiche d'un marche signale affichait son
+ecart normalise : la bonne mesure, celle que la regle calcule, et que personne ne sait lire. La
+reglette place trois reperes sur un axe logarithmique (la moitie centrale de la famille, sa
+mediane, ce marche) et la phrase a cote dit « ce marche coute 7 547 fois le montant median de
+sa famille ». L'echelle logarithmique n'est pas un choix de presentation : les montants vont de
+quelques centaines d'euros a plusieurs centaines de millions, et c'est de plus l'echelle dans
+laquelle la detection travaille, donc la figure montre ce que la regle calcule.
+
+Cout mesure : la page d'accueil passe de 10,3 a 17,0 ko et de 3 a 6 ms, la fiche de 4,4 a
+6,5 ko. Les deux pages qu'un visiteur ouvre en premier, et le supplement reste sous le seuil ou
+le poids d'une page compte.
+
+### Les libelles des familles, dans un fichier et non dans la base
+
+Le site affichait « CPV 45 » et « CPV 71 », qui ne veulent rien dire hors du metier.
+
+| Option | Avantage | Limite | Verdict |
+|---|---|---|---|
+| **un CSV versionne, lu au demarrage** | relisible en revue de code, diffable, disponible base eteinte | charge par chaque processus, 46 lignes | **retenu** |
+| une table dans PostgreSQL | jointure SQL possible | une nomenclature officielle n'est pas une donnee collectee : la recharger avec les donnees melange deux choses | ecarte |
+| un dictionnaire dans le code | rien a lire au demarrage | c'etait deja le cas, **en double** dans `mesures/figures.py`, et les deux copies n'etaient plus d'accord sur six libelles | ecarte |
+
+Ce fichier a revele un defaut de donnees non mesure jusqu'ici : la colonne contient **91 valeurs
+distinctes pour 46 divisions reelles**. Les 45 autres ne correspondent a aucune division, ni de
+2008 ni de 2003, et portent 0,50 pour cent des attributions ; 4 539 marches portent en outre une
+division supprimee en 2008. Ni supprimes, ni reaffectes : ecartes des menus, toujours
+cherchables, et comptes sur la page « a propos ».
+
 ## Le total des montants, surcompte de 36,7 pour cent
 
 Le site devait afficher un montant total. Le projet documentait depuis la phase 2 que les

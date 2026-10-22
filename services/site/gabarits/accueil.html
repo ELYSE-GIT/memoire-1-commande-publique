@@ -117,6 +117,45 @@
 </section>
 {% endif %}
 
+{% if familles.barres %}
+<section class="figure">
+  <h2>Ce que l'État et les collectivités achètent</h2>
+  <p class="note">
+    Les dix premières familles d'achat, sur les quarante-cinq de la nomenclature européenne
+    CPV. Le nombre est celui des attributions ; le montant est la médiane de la famille, qui
+    résiste aux quelques marchés géants bien mieux qu'une moyenne.
+    {% if hors_nomenclature %}
+    Ne sont pas comptés ici les {{ hors_nomenclature | pourcentage }} d'attributions dont le
+    code d'achat ne correspond à aucune famille de la nomenclature : ce sont des codes mal
+    saisis à la source. Ces marchés restent cherchables.
+    {% endif %}
+  </p>
+  <svg viewBox="0 0 {{ familles.largeur }} {{ familles.hauteur }}"
+       width="100%" role="img"
+       aria-label="Les dix premières familles d'achat, par nombre d'attributions">
+    {% for barre in familles.barres %}
+    <g>
+      <title>{{ barre.titre }} : {{ barre.marches | nombre }} attributions, montant médian {{ barre.montant_median | euros }}</title>
+      {# Le libellé est un lien : cliquer une famille mène à ses marchés. #}
+      <a href="/recherche?famille={{ barre.code }}">
+        <text class="libelle-famille" x="{{ barre.x_libelle }}" y="{{ barre.ligne_de_base }}"
+              text-anchor="end">{{ barre.libelle }}</text>
+      </a>
+      <rect class="barre-famille" x="{{ barre.x_barre }}" y="{{ barre.y }}"
+            width="{{ barre.largeur }}" height="{{ barre.hauteur }}"></rect>
+      <text class="valeur-barre{% if not barre.texte_dedans %} valeur-dehors{% endif %}"
+            x="{{ barre.texte_x }}" y="{{ barre.ligne_de_base }}"
+            text-anchor="{{ 'end' if barre.texte_dedans else 'start' }}">{{ barre.marches | nombre }}</text>
+    </g>
+    {% endfor %}
+  </svg>
+  <p class="note">
+    Montant médian par famille :
+    {% for barre in familles.barres %}{{ barre.libelle }} {{ barre.montant_median | euros }}{% if not loop.last %} · {% endif %}{% endfor %}.
+  </p>
+</section>
+{% endif %}
+
 <section class="pistes">
   <h2>Par où commencer</h2>
   <ul class="cartes">
@@ -140,6 +179,7 @@
 {% endblock %}
 
 {% block source_de_la_page %}
-Cette page lit <a href="{{ prefixe_api }}/statistiques">{{ prefixe_api }}/statistiques</a> et
-<a href="{{ prefixe_api }}/statistiques/annees">{{ prefixe_api }}/statistiques/annees</a>.
+Cette page lit <a href="{{ prefixe_api }}/statistiques">{{ prefixe_api }}/statistiques</a>,
+<a href="{{ prefixe_api }}/statistiques/annees">{{ prefixe_api }}/statistiques/annees</a> et
+<a href="{{ prefixe_api }}/statistiques/familles">{{ prefixe_api }}/statistiques/familles</a>.
 {% endblock %}
