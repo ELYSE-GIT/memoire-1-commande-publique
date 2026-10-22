@@ -97,8 +97,8 @@ en silence.
   reste a decider avec Elyse.
 - **Pas de `Dockerfile`.** Phase 9, en meme temps que Caddy, et ecrit le jour ou il sera
   construit et teste. Un Dockerfile jamais construit donne l'illusion d'un service deployable.
-  Note pour ce jour-la : le service met environ onze secondes a demarrer, prechauffage compris,
-  donc le `start_period` du healthcheck doit etre genereux.
+  Note pour ce jour-la : le service met de onze a vingt-sept secondes a demarrer selon l'etat
+  des caches, prechauffage compris, donc le `start_period` du healthcheck doit etre genereux.
 - **Pas de compression.** Les pages sont servies telles quelles ; Caddy compressera en phase 9.
   `make bench-site` mesure deja les deux poids, pour que le gain soit connu avant d'etre annonce.
 - **Pas de page par acheteur ni par titulaire.** La recherche les trouve, mais il n'y a pas de

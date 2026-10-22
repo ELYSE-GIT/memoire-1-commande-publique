@@ -210,11 +210,65 @@ def pourcentage(valeur: float | None) -> str:
     return f"{valeur:.1f}".replace(".", ",") + f"{FINE}%"
 
 
+# Les colonnes de l'assistant qui portent de l'argent. Elles sont nommees ici parce que
+# l'assistant rend ses lignes en dictionnaires dont les cles dependent de la question : le
+# gabarit ne peut pas deviner qu'une colonne « total » est en euros et qu'une colonne
+# « marches » est un compte. Sans cette liste, la page affichait « 818316686 » la ou il fallait
+# lire « 818 316 686 € ». Vu a l'ecran.
+COLONNES_EN_EUROS = ("montant", "total", "mediane", "moyenne", "montant_total", "cout")
+
+
+def cellule(colonne: str, valeur: Any) -> str:
+    """Met en forme une valeur de l'assistant, en se servant du nom de sa colonne.
+
+    Les listes ne passent pas par ici : ce sont des numeros de marche, et le gabarit en fait des
+    liens vers les fiches plutot qu'une suite de caracteres. Avant cette distinction, la page
+    affichait la representation Python de la liste, crochets et apostrophes compris.
+    """
+    if valeur is None:
+        return "–"
+    if colonne in COLONNES_EN_EUROS:
+        return euros(valeur)
+    # `bool` est un `int` en Python : sans cette exclusion, « vrai » s'afficherait « 1 ».
+    if isinstance(valeur, int | float | Decimal) and not isinstance(valeur, bool):
+        return nombre(valeur)
+    return str(valeur)
+
+
+# Longueur au-dela de laquelle l'objet d'un marche est coupe dans une liste.
+#
+# Mesure du 22 octobre 2026 sur les 1 999 474 lignes chargees : 86 caracteres de mediane,
+# 193 au 90e centile, 342 au 99e, et **2 822 au maximum**. Sans coupure, un seul marche prend
+# six lignes a l'ecran et ecrase les neuf autres resultats. Vu a l'ecran sur une recherche de
+# renovation energetique, pas par un test.
+#
+# 200 caracteres : au-dessus du 90e centile, donc neuf objets sur dix s'affichent entiers, et
+# la liste garde une hauteur previsible. Le texte complet est sur la fiche, jamais perdu.
+OBJET_MAXIMUM = 200
+
+
+def extrait(texte: str | None, limite: int = OBJET_MAXIMUM) -> str:
+    """Coupe un texte trop long a la fin d'un mot, et marque la coupure.
+
+    La coupure est faite ici et non par du CSS : une ligne coupee par `text-overflow` est
+    toujours envoyee au navigateur en entier, donc elle pese, et elle reapparait entiere a
+    l'impression et dans un lecteur d'ecran.
+    """
+    if texte is None:
+        return ""
+    texte = texte.strip()
+    if len(texte) <= limite:
+        return texte
+    coupe = texte[:limite].rsplit(" ", 1)[0]
+    return f"{coupe}…"
+
+
 FILTRES_DE_FORMAT = {
     "nombre": nombre,
     "euros": euros,
     "jour": jour,
     "pourcentage": pourcentage,
+    "extrait": extrait,
 }
 
 # `StrictUndefined` : une variable absente du contexte leve une erreur au lieu de s'afficher
@@ -230,6 +284,9 @@ gabarits.env.filters.update(FILTRES_DE_FORMAT)
 gabarits.env.globals["prefixe_api"] = PREFIXE_API
 gabarits.env.globals["chemin_statique"] = CHEMIN_STATIQUE
 gabarits.env.globals["chemin_docs"] = CHEMIN_DOCS
+# Une fonction et non un filtre : elle a besoin du nom de la colonne autant que de la
+# valeur, et `{{ cellule(nom, valeur) }}` se lit mieux que deux filtres enchaines.
+gabarits.env.globals["cellule"] = cellule
 
 
 def page(

@@ -55,8 +55,9 @@ documentation interactive de l'API, generee depuis le code.
 | `/api/...` | les memes donnees en JSON |
 
 Le site est fabrique par le serveur, avec des gabarits et htmx : aucune compilation, aucun
-Node.js, et chaque page fonctionne sans JavaScript. Le demarrage prend une dizaine de secondes,
-dont le prechauffage de la base, pour que le premier visiteur n'attende pas.
+Node.js, et chaque page fonctionne sans JavaScript. Le demarrage prend de onze a vingt-sept
+secondes selon l'etat des caches : c'est le prechauffage de la base, pour que le premier
+visiteur n'attende pas. Le service ne se declare pret qu'une fois chaud.
 
 ## Sobriete
 

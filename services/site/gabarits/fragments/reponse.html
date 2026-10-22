@@ -40,7 +40,7 @@
   <ul class="chiffres-cles">
     {% for nom, valeur in reponse.chiffres.items() %}
     <li><span class="cle">{{ nom | replace('_', ' ') }}</span>
-        <span class="valeur">{{ valeur if valeur is string else valeur | nombre }}</span></li>
+        <span class="valeur">{{ cellule(nom, valeur) }}</span></li>
     {% endfor %}
   </ul>
   {% endif %}
@@ -48,25 +48,28 @@
   {% if reponse.lignes %}
   <table class="lignes">
     <thead>
-      <tr>{% for colonne in reponse.lignes[0].keys() %}<th>{{ colonne | replace('_', ' ') }}</th>{% endfor %}</tr>
+      <tr>{% for colonne in reponse.lignes[0].keys() %}<th>{{ 'marchés cités' if colonne == 'citations' else colonne | replace('_', ' ') }}</th>{% endfor %}</tr>
     </thead>
     <tbody>
       {% for ligne in reponse.lignes %}
       <tr>
         {% for colonne, valeur in ligne.items() %}
+        {# Une valeur peut etre une liste de numeros de marche : ce sont les pieces
+           justificatives de la ligne, et elles deviennent des liens vers les fiches. Rendues
+           telles quelles, la page affichait la representation Python de la liste. #}
+        {% if valeur is sequence and valeur is not string %}
+        <td class="citations-de-ligne">
+          {% for marche_id in valeur %}<a href="/fiche/{{ marche_id }}">{{ loop.index }}</a>{% endfor %}
+        </td>
+        {% else %}
         <td{% if valeur is number %} class="nombre"{% endif %}>
           {%- if colonne == 'marche_id' and valeur -%}
           <a href="/fiche/{{ valeur }}">{{ valeur }}</a>
-          {%- elif valeur is none -%}
-          <span class="aide">–</span>
-          {%- elif colonne.startswith('montant') and valeur is number -%}
-          {{ valeur | euros }}
-          {%- elif valeur is number -%}
-          {{ valeur | nombre }}
           {%- else -%}
-          {{ valeur }}
+          {{ cellule(colonne, valeur) }}
           {%- endif -%}
         </td>
+        {% endif %}
         {% endfor %}
       </tr>
       {% endfor %}

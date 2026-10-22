@@ -136,9 +136,9 @@ make site      # les pages et l'API, rechargees a chaque modification du code
 `make api` existe toujours et ne demarre que l'API, sans les pages. C'est ce que mesure
 `make bench-api` ; au quotidien, `make site` est la bonne commande.
 
-**Duree** : environ onze secondes, et il faut savoir pourquoi. Une seconde pour ouvrir la
-reserve de connexions et charger les lexiques de l'assistant (74 055 lexemes, 24 regions,
-107 departements), dix pour le **prechauffage** : le service pose lui-meme les requetes les plus
+**Duree** : de onze a vingt-sept secondes selon l'etat des caches, et il faut savoir pourquoi.
+Une seconde pour ouvrir la reserve de connexions et charger les lexiques de l'assistant
+(74 055 lexemes, 24 regions, 107 departements), tout le reste pour le **prechauffage** : le service pose lui-meme les requetes les plus
 couteuses, pour que le premier visiteur ne les paie pas. Sans lui, la premiere question posee a
 l'assistant sur une base qui vient de demarrer depassait les dix secondes du service et
 repondait une erreur. Le cout n'a pas disparu, il a change de place : au demarrage, personne

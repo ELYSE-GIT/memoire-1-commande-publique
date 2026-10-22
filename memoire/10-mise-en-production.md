@@ -267,11 +267,11 @@ donc le poids servi, compressé et non compressé.
 | question à l'assistant | 5,5 ko | 2,1 ko | 8 ms |
 | marchés à examiner | 8,2 ko | 1,9 ko | 8 ms |
 | accueil | 10,3 ko | 3,0 ko | 12 ms |
-| recherche large | 16,2 ko | 5,5 ko | 22 ms |
+| recherche large | 12,0 ko | 5,5 ko | 22 ms |
 
 *Source : `make bench-site`, 22 octobre 2026.*
 
-S'y ajoutent soixante-quatre kilo-octets de feuille de style, de bibliothèque et d'icône,
+S'y ajoutent soixante-cinq kilo-octets de feuille de style, de bibliothèque et d'icône,
 téléchargés une seule fois puis conservés par le navigateur.
 
 La conclusion est qu'il n'y a **rien à optimiser**, et c'est une conclusion qui a de la valeur :
@@ -331,7 +331,7 @@ mesurées, et les deux premières étaient fausses.
 | Aucun préchauffage | 0,9 s | 794 à 1 766 ms | 1 199 à 2 812 ms |
 | Requêtes écrites à la main, ressemblant à celles du service | 2,1 s | 135 ms | 1 379 ms |
 | Table entière chargée en mémoire | 22,1 s | 647 ms | non mesurée |
-| **Les requêtes réelles du service** | **10,9 s** | **95 ms** | **166 ms** |
+| **Les requêtes réelles du service** | **11 à 27 s** | **95 à 180 ms** | **164 ms** |
 
 *Source : `make bench-site`, 22 octobre 2026, base froide après redémarrage complet.*
 
@@ -345,9 +345,14 @@ La troisième ligne est l'option que l'on adopte par réflexe, et la mesure l'a 
 table entière coûte vingt-deux secondes de démarrage pour un gain partiel, la mémoire allouée au
 cache de la base valant la moitié de la taille de la table.
 
-Le coût n'a pas disparu, il a changé de place. Dix secondes de démarrage supplémentaires sont dix
-secondes pendant lesquelles personne n'attend, et c'est précisément la différence entre une
-attente et une panne.
+Le coût n'a pas disparu, il a changé de place, et il ne diminue pas : sur une base réellement
+froide, le démarrage atteint vingt-sept secondes, ce qui est exactement ce que le premier
+visiteur payait auparavant. Le préchauffage ne crée pas cette dépense, il la rend visible et la
+déplace là où personne n'attend. Le service ne se déclare prêt qu'une fois chaud, ce qui est le
+sens que l'on veut donner au mot : répondre à un test de vie en étant incapable de servir une
+page serait un mensonge sur son état. La conséquence pratique est à retenir pour le chapitre
+suivant : le délai de grâce du contrôle de santé du conteneur devra être généreux, faute de quoi
+le superviseur redémarrerait en boucle un service en train de démarrer normalement.
 
 Une honnêteté de méthode pour finir. Cette mesure est **très instable** : entre deux exécutions, le
 même premier appel varie de 1 281 à 7 302 millisecondes, selon ce que le système d'exploitation

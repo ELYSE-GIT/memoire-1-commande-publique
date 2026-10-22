@@ -426,6 +426,19 @@ def test_un_classement_approche_est_annonce_a_l_ecran() -> None:
     assert "Classement approché" not in texte
 
 
+def test_le_pluriel_de_signal_est_signaux() -> None:
+    """Le pluriel de « signal » est irregulier, et coller un suffixe donnait « signalux ».
+
+    Vu a l'ecran et nulle part ailleurs : aucun test ne lisait le texte affiche, et le banc
+    mesure des millisecondes et des kilo-octets, pas du francais.
+    """
+    un = client([[{**LIGNE_SIGNAL, "signaux_forts": 1}]]).get("/a-examiner").text
+    plusieurs = client([[{**LIGNE_SIGNAL, "signaux_forts": 2}]]).get("/a-examiner").text
+    assert "1 signal fort" in un
+    assert "2 signaux forts" in plusieurs
+    assert "signalux" not in un + plusieurs
+
+
 def test_la_page_des_signaux_rappelle_ce_qu_un_signal_ne_dit_pas() -> None:
     """« A examiner » et non « anomalies » : la concordance mesuree est de 69,3 pour cent."""
     texte = client([[LIGNE_SIGNAL]]).get("/a-examiner").text
@@ -487,6 +500,23 @@ def test_les_questions_de_prechauffage_viennent_du_jeu_versionne() -> None:
 def test_les_nombres_sont_groupes_par_milliers(valeur: int | None, attendu: str) -> None:
     """Une espace fine insecable, et non un espace ordinaire : un nombre ne se coupe pas."""
     assert pages.nombre(valeur) == attendu
+
+
+def test_un_objet_trop_long_est_coupe_a_la_fin_d_un_mot() -> None:
+    """Le plus long objet de la base fait 2 822 caracteres, contre 86 de mediane.
+
+    Affiche entier dans une liste, il prend six lignes a lui seul et ecrase les neuf autres
+    resultats. Vu a l'ecran sur une vraie recherche, pas par un test.
+    """
+    court = "Travaux de voirie"
+    assert pages.extrait(court) == court
+    long = "mot " * 200
+    coupe = pages.extrait(long)
+    assert len(coupe) <= pages.OBJET_MAXIMUM + 1
+    assert coupe.endswith("…")
+    # Coupe a la fin d'un mot, pas au milieu.
+    assert not coupe.removesuffix("…").endswith("mo")
+    assert pages.extrait(None) == ""
 
 
 def test_un_montant_absent_ne_devient_pas_zero() -> None:

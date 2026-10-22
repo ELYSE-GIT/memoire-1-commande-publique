@@ -373,7 +373,7 @@ make bench-site
 |---|---|---|---|---|
 | `/` | 17 ms | 3 ms | 10,3 ko | 3,0 ko |
 | `/recherche?q=...` | 95 ms | 35 ms | 11,7 ko | 3,6 ko |
-| `/recherche?q=travaux` | 53 ms | 55 ms | 16,2 ko | 5,5 ko |
+| `/recherche?q=travaux` | 53 ms | 55 ms | 12,0 ko | 5,5 ko |
 | `/fiche/{id}` | 16 ms | 2 ms | 4,4 ko | 1,9 ko |
 | `/a-examiner` | 166 ms | 60 ms | 8,2 ko | 1,9 ko |
 | `/questions?question=...` | 120 ms | 47 ms | 5,5 ko | 2,1 ko |
@@ -381,14 +381,14 @@ make bench-site
 
 **Ce qu'il faut savoir en lire** :
 
-- **Le poids.** La page la plus lourde fait 16,2 ko, soit 5,5 ko une fois compressee : 22
+- **Le poids.** La page la plus lourde fait 12,0 ko, soit 5,5 ko une fois compressee : 22
   millisecondes d'attente sur une connexion mobile a 2 Mbit/s. Aucune optimisation de poids
   n'est justifiee, et le dire en chiffres evite d'en faire une par reflexe. Les fichiers
-  charges une fois puis gardes par le navigateur (feuille de style, htmx, icone) pesent 64,1 ko
+  charges une fois puis gardes par le navigateur (feuille de style, htmx, icone) pesent 65,0 ko
   au total.
 - **Le gain du fragment.** Le meme filtre applique de deux facons : en rechargeant la page
   entiere, ou en remplacant la seule liste de resultats. Le fragment pese 32 a 71 pour cent de
-  moins, mediane 35. C'est ce qui justifie htmx, et c'est une mesure, pas une preference.
+  moins, mediane 36. C'est ce qui justifie htmx, et c'est une mesure, pas une preference.
 - **Sans JavaScript.** Chaque page est demandee sans l'en-tete `HX-Request`, exactement comme
   un navigateur dont le JavaScript est coupe, et son contenu doit etre present. Dix pages sur
   dix. C'est le plan B de la soutenance, et un plan B qu'on n'essaie pas n'existe pas.

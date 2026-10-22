@@ -97,7 +97,7 @@ de reponse de l'assistant.
 | Option | Avantage | Limite | Verdict |
 |---|---|---|---|
 | ne rien faire | aucun code | le premier visiteur apres chaque demarrage recoit une erreur, donc le jury le premier | ecarte |
-| **prechauffer avec les vraies requetes** | le cout est paye au demarrage, ou personne n'attend | le demarrage passe de 0,9 a 10,9 s | **retenu** |
+| **prechauffer avec les vraies requetes** | le cout est paye au demarrage, ou personne n'attend | le demarrage passe de 0,9 a 11 s, et jusqu'a 27 s sur une base reellement froide | **retenu** |
 | augmenter le delai de la requete | une ligne | un service qui met dix secondes a repondre est un service casse | ecarte |
 | charger toute la table en memoire (`pg_prewarm`) | toute recherche serait rapide, pas seulement celles prechauffees | **22 s** de demarrage mesurees, et un gain partiel : `shared_buffers` vaut 768 Mo pour une table de 1 386 Mo | ecarte, mesure |
 
@@ -150,8 +150,10 @@ kilo-octets. Un site qui fonctionne sans JavaScript et sans reseau. Une politiqu
 sans exception. Des adresses partageables et citables dans le memoire. Et une API dont trois
 defauts reels ont ete corriges parce qu'elle a enfin un appelant qui n'est pas son auteur.
 
-**Ce que cela coute.** Un demarrage de onze secondes, a prendre en compte dans le healthcheck du
-conteneur en phase 9. Un gabarit de plus par fragment. Et l'impossibilite de redimensionner les
+**Ce que cela coute.** Un demarrage de onze a vingt-sept secondes selon l'etat des caches, a
+prendre en compte dans le `start_period` du healthcheck du conteneur en phase 9. Le service ne
+se declare pret qu'une fois chaud, et c'est voulu : repondre a un test de vie en etant incapable
+de servir une page serait un mensonge sur son etat. Un gabarit de plus par fragment. Et l'impossibilite de redimensionner les
 pages et les donnees separement, ce qu'aucune mesure ne justifie aujourd'hui.
 
 **Ce qui ferait revenir sur cette decision.** Une page a etat complexe cote navigateur. Ou une

@@ -268,6 +268,10 @@ dl.repere, dl.comparaison {
 dl.repere > div, dl.comparaison > div { padding: 0.8rem 1rem; background: var(--papier-doux); border-radius: var(--rayon); }
 dl.repere dt, dl.comparaison dt { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--encre-douce); }
 dl.repere dd, dl.comparaison dd { margin: 0.25rem 0 0; font-weight: 600; }
+/* Un numero de marche fait jusqu'a 64 caracteres sans espace ni tiret : sans cette regle, il
+ * deborde de sa carte et le navigateur le coupe a l'affichage, donc le lecteur voit un numero
+ * incomplet sans savoir qu'il l'est. Vu a l'ecran sur une fiche reelle. */
+dl.repere dd code { overflow-wrap: anywhere; font-weight: 500; }
 
 table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.95rem; }
 th, td { text-align: left; padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--trait); vertical-align: top; }
@@ -294,6 +298,23 @@ ul.chiffres-cles { list-style: none; padding: 0; display: flex; flex-wrap: wrap;
 ul.chiffres-cles li { padding: 0.5rem 0.9rem; background: var(--papier-doux); border-radius: var(--rayon); }
 ul.chiffres-cles .cle { display: block; font-size: 0.8rem; color: var(--encre-douce); }
 ul.chiffres-cles .valeur { font-weight: 650; font-variant-numeric: tabular-nums; }
+
+/* Les pieces justificatives d'une ligne de tableau : des liens numerotes 1, 2, 3, pour que la
+ * colonne reste lisible. Le numero de marche complet est sur la fiche, et dans la liste des
+ * marches cites sous le tableau. */
+td.citations-de-ligne { white-space: nowrap; }
+td.citations-de-ligne a {
+  display: inline-block;
+  min-width: 1.5rem;
+  margin-right: 0.25rem;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  text-align: center;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+td.citations-de-ligne a:hover { border-color: var(--accent); }
 
 ul.citations { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
 ul.citations li a {
