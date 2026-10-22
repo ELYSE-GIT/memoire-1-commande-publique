@@ -108,6 +108,14 @@ indexer:
 	@echo "--- base/schema/009-remplir-statistiques.sql"
 	@$(PSQL) < base/schema/009-remplir-statistiques.sql
 
+## migrer : applique les changements de schema aux bases deja chargees (idempotent)
+## (a lancer apres un `git pull` qui ajoute un fichier dans base/migrations/)
+migrer:
+	@for fichier in base/migrations/*.sql; do \
+		echo "--- $$fichier"; \
+		$(PSQL) < $$fichier; \
+	done
+
 ## base-vider : vide les deux tables sans toucher au schema, pour recharger proprement
 base-vider:
 	@echo 'truncate table marches, signaux, vocabulaire, statistiques restart identity;' | $(PSQL)
@@ -182,6 +190,18 @@ api-une-fois:
 	uv run --env-file .env uvicorn services.api.main:application \
 		--host 127.0.0.1 --port $${API_PORT:-8000}
 
+## site : demarre le site complet (pages + API) en local, recharge a chaque modification
+## (necessite `make up` avant. Arreter avec Ctrl-C)
+## Pages : http://localhost:8000/  Documentation de l'API : http://localhost:8000/docs
+site:
+	uv run --env-file .env uvicorn services.site.main:application \
+		--host 127.0.0.1 --port $${API_PORT:-8000} --reload
+
+## site-une-fois : demarre le site sans rechargement automatique, comme en production
+site-une-fois:
+	uv run --env-file .env uvicorn services.site.main:application \
+		--host 127.0.0.1 --port $${API_PORT:-8000}
+
 ## bench-decp : mesure la qualite et les performances sur le jeu DECP
 bench-decp:
 	uv run python mesures/decp_qualite.py
@@ -232,6 +252,11 @@ bench-stabilite:
 ## (demarre l'API lui-meme, mesure, et l'arrete. Necessite `make up` avant)
 bench-api:
 	uv run --env-file .env python -m mesures.api
+
+## bench-site : mesure chaque page du site, son poids et son rendu sans JavaScript
+## (demarre le site lui-meme, mesure, et l'arrete. Necessite `make up` avant)
+bench-site:
+	uv run --env-file .env python -m mesures.site
 
 ## figures : trace les figures du memoire a partir des agregats mesures
 figures:

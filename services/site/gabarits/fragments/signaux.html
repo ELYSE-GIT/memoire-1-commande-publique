@@ -1,0 +1,39 @@
+{# La liste des marchés signalés, seule. Rendue incluse dans la page, et renvoyée seule à htmx. #}
+{% if not signaux %}
+<p class="vide">Aucun marché ne porte autant de signaux forts.</p>
+{% else %}
+<ol class="marches">
+  {% for signal in signaux %}
+  <li>
+    <h3><a href="/fiche/{{ signal.marche_id }}">Marché {{ signal.marche_id }}</a></h3>
+    <ul class="motifs">
+      {% for motif in signal.motifs_de_signalement %}<li>{{ motif }}</li>{% endfor %}
+    </ul>
+    <p class="chiffres">
+      <span>{{ signal.signaux_forts }} signal{{ 'ux' if signal.signaux_forts > 1 else '' }} fort{{ 's' if signal.signaux_forts > 1 }}</span>
+      {% if signal.famille_cpv %}<span>CPV {{ signal.famille_cpv }}</span>{% endif %}
+      {% if signal.marches_dans_la_famille is not none %}
+      <span>comparé à {{ signal.marches_dans_la_famille | nombre }} marchés de la même famille</span>
+      {% endif %}
+      {% if signal.ecart_normalise_famille is not none %}
+      <span>écart {{ signal.ecart_normalise_famille | round(2) }}</span>
+      {% endif %}
+    </p>
+  </li>
+  {% endfor %}
+</ol>
+
+<nav class="pagination" aria-label="Pages de résultats">
+  {% if page_courante > 1 %}
+  <a href="/a-examiner?{{ parametres }}{% if parametres %}&{% endif %}page={{ page_courante - 1 }}"
+     hx-get="/a-examiner?{{ parametres }}{% if parametres %}&{% endif %}page={{ page_courante - 1 }}"
+     hx-target="#signaux" hx-push-url="true" hx-swap="innerHTML show:#signaux:top">← page précédente</a>
+  {% endif %}
+  <span>page {{ page_courante }}</span>
+  {% if page_suivante %}
+  <a href="/a-examiner?{{ parametres }}{% if parametres %}&{% endif %}page={{ page_courante + 1 }}"
+     hx-get="/a-examiner?{{ parametres }}{% if parametres %}&{% endif %}page={{ page_courante + 1 }}"
+     hx-target="#signaux" hx-push-url="true" hx-swap="innerHTML show:#signaux:top">page suivante →</a>
+  {% endif %}
+</nav>
+{% endif %}

@@ -34,6 +34,30 @@ make verif            # style, types, tests, recherche de secrets
 
 `make help` affiche toutes les commandes disponibles, avec une ligne d'explication chacune.
 
+## Voir le site
+
+```bash
+make up            # PostgreSQL
+make site          # les pages et l'API, dans un seul processus
+```
+
+Puis <http://localhost:8000/> pour le site, et <http://localhost:8000/docs> pour la
+documentation interactive de l'API, generee depuis le code.
+
+| Adresse | Ce qu'elle rend |
+|---|---|
+| `/` | les comptages, la courbe par annee, par ou commencer |
+| `/recherche` | la recherche par texte et par filtres |
+| `/fiche/{marche_id}` | un marche, ses titulaires, ce qui a ete remarque dessus |
+| `/a-examiner` | les marches atypiques, avec leurs motifs en clair |
+| `/questions` | une question en francais, avec ses citations |
+| `/a-propos` | les sources, les limites, la methode |
+| `/api/...` | les memes donnees en JSON |
+
+Le site est fabrique par le serveur, avec des gabarits et htmx : aucune compilation, aucun
+Node.js, et chaque page fonctionne sans JavaScript. Le demarrage prend une dizaine de secondes,
+dont le prechauffage de la base, pour que le premier visiteur n'attende pas.
+
 ## Sobriete
 
 Rien ne tourne en permanence sur la machine de developpement. On demarre la VM des conteneurs pour

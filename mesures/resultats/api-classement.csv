@@ -1,11 +1,11 @@
 question,mots,lignes_qui_repondent,bornee_par_le_plafond,exact_ms,borne_ms,acceleration,communs_sur_dix,ordre_identique
-travaux de voirie,3,20477,True,77.0,16.3,4.7,3,False
-entretien des espaces verts,4,13482,True,51.4,19.2,2.7,5,False
-fourniture de repas pour la restauration scolaire,7,1162,False,10.2,8.9,1.1,10,True
-assurance dommages aux biens,4,5489,True,23.9,18.4,1.3,8,False
-refection de la toiture d'une ecole,6,437,False,5.0,4.5,1.1,10,True
-travaux de rehabilitation de logements,5,6432,True,28.1,19.0,1.5,2,False
-travaux,1,348748,True,3549.2,128.9,27.5,0,False
-entretien,1,101818,True,533.7,17.4,30.6,0,False
-fourniture,1,233730,True,542.6,56.3,9.6,0,False
-maintenance,1,108650,True,171.0,22.4,7.6,3,False
+travaux de voirie,3,20477,True,2419.0,46.6,51.9,3,False
+entretien des espaces verts,4,13482,True,229.6,330.7,0.7,5,False
+fourniture de repas pour la restauration scolaire,7,1162,False,19.6,7.8,2.5,10,True
+assurance dommages aux biens,4,5489,True,15.4,14.5,1.1,8,False
+refection de la toiture d'une ecole,6,437,False,4.3,7.7,0.6,10,True
+travaux de rehabilitation de logements,5,6432,True,28.3,21.0,1.4,2,False
+travaux,1,348748,True,5530.9,73.5,75.3,0,False
+entretien,1,101818,True,108.1,17.0,6.4,0,False
+fourniture,1,233730,True,2218.1,164.6,13.5,0,False
+maintenance,1,108650,True,481.5,27.4,17.6,3,False

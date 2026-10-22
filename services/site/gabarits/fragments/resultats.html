@@ -1,0 +1,89 @@
+{# La liste des résultats, seule.
+
+   Ce fragment est rendu deux fois : inclus dans la page complète, et renvoyé seul quand htmx
+   demande la même adresse. Il ne contient donc ni <html>, ni entête, ni feuille de style, et
+   il ne suppose rien de la page qui le contient.
+#}
+{% if erreur %}
+<p class="refus" role="alert">{{ erreur }}</p>
+
+{% elif resultats is none %}
+<p class="vide">Aucune recherche lancée.</p>
+
+{% else %}
+
+{% if resultats.classement_approche %}
+{# Le coût de l'optimisation, affiché plutôt que caché. Voir `PLAFOND_CANDIDATS` dans
+   services/api/requetes.py : au-delà du plafond, les dix marchés affichés ne sont pas les dix
+   du classement exact. #}
+<p class="avertissement" role="status">
+  <strong>Classement approché.</strong> Plus de marchés contiennent ces mots que le service
+  n'en classe : le classement par pertinence n'a porté que sur
+  {{ resultats.candidats_examines | nombre }} d'entre eux, en pratique les plus récents. Les
+  marchés affichés ne sont donc pas forcément les plus pertinents de toute la base. Sur un mot
+  seul très courant, ils peuvent être entièrement différents. Ajouter un mot, une année ou un
+  département suffit pour que le classement redevienne exact.
+  <a href="/a-propos#classement">Pourquoi</a>
+</p>
+{% endif %}
+
+{% if not resultats.resultats %}
+<p class="vide">
+  Aucun marché ne répond à cette recherche.
+  {% if criteres.q %}Les mots sont cherchés tous ensemble : en retirer un élargit la
+  recherche.{% endif %}
+</p>
+{% else %}
+
+<p class="compte">
+  {{ resultats.resultats | length }} marché{{ 's' if resultats.resultats | length > 1 }}
+  affiché{{ 's' if resultats.resultats | length > 1 }}, page {{ resultats.page }}.
+  {# Pas de nombre total : voir l'en-tête de services/api/requetes.py. Le compter obligerait
+     PostgreSQL à visiter toutes les lignes trouvées avant d'afficher les dix premières. #}
+  Le nombre total de résultats n'est pas affiché, et c'est volontaire : le compter coûterait
+  plus que les afficher.
+</p>
+
+<ol class="marches">
+  {% for marche in resultats.resultats %}
+  <li>
+    <h3><a href="/fiche/{{ marche.marche_id }}">{{ marche.objet or "Objet non publié" }}</a></h3>
+    <p class="qui">
+      {{ marche.acheteur_nom or "Acheteur non identifié" }}
+      {%- if marche.acheteur_departement_nom %} ({{ marche.acheteur_departement_nom }}){% endif %}
+      → {{ marche.titulaire_nom or "Titulaire non identifié" }}
+      {%- if marche.titulaire_categorie %} <span class="etiquette-categorie">{{ marche.titulaire_categorie }}</span>{% endif %}
+    </p>
+    <p class="chiffres">
+      <span class="montant">{{ marche.montant | euros }}</span>
+      <span>notifié le {{ marche.date_notification | jour }}</span>
+      {% if marche.procedure %}<span>{{ marche.procedure }}</span>{% endif %}
+      {% if marche.offres_recues is not none %}
+      <span>{{ marche.offres_recues }} offre{{ 's' if marche.offres_recues > 1 }}
+      reçue{{ 's' if marche.offres_recues > 1 }}</span>
+      {% endif %}
+      {% if marche.famille_cpv %}<span>CPV {{ marche.famille_cpv }}</span>{% endif %}
+    </p>
+  </li>
+  {% endfor %}
+</ol>
+
+<nav class="pagination" aria-label="Pages de résultats">
+  {% if page_courante > 1 %}
+  <a href="/recherche?{{ parametres }}{% if parametres %}&{% endif %}page={{ page_courante - 1 }}"
+     hx-get="/recherche?{{ parametres }}{% if parametres %}&{% endif %}page={{ page_courante - 1 }}"
+     hx-target="#resultats" hx-push-url="true" hx-swap="innerHTML show:#resultats:top">← page précédente</a>
+  {% endif %}
+  <span>page {{ page_courante }}</span>
+  {% if resultats.page_suivante and page_courante < page_maximum %}
+  <a href="/recherche?{{ parametres }}{% if parametres %}&{% endif %}page={{ page_courante + 1 }}"
+     hx-get="/recherche?{{ parametres }}{% if parametres %}&{% endif %}page={{ page_courante + 1 }}"
+     hx-target="#resultats" hx-push-url="true" hx-swap="innerHTML show:#resultats:top">page suivante →</a>
+  {% elif resultats.page_suivante %}
+  <span class="aide">La pagination s'arrête à la page {{ page_maximum }} : au-delà, la base
+  produit puis jette autant de lignes que de pages sautées, et le classement par pertinence
+  ne porte plus. Affiner la recherche donne un meilleur résultat qu'une page de plus.</span>
+  {% endif %}
+</nav>
+{% endif %}
+{% endif %}

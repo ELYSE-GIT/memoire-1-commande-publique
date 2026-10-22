@@ -1,0 +1,95 @@
+{# La réponse de l'assistant, seule.
+
+   L'ordre d'affichage est voulu : la phrase, puis le filtre appliqué, puis les chiffres, puis
+   les marchés cités. Un chiffre lu sans son filtre ne veut rien dire, et c'est la première
+   erreur que fait un lecteur pressé devant un tableau de bord.
+#}
+{% if not assistant_disponible %}
+<p class="refus" role="alert">
+  L'assistant est indisponible : ses lexiques n'ont pas pu être chargés au démarrage du
+  service. Le reste du site fonctionne.
+</p>
+
+{% elif reponse is none %}
+<p class="vide">Aucune question posée.</p>
+
+{% else %}
+<article class="reponse">
+  <p class="phrase">{{ reponse.phrase }}</p>
+
+  <dl class="verification">
+    <div>
+      <dt>Comprise comme</dt>
+      <dd>{{ reponse.intention }}</dd>
+    </div>
+    <div>
+      <dt>Filtre appliqué</dt>
+      <dd>{{ reponse.filtre }}</dd>
+    </div>
+    <div>
+      <dt>Calculée en</dt>
+      <dd>{{ reponse.duree_ms | round(0) | int }} ms</dd>
+    </div>
+  </dl>
+
+  {% if reponse.avertissement %}
+  <p class="avertissement">{{ reponse.avertissement }}</p>
+  {% endif %}
+
+  {% if reponse.chiffres %}
+  <ul class="chiffres-cles">
+    {% for nom, valeur in reponse.chiffres.items() %}
+    <li><span class="cle">{{ nom | replace('_', ' ') }}</span>
+        <span class="valeur">{{ valeur if valeur is string else valeur | nombre }}</span></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if reponse.lignes %}
+  <table class="lignes">
+    <thead>
+      <tr>{% for colonne in reponse.lignes[0].keys() %}<th>{{ colonne | replace('_', ' ') }}</th>{% endfor %}</tr>
+    </thead>
+    <tbody>
+      {% for ligne in reponse.lignes %}
+      <tr>
+        {% for colonne, valeur in ligne.items() %}
+        <td{% if valeur is number %} class="nombre"{% endif %}>
+          {%- if colonne == 'marche_id' and valeur -%}
+          <a href="/fiche/{{ valeur }}">{{ valeur }}</a>
+          {%- elif valeur is none -%}
+          <span class="aide">–</span>
+          {%- elif colonne.startswith('montant') and valeur is number -%}
+          {{ valeur | euros }}
+          {%- elif valeur is number -%}
+          {{ valeur | nombre }}
+          {%- else -%}
+          {{ valeur }}
+          {%- endif -%}
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if reponse.citations %}
+  <h2>Marchés cités</h2>
+  <p class="aide">
+    Chaque numéro mène à sa fiche. C'est ce qui permet de vérifier la réponse au lieu de la
+    croire : si la phrase ci-dessus ne correspond pas à ces marchés, elle est fausse.
+  </p>
+  <ul class="citations">
+    {% for marche_id in reponse.citations %}
+    <li><a href="/fiche/{{ marche_id }}">{{ marche_id }}</a></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <p class="aide">
+    Même réponse en JSON :
+    <a href="{{ prefixe_api }}/assistant?question={{ reponse.question | urlencode }}">{{ prefixe_api }}/assistant?question=…</a>
+  </p>
+</article>
+{% endif %}

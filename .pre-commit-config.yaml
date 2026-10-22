@@ -9,10 +9,15 @@ repos:
       # Les figures sont produites par mesures/figures.py. Si un hook les retouche, le fichier
       # versionne ne correspond plus a ce que le script genere, et chaque regeneration produit
       # une difference. Un artefact genere ne se corrige pas a la main : on corrige son script.
+      #
+      # htmx est un fichier tiers, recopie tel quel depuis sa publication officielle. Lui
+      # ajouter une fin de ligne le rendrait different de l'original, donc inverifiable :
+      # son empreinte ne correspondrait plus a celle publiee. Un fichier tiers se verifie,
+      # il ne se reformate pas. Voir services/site/statique/README.md.
       - id: trailing-whitespace
-        exclude: ^memoire/figures/
+        exclude: ^(memoire/figures/|services/site/statique/htmx-)
       - id: end-of-file-fixer
-        exclude: ^memoire/figures/
+        exclude: ^(memoire/figures/|services/site/statique/htmx-)
       - id: check-yaml
       - id: check-toml
       # Garde-fou contre un fichier de donnees commit par accident. Les notebooks executes sont

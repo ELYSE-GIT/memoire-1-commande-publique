@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block contenu %}
+<h1>Poser une question</h1>
+
+<p class="chapo">
+  Aucun modèle de langue n'intervient ici. La question est lue par des règles et des lexiques,
+  traduite en SQL, et la réponse est composée à partir des lignes rendues par la base. La
+  conséquence est visible : l'assistant refuse ce qu'il ne sait pas lire, au lieu d'écrire une
+  réponse plausible.
+</p>
+
+<form class="poser" action="/questions" method="get"
+      hx-get="/questions" hx-target="#reponse" hx-push-url="true" hx-indicator="#attente">
+  <label for="question">Votre question, en français</label>
+  <div class="ligne">
+    <input type="text" id="question" name="question" value="{{ question }}"
+           maxlength="200" minlength="3"
+           placeholder="combien de marches de voirie en 2023" required>
+    <button type="submit">Demander</button>
+  </div>
+  <span id="attente" class="attente" aria-live="polite">lecture de la question…</span>
+</form>
+
+<details class="exemples">
+  <summary>Des questions que l'assistant sait lire</summary>
+  <p class="aide">
+    Ces exemples sont tirés du jeu de questions versionné du projet : leurs réponses, leurs
+    chiffres et leurs citations sont revérifiés à chaque mesure. Le dernier est un refus, et
+    il est là exprès.
+  </p>
+  <ul>
+    {% for exemple, attendu in exemples %}
+    <li>
+      <a href="/questions?question={{ exemple | urlencode }}">{{ exemple }}</a>
+      <span class="aide">{{ attendu }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</details>
+
+<div id="reponse">
+  {% include "fragments/reponse.html" %}
+</div>
+{% endblock %}
+
+{% block source_de_la_page %}
+Cette page lit <a href="{{ prefixe_api }}/assistant">{{ prefixe_api }}/assistant</a>.
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block contenu %}
+{% set premiere = lignes[0] %}
+<article class="fiche">
+  <p class="fil"><a href="/recherche">Recherche</a> → marché {{ marche_id }}</p>
+  <h1>{{ premiere.objet or "Objet non publié" }}</h1>
+
+  <dl class="repere">
+    <div>
+      <dt>Numéro de marché</dt>
+      <dd><code>{{ marche_id }}</code></dd>
+    </div>
+    <div>
+      <dt>Acheteur</dt>
+      <dd>
+        {{ premiere.acheteur_nom or "non identifié" }}
+        {% if premiere.acheteur_departement_nom %}<br>{{ premiere.acheteur_departement_nom }}{% endif %}
+        {% if premiere.acheteur_categorie %}<br><span class="aide">{{ premiere.acheteur_categorie }}</span>{% endif %}
+      </dd>
+    </div>
+    <div>
+      <dt>Notifié le</dt>
+      <dd>{{ premiere.date_notification | jour }}</dd>
+    </div>
+    <div>
+      <dt>Montant</dt>
+      <dd>
+        {% if montant_total is not none %}{{ montant_total | euros }}
+        {% else %}<span class="aide">montants différents selon les lignes, non totalisés</span>{% endif %}
+      </dd>
+    </div>
+    {% if premiere.procedure %}
+    <div>
+      <dt>Procédure</dt>
+      <dd>{{ premiere.procedure }}</dd>
+    </div>
+    {% endif %}
+    {% if premiere.offres_recues is not none %}
+    <div>
+      <dt>Offres reçues</dt>
+      <dd>{{ premiere.offres_recues }}</dd>
+    </div>
+    {% endif %}
+    {% if premiere.famille_cpv %}
+    <div>
+      <dt>Famille d'achat</dt>
+      <dd>CPV {{ premiere.famille_cpv }},
+        <a href="/recherche?famille={{ premiere.famille_cpv }}">les autres marchés de cette famille</a>
+      </dd>
+    </div>
+    {% endif %}
+  </dl>
+
+  <h2>Titulaire{{ 's' if lignes | length > 1 }} ({{ lignes | length }})</h2>
+  {% if lignes | length > 1 %}
+  <p class="note">
+    Ce marché compte {{ lignes | length }} lignes et non une seule : un marché attribué à un
+    groupement d'entreprises est publié une fois par titulaire. Ce n'est pas un doublon.
+    Attention au montant : dans les données source, le montant porté par chaque ligne est très
+    souvent celui du marché entier, répété, et non la part du titulaire. Les additionner
+    donnerait un total faux.
+  </p>
+  {% endif %}
+  <table class="titulaires">
+    <thead>
+      <tr><th>Titulaire</th><th>Catégorie</th><th>Montant porté par la ligne</th></tr>
+    </thead>
+    <tbody>
+      {% for ligne in lignes %}
+      <tr>
+        <td>{{ ligne.titulaire_nom or "non identifié" }}</td>
+        <td>
+          {% if ligne.titulaire_categorie %}{{ ligne.titulaire_categorie }}
+          {% else %}<span class="aide">SIRET non résolu</span>{% endif %}
+        </td>
+        <td class="nombre">{{ ligne.montant | euros }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Ce qui a été remarqué</h2>
+  {% if not signaux %}
+  <p class="rien">
+    Aucun signal sur ce marché. Cela veut dire qu'il ne s'écarte pas de ses pairs sur les
+    points que le projet mesure, et rien de plus : l'absence de signal n'est pas un certificat
+    de régularité.
+  </p>
+  {% else %}
+  {% for signal in signaux %}
+  <div class="signal">
+    <ul class="motifs">
+      {% for motif in signal.motifs_de_signalement %}<li>{{ motif }}</li>{% endfor %}
+    </ul>
+    <dl class="comparaison">
+      {% if signal.famille_cpv %}
+      <div><dt>Comparé aux marchés de la famille</dt><dd>CPV {{ signal.famille_cpv }}</dd></div>
+      {% endif %}
+      {% if signal.marches_dans_la_famille is not none %}
+      <div>
+        <dt>Taille du groupe de comparaison</dt>
+        <dd>{{ signal.marches_dans_la_famille | nombre }} marchés</dd>
+      </div>
+      {% endif %}
+      {% if signal.ecart_normalise_famille is not none %}
+      <div>
+        <dt>Écart à la médiane du groupe</dt>
+        <dd>{{ signal.ecart_normalise_famille | round(2) }}</dd>
+      </div>
+      {% endif %}
+    </dl>
+    <p class="aide">
+      L'écart est la différence entre le montant et la médiane du groupe, divisée par l'écart
+      interquartile, en échelle logarithmique. Au-delà de 4, le prix est signalé. En dessous de
+      30 marchés dans le groupe, aucun signal de prix n'est émis : la médiane ne serait pas
+      fiable.
+    </p>
+  </div>
+  {% endfor %}
+  <p class="avertissement">
+    Un signal n'est pas une accusation. Ces règles concordent avec les anomalies publiées par
+    le producteur des données dans 69,3&nbsp;% des cas hors échantillon (intervalle de 67,8 à
+    70,8&nbsp;%) : c'est utile pour trier, insuffisant pour conclure.
+    <a href="/a-propos#signaux">Comment ces signaux sont calculés</a>
+  </p>
+  {% endif %}
+</article>
+{% endblock %}
+
+{% block source_de_la_page %}
+Cette page lit
+<a href="{{ prefixe_api }}/marches/{{ marche_id }}">{{ prefixe_api }}/marches/{{ marche_id }}</a>.
+{% endblock %}

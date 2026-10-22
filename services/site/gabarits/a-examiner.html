@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block contenu %}
+<h1>Marchés à examiner</h1>
+
+<p class="chapo">
+  Ces marchés s'écartent de leurs pairs sur un point mesurable. Chacun porte son motif en
+  clair, et les valeurs qui ont servi à le comparer. La page s'appelle « à examiner » et non
+  « anomalies », parce que c'est exactement ce que la mesure permet de dire.
+</p>
+
+<p class="avertissement">
+  Ces règles concordent avec les anomalies publiées par le producteur des données dans
+  69,3&nbsp;% des cas, mesuré hors échantillon sur les années 2024 à 2026 après calage sur
+  2019-2023 (intervalle de confiance de 67,8 à 70,8&nbsp;%). Une concordance n'est pas une
+  preuve : le producteur ne publie pas la vérité, il publie ses propres signalements.
+  <a href="/a-propos#signaux">Le détail de la méthode</a>
+</p>
+
+<form class="filtres mince" action="/a-examiner" method="get"
+      hx-get="/a-examiner" hx-target="#signaux" hx-push-url="true">
+  <div class="champ">
+    <label for="minimum">Nombre minimal de signaux forts</label>
+    <select id="minimum" name="minimum">
+      {% for valeur in [1, 2, 3] %}
+      <option value="{{ valeur }}" {% if minimum == valeur %}selected{% endif %}>
+        au moins {{ valeur }}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="actions"><button type="submit">Filtrer</button></div>
+</form>
+
+<div id="signaux">
+  {% include "fragments/signaux.html" %}
+</div>
+{% endblock %}
+
+{% block source_de_la_page %}
+Cette page lit <a href="{{ prefixe_api }}/signaux">{{ prefixe_api }}/signaux</a>.
+{% endblock %}

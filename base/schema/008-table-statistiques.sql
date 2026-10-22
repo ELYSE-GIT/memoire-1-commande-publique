@@ -68,7 +68,51 @@ create table if not exists statistiques (
     marches_distincts           bigint not null,
     acheteurs                   bigint not null,
     titulaires                  bigint not null,
+    -- Somme des montants portes par les lignes. ATTENTION : elle surcompte.
     montant_total               numeric(20, 2),
+
+    -- Somme des montants en ne comptant qu'une fois chaque couple (marche, montant).
+    --
+    -- C'est le chiffre a afficher, et l'ecart avec le precedent est le resultat de mesure le
+    -- plus genant de la journee du 22 octobre 2026 :
+    --
+    --     somme sur les lignes                     1 500,9 milliards d'euros
+    --     somme par couple (marche, montant)       1 098,2 milliards d'euros
+    --     ecart                                      402,7 milliards, soit 36,7 %
+    --
+    -- La raison : un marche attribue a un groupement d'entreprises occupe une ligne par
+    -- titulaire, et le montant publie sur chacune de ces lignes est tres souvent celui du
+    -- marche entier, repete, et non la part du titulaire. Additionner les lignes compte donc
+    -- ce marche autant de fois qu'il a de titulaires. Le projet documentait deja ce piege
+    -- pour les COMPTAGES (273 494 cas de groupements, voir memoire/02-etat-des-lieux.md) ;
+    -- personne n'avait regarde ce qu'il faisait aux MONTANTS avant que le site n'ait a en
+    -- afficher un.
+    --
+    -- Pourquoi `distinct (marche_id, montant)` et non une autre regle :
+    --
+    --     Option envisagee        Ce qu'elle donne   Cout     Limite               Verdict
+    --     somme des lignes        1 500,9 Md         2 s      surcompte de 36,7 %  ecarte
+    --     **distinct (marche,     1 098,2 Md         13 s     deux lots d'un meme  **retenu**
+    --     montant)**                                          marche au meme
+    --                                                          montant fusionnes
+    --     max(montant) par        1 097,9 Md         25 s     ecrase les montants  ecarte
+    --     marche                                               differents d'un
+    --                                                          meme marche
+    --                                                          (avenants, lots)
+    --     part reelle de chaque   le vrai chiffre    --       la source ne publie  impossible
+    --     titulaire                                            pas la repartition
+    --
+    -- Mesures du 22 octobre 2026 sur les 1 999 474 lignes chargees. Les deux regles
+    -- defendables ne different que de 0,3 milliard sur 1 098, soit 0,03 pour cent : le choix
+    -- entre elles ne change pas le chiffre affiche, alors que le choix de ne pas dedoublonner
+    -- le change de 37 pour cent. C'est la seule decision qui compte ici.
+    --
+    -- Ce qui a fait pencher : la regle retenue ne suppose rien que la source ne dise. Sa limite
+    -- est bornee et mesuree, et elle va dans le sens de la prudence. Le site affiche les deux
+    -- chiffres et l'ecart, parce qu'un total d'argent public est exactement le genre de nombre
+    -- qu'on reprend sans le verifier.
+    montant_total_marches       numeric(20, 2),
+
     premiere_annee              smallint,
     derniere_annee              smallint,
     marches_signales            bigint not null default 0,

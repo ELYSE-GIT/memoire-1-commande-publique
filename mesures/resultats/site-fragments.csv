@@ -1,0 +1,5 @@
+page,chemin,page_entiere_ko,fragment_ko,economie_pourcent,page_entiere_comprime_ko,fragment_comprime_ko,page_entiere_p50_ms,fragment_p50_ms,fragment_sans_squelette
+recherche texte,/recherche?q=travaux+de+voirie,11.7,7.9,32.8,3.6,2.2,20.2,21.3,True
+recherche filtree,/recherche?q=travaux+de+voirie&annee=2024&departement=35,11.0,7.1,35.0,3.0,1.6,10.8,11.0,True
+a examiner,/a-examiner,8.2,5.3,35.9,1.9,0.6,61.5,53.2,True
+questions,/questions?question=combien+de+marches+de+voirie+en+2023,5.5,1.6,71.7,2.1,0.6,100.4,104.9,True

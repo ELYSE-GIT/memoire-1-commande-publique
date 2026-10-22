@@ -35,7 +35,8 @@ make transformer         # construit les couches argent et or, et les variables 
 | `make bench-incertitude` | intervalle de confiance de chaque pourcentage tire d'un echantillon | environ 1 s | `incertitude-*.csv` |
 | `make bench-stabilite` | la regle de detection calee sur 2019-2023, appliquee a 2024-2026 | environ 2 s | `stabilite-*.csv` |
 | `make bench-api` | l'API publique, route par route, puis sous charge | environ 4 min | `api-latences.csv`, `api-charge.csv`, `api-classement.csv`, `api-resume.csv` |
-| `make figures` | trace les 24 figures du memoire depuis les CSV | environ 5 s | `memoire/figures/` |
+| `make bench-site` | le site : poids de chaque page, gain du fragment, rendu sans JavaScript | environ 1 min | `site-pages.csv`, `site-fragments.csv`, `site-statique.csv`, `site-resume.csv` |
+| `make figures` | trace les 25 figures du memoire depuis les CSV | environ 5 s | `memoire/figures/` |
 
 ---
 
@@ -302,18 +303,28 @@ pour montrer ce qu'elle coute.
 
 | Route | Premier appel, base froide | p50 | p95 |
 |---|---|---|---|
-| `/sante` | 3 ms | 2 ms | 3 ms |
-| `/marches?q=...` | 234 ms | 22 ms | 55 ms |
-| `/marches/{id}` | 43 ms | 2 ms | 3 ms |
-| `/signaux` | 5 788 ms | 62 ms | 497 ms |
-| `/statistiques` | 8 ms | 2 ms | 3 ms |
-| `/statistiques/annees` | 6 ms | 2 ms | 3 ms |
-| `/assistant` | 744 ms | 36 ms | 51 ms |
+| `/api/sante` | 9 ms | 3 ms | 4 ms |
+| `/api/marches?q=...` | 1 281 a 7 302 ms | 20 ms | 96 ms |
+| `/api/marches/{id}` | 8 ms | 2 ms | 4 ms |
+| `/api/signaux` | 1 314 a 1 443 ms | 84 ms | 172 ms |
+| `/api/statistiques` | 9 ms | 2 ms | 3 ms |
+| `/api/statistiques/annees` | 5 ms | 2 ms | 3 ms |
+| `/api/assistant` | 304 a 8 766 ms | 31 ms | 37 ms |
 
-Le service tient entre 95 et 111 requetes par seconde selon l'execution, sans aucun echec sur
-300 appels, et sa memoire est de 37 Mo. L'ecart entre deux executions n'est pas du bruit de
-mesure : il depend de ce que PostgreSQL garde en memoire, et c'est la meme raison qui fait varier
-le calcul des comptages de 10,7 s a 61,5 s.
+Le service tient entre 87 et 111 requetes par seconde selon l'execution, sans aucun echec sur
+300 appels, et sa memoire est de 37 Mo.
+
+**Deux chiffres au lieu d'un dans la colonne froide**, et c'est volontaire : le premier appel
+varie d'un facteur six d'une execution a l'autre, selon ce que le Mac garde du disque de la
+machine virtuelle. Publier une seule valeur laisserait croire a une mesure stable. Ce qui est
+stable, lui, c'est l'ordre de grandeur : la premiere visite coute des centaines de
+millisecondes a plusieurs secondes, et une fois sur un demarrage reellement froid elle a
+depasse les dix secondes du service.
+
+C'est pour cette raison que le service se **prechauffe** au demarrage depuis le 22 octobre 2026.
+`make bench-api` coupe ce prechauffage (`PRECHAUFFAGE=0`), justement pour continuer a mesurer le
+cas froid ; `make bench-site` mesure le service tel qu'il est deploye, prechauffage compris, et
+le pire premier appel y tombe a 166 ms.
 
 **Les trois colonnes a savoir lire** :
 
@@ -332,7 +343,55 @@ qu'aucun test ne mesure une duree. Le tri de la liste recente qui renoncait a so
 classement de la recherche trop large a froid, et la serie par annee a 2,4 secondes au 95e
 centile. Le detail est dans l'ADR 0011.
 
+**Ce que le banc mesure aussi depuis le 22 octobre 2026** : une question par intention de
+l'assistant, et non une seule. Chaque intention rend une forme de reponse differente, et avec
+une seule question de comptage, les questions sur les titulaires repondaient 500 depuis la mise
+en service de l'API sans qu'aucun test ni aucun banc ne le voie.
+
 **Ce que `api-classement.csv` contient** : pour dix questions, le nombre de marches qui
 repondent, la duree du classement exact, celle du classement borne, et combien des dix marches
 affiches sont les memes dans les deux cas. C'est la contrepartie du plafond, chiffree : exacte
 sous 5 000 reponses, et jusqu'a zero sur dix au-dela.
+
+---
+
+## `make bench-site` : le poids des pages et le gain du rechargement partiel
+
+Mesure ce que la latence seule ne dit pas : combien pese chaque page, ce que le fragment htmx
+economise, et si les pages se rendent sans JavaScript.
+
+```bash
+make up
+make bench-site
+```
+
+**Duree** : environ une minute. Le banc demarre le site lui-meme, mesure, et l'arrete.
+
+**Resultat attendu**, mesures du 22 octobre 2026, base froide :
+
+| Page | Premier appel | p50 | Poids | Comprime |
+|---|---|---|---|---|
+| `/` | 17 ms | 3 ms | 10,3 ko | 3,0 ko |
+| `/recherche?q=...` | 95 ms | 35 ms | 11,7 ko | 3,6 ko |
+| `/recherche?q=travaux` | 53 ms | 55 ms | 16,2 ko | 5,5 ko |
+| `/fiche/{id}` | 16 ms | 2 ms | 4,4 ko | 1,9 ko |
+| `/a-examiner` | 166 ms | 60 ms | 8,2 ko | 1,9 ko |
+| `/questions?question=...` | 120 ms | 47 ms | 5,5 ko | 2,1 ko |
+| `/a-propos` | 2 ms | 1 ms | 8,7 ko | 3,6 ko |
+
+**Ce qu'il faut savoir en lire** :
+
+- **Le poids.** La page la plus lourde fait 16,2 ko, soit 5,5 ko une fois compressee : 22
+  millisecondes d'attente sur une connexion mobile a 2 Mbit/s. Aucune optimisation de poids
+  n'est justifiee, et le dire en chiffres evite d'en faire une par reflexe. Les fichiers
+  charges une fois puis gardes par le navigateur (feuille de style, htmx, icone) pesent 64,1 ko
+  au total.
+- **Le gain du fragment.** Le meme filtre applique de deux facons : en rechargeant la page
+  entiere, ou en remplacant la seule liste de resultats. Le fragment pese 32 a 71 pour cent de
+  moins, mediane 35. C'est ce qui justifie htmx, et c'est une mesure, pas une preference.
+- **Sans JavaScript.** Chaque page est demandee sans l'en-tete `HX-Request`, exactement comme
+  un navigateur dont le JavaScript est coupe, et son contenu doit etre present. Dix pages sur
+  dix. C'est le plan B de la soutenance, et un plan B qu'on n'essaie pas n'existe pas.
+- **Les en-tetes servis.** Le banc relit la politique de securite reellement envoyee et verifie
+  qu'elle n'autorise ni `unsafe-inline` ni aucun domaine tiers. Une politique ecrite dans le
+  code et jamais relue dans une reponse reelle est une intention, pas une mesure.

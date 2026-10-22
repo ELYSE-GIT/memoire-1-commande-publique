@@ -1,0 +1,17 @@
+{# Une page d'erreur, et non un objet JSON.
+
+   Un visiteur qui tombe sur une adresse inconnue doit pouvoir repartir : la navigation est
+   celle de tout le site, parce que cette page hérite du même squelette.
+#}
+{% extends "base.html" %}
+
+{% block contenu %}
+<section class="erreur">
+  <h1>{{ titre }}</h1>
+  <p class="chapo">{{ message }}</p>
+  {% if detail %}<p class="texte">{{ detail }}</p>{% endif %}
+  <p class="texte">
+    <a href="/">Retour à l'accueil</a> ou <a href="/recherche">chercher un marché</a>.
+  </p>
+</section>
+{% endblock %}

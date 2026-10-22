@@ -115,30 +115,46 @@ est defini par `POSTGRES_PORT` dans `.env`.
 
 ## L'API publique
 
-Depuis la phase 7, le projet a un second service : l'API, qui sert les marches, les signaux, les
-comptages et l'assistant. Elle a besoin de PostgreSQL, donc de `make up` avant.
+Depuis la phase 7, le projet a un second service : le site, qui sert a la fois les pages et
+l'API. Un seul processus, deux jeux d'adresses :
+
+| Adresse | Ce qu'elle rend |
+|---|---|
+| `/`, `/recherche`, `/fiche/...`, `/a-examiner`, `/questions`, `/a-propos` | les pages HTML |
+| `/api/...` | les memes donnees en JSON |
+| `/docs` | la documentation interactive de l'API |
+
+Il a besoin de PostgreSQL, donc de `make up` avant.
 
 ### Demarrer
 
 ```bash
-make up        # PostgreSQL d'abord, sinon l'API demarre en mode degrade
-make api       # l'API, rechargee a chaque modification du code
+make up        # PostgreSQL d'abord, sinon le service demarre en mode degrade
+make site      # les pages et l'API, rechargees a chaque modification du code
 ```
 
-**Duree** : moins d'une seconde pour le demarrage, dont le chargement des lexiques de
-l'assistant (74 055 lexemes, 24 regions, 107 departements).
+`make api` existe toujours et ne demarre que l'API, sans les pages. C'est ce que mesure
+`make bench-api` ; au quotidien, `make site` est la bonne commande.
+
+**Duree** : environ onze secondes, et il faut savoir pourquoi. Une seconde pour ouvrir la
+reserve de connexions et charger les lexiques de l'assistant (74 055 lexemes, 24 regions,
+107 departements), dix pour le **prechauffage** : le service pose lui-meme les requetes les plus
+couteuses, pour que le premier visiteur ne les paie pas. Sans lui, la premiere question posee a
+l'assistant sur une base qui vient de demarrer depassait les dix secondes du service et
+repondait une erreur. Le cout n'a pas disparu, il a change de place : au demarrage, personne
+n'attend.
 
 **Resultat attendu** : `Uvicorn running on http://127.0.0.1:8000`. Ouvrir
-<http://localhost:8000/docs> : la documentation interactive est generee depuis le code, donc
-toujours a jour. Chaque route y est essayable directement dans le navigateur, ce qui est le plus
-court chemin pour montrer l'API en soutenance.
+<http://localhost:8000/> pour le site, <http://localhost:8000/docs> pour la documentation
+interactive de l'API, generee depuis le code donc toujours a jour. Chaque route y est essayable
+dans le navigateur.
 
-**Arreter** : Ctrl-C dans le terminal. L'API ne redemarre pas toute seule, comme le reste.
+**Arreter** : Ctrl-C dans le terminal. Rien ne redemarre tout seul, comme le reste.
 
 ### Verifier qu'elle va bien
 
 ```bash
-curl -s http://localhost:8000/sante
+curl -s http://localhost:8000/api/sante
 ```
 
 **Resultat attendu** :
@@ -159,13 +175,13 @@ Les deux cas a savoir lire :
 ### Trois appels pour la demonstration
 
 ```bash
-curl -s "http://localhost:8000/marches?q=travaux+de+voirie&annee=2024" | head -40
-curl -s "http://localhost:8000/signaux?taille=3"
-curl -s "http://localhost:8000/assistant?question=combien+de+marches+de+voirie+en+Bretagne+en+2024"
+curl -s "http://localhost:8000/api/marches?q=travaux+de+voirie&annee=2024" | head -40
+curl -s "http://localhost:8000/api/signaux?taille=3"
+curl -s "http://localhost:8000/api/assistant?question=combien+de+marches+de+voirie+en+Bretagne+en+2024"
 ```
 
 Le troisieme est celui a montrer : la reponse porte la phrase, les chiffres, le filtre applique
-en francais et les numeros de marche cites, verifiables un par un sur `/marches/{marche_id}`.
+en francais et les numeros de marche cites, verifiables un par un sur `/api/marches/{marche_id}`, ou sur la page `/fiche/{marche_id}`.
 
 ### `classement_approche`, et pourquoi il faut savoir l'expliquer
 
@@ -178,8 +194,14 @@ La reponse d'une recherche contient deux champs qu'il faut pouvoir justifier dev
 Le service ne classe que 5 000 marches au plus. Classer les 348 748 qui contiennent « travaux »
 prenait 9,7 secondes a chaud, et 7,2 secondes a froid au plafond precedent de 20 000, ce qui
 depassait le delai que l'API s'impose. Quand `classement_approche` vaut `true`, les marches
-affiches sont les mieux classes **parmi les 5 000 plus recents qui contiennent les mots**, et non
-parmi tous.
+affiches sont les mieux classes **parmi les 5 000 premiers que l'index rend**, et non parmi tous
+ceux qui contiennent les mots. Ces 5 000 sont en pratique les plus recents, parce que la table
+est ecrite par date decroissante, ce qui est une dependance a l'ordre de chargement et non une
+garantie du modele relationnel.
+
+Sur le site, cette limite n'est pas cachee : la liste de resultats affiche « Classement
+approche » des que le plafond est atteint, avec la phrase qui explique quoi faire (ajouter un
+mot, une annee, un departement).
 
 Le raisonnement complet, avec le tableau de ce que l'approximation change vraiment, est dans
 `services/api/requetes.py` et dans l'ADR 0011.

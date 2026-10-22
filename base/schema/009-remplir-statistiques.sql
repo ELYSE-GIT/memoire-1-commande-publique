@@ -22,25 +22,34 @@ with compte as (
 ),
 signales as (
     select count(*) as marches_signales from signaux where signaux_forts > 0
+),
+-- Le montant sans le surcompte des groupements. 13 secondes de calcul sur les 1 999 474
+-- lignes, soit impossible a la demande, et c'est pour cela qu'il est ecrit ici. Le pourquoi
+-- de la regle est dans le fichier 008, a cote de la colonne.
+sans_doublons as (
+    select sum(montant) as montant_total_marches
+    from (select distinct marche_id, montant from marches) as couples
 )
 insert into statistiques (
     ligne_unique, marches, marches_distincts, acheteurs, titulaires,
-    montant_total, premiere_annee, derniere_annee, marches_signales,
+    montant_total, montant_total_marches, premiere_annee, derniere_annee, marches_signales,
     calcule_a
 )
 select
     true,
     compte.marches, compte.marches_distincts, compte.acheteurs, compte.titulaires,
-    compte.montant_total, compte.premiere_annee, compte.derniere_annee,
+    compte.montant_total, sans_doublons.montant_total_marches,
+    compte.premiere_annee, compte.derniere_annee,
     signales.marches_signales,
     clock_timestamp()
-from compte, signales
+from compte, signales, sans_doublons
 on conflict (ligne_unique) do update set
     marches           = excluded.marches,
     marches_distincts = excluded.marches_distincts,
     acheteurs         = excluded.acheteurs,
     titulaires        = excluded.titulaires,
     montant_total     = excluded.montant_total,
+    montant_total_marches = excluded.montant_total_marches,
     premiere_annee    = excluded.premiere_annee,
     derniere_annee    = excluded.derniere_annee,
     marches_signales  = excluded.marches_signales,
@@ -48,7 +57,10 @@ on conflict (ligne_unique) do update set
 
 -- Verification affichee, pour que celui qui lance la commande voie ce qui a ete ecrit.
 select
-    marches, marches_distincts, acheteurs, titulaires, marches_signales, calcule_a
+    marches, marches_distincts, acheteurs, titulaires, marches_signales,
+    round(montant_total / 1e9, 1)         as montant_milliards_lignes,
+    round(montant_total_marches / 1e9, 1) as montant_milliards_marches,
+    calcule_a
 from statistiques;
 
 
