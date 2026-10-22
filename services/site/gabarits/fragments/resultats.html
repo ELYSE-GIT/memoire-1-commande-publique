@@ -64,7 +64,7 @@
       <span>{{ marche.offres_recues }} offre{{ 's' if marche.offres_recues > 1 }}
       reçue{{ 's' if marche.offres_recues > 1 }}</span>
       {% endif %}
-      {% if marche.famille_cpv %}<span>CPV {{ marche.famille_cpv }}</span>{% endif %}
+      {% if marche.famille_cpv %}<span>{{ libelle_famille(marche.famille_cpv, court=True) }}</span>{% endif %}
     </p>
   </li>
   {% endfor %}

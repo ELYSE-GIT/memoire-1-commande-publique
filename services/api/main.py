@@ -63,6 +63,7 @@ from services.api.base import (
     preparer,
 )
 from services.api.modeles import (
+    Famille,
     MarcheDetaille,
     PageDeMarches,
     PageDeSignaux,
@@ -421,6 +422,38 @@ def lire_par_annee(curseur_sql: Curseur) -> list[StatistiqueAnnuelle]:
     # d'accueil repondait 500. Un `type: ignore` ne masque pas un detail de typage, il masque
     # une affirmation fausse, et elle attend le second appelant.
     return [StatistiqueAnnuelle(**ligne) for ligne in curseur_sql.fetchall()]
+
+
+@routeur.get("/statistiques/familles", response_model=list[Famille], tags=["statistiques"])
+def lire_les_familles(curseur_sql: Curseur) -> list[Famille]:
+    """Les familles d'achat, avec leurs quartiles de montant et leur part de PME.
+
+    Lues dans leur table, comme les autres comptages : les calculer a la demande prenait
+    9 420 ms, parce que `percentile_cont` trie l'ensemble de chaque groupe avant de rendre un
+    quartile. Le pourquoi est a cote de la declaration de la table, dans
+    `base/schema/008-table-statistiques.sql`.
+
+    Les libelles ne sont pas servis ici. Ils viennent d'une nomenclature officielle versionnee
+    dans `base/reference/familles-cpv.csv`, pas des donnees collectees, et les faire transiter
+    par la base reviendrait a recopier un fichier de reference dans une table qu'il faut
+    recharger.
+    """
+    curseur_sql.execute(requetes.FAMILLES)
+    return [Famille(**ligne) for ligne in curseur_sql.fetchall()]
+
+
+def lire_une_famille(curseur_sql: Any, famille_cpv: str | None) -> Famille | None:
+    """Une famille d'achat, ou `None` si elle est inconnue.
+
+    Ce n'est pas une route : c'est la fiche d'un marche qui s'en sert, pour situer son montant
+    parmi ceux de sa famille. Une route dediee rendrait un aller-retour de plus pour une page
+    qui a deja la famille sous la main.
+    """
+    if not famille_cpv:
+        return None
+    curseur_sql.execute(requetes.FAMILLE, (famille_cpv,))
+    ligne = curseur_sql.fetchone()
+    return Famille(**ligne) if ligne else None
 
 
 # --- L'assistant -------------------------------------------------------------

@@ -45,8 +45,9 @@
     {% if premiere.famille_cpv %}
     <div>
       <dt>Famille d'achat</dt>
-      <dd>CPV {{ premiere.famille_cpv }},
-        <a href="/recherche?famille={{ premiere.famille_cpv }}">les autres marchés de cette famille</a>
+      <dd>{{ libelle_famille(premiere.famille_cpv) }}
+        <br><span class="aide">CPV {{ premiere.famille_cpv }},
+        <a href="/recherche?famille={{ premiere.famille_cpv }}">les autres marchés de cette famille</a></span>
       </dd>
     </div>
     {% endif %}
@@ -80,6 +81,57 @@
     </tbody>
   </table>
 
+{% if situation %}
+  <h2>Ce marché, parmi ceux de sa famille</h2>
+  <p class="note">
+    Comparé aux {{ situation.marches | nombre }} marchés de la famille
+    « {{ libelle_famille(premiere.famille_cpv) }} » qui portent un montant. L'échelle est
+    logarithmique : les montants de la commande publique vont de quelques centaines d'euros à
+    plusieurs centaines de millions, et une échelle ordinaire tasserait toute la moitié centrale
+    contre le bord gauche.
+  </p>
+  {# La géométrie est calculée dans `situation_dans_la_famille`, en Python, et passe par des
+     attributs SVG : aucun attribut `style`, donc aucune exception à la politique de sécurité. #}
+  <svg class="reglette" viewBox="-10 0 {{ situation.largeur + 20 }} 92"
+       width="100%" role="img"
+       aria-label="Position du montant de ce marché parmi ceux de sa famille">
+    <title>Ce marché : {{ situation.montant | euros }}. Médiane de la famille :
+      {{ situation.mediane | euros }}.</title>
+
+    {# La moitié centrale de la famille : du premier au troisième quartile. #}
+    <rect class="boite" x="{{ situation.x_q1 }}" y="34"
+          width="{{ situation.largeur_boite }}" height="24"></rect>
+    <line class="axe" x1="0" y1="46" x2="{{ situation.largeur }}" y2="46"></line>
+    <line class="mediane" x1="{{ situation.x_median }}" y1="28"
+          x2="{{ situation.x_median }}" y2="64"></line>
+
+    {# Ce marché. #}
+    <line class="repere-ici" x1="{{ situation.x_ici }}" y1="20"
+          x2="{{ situation.x_ici }}" y2="72"></line>
+    <circle class="point-ici" cx="{{ situation.x_ici }}" cy="46" r="6"></circle>
+
+    <text class="etiquette" x="{{ situation.x_q1 }}" y="76" text-anchor="middle">{{ situation.q1 | euros }}</text>
+    <text class="etiquette" x="{{ situation.x_q3 }}" y="76" text-anchor="middle">{{ situation.q3 | euros }}</text>
+    <text class="etiquette etiquette-mediane" x="{{ situation.x_median }}" y="24" text-anchor="middle">médiane {{ situation.mediane | euros }}</text>
+    <text class="etiquette etiquette-ici" x="{{ situation.x_ici }}" y="14"
+          text-anchor="{{ 'end' if situation.x_ici > situation.largeur * 0.8 else ('start' if situation.x_ici < situation.largeur * 0.2 else 'middle') }}">ce marché : {{ situation.montant | euros }}</text>
+  </svg>
+  <p class="legende">
+    <span class="puce puce-boite"></span> moitié centrale des marchés de la famille
+    <span class="puce puce-mediane"></span> médiane
+    <span class="puce puce-ici"></span> ce marché
+  </p>
+  <p class="{{ 'avertissement' if situation.au_dessus or situation.au_dessous else 'note' }}">
+    Ce marché coûte <strong>{{ situation.comparaison }}</strong>.
+    {% if situation.au_dessus %}Il est au-dessus des trois quarts des marchés comparables.
+    {% elif situation.au_dessous %}Il est en dessous des trois quarts des marchés comparables.
+    {% else %}Il se situe dans la moitié centrale de sa famille.{% endif %}
+    Un écart n'est pas une irrégularité : un marché peut être plus gros parce qu'il porte sur
+    plus de choses, plus longtemps, ou pour une collectivité plus grande. La famille d'achat ne
+    corrige aucun de ces trois facteurs.
+  </p>
+{% endif %}
+
   <h2>Ce qui a été remarqué</h2>
   {% if not signaux %}
   <p class="rien">
@@ -95,7 +147,8 @@
     </ul>
     <dl class="comparaison">
       {% if signal.famille_cpv %}
-      <div><dt>Comparé aux marchés de la famille</dt><dd>CPV {{ signal.famille_cpv }}</dd></div>
+      <div><dt>Comparé aux marchés de la famille</dt>
+        <dd>{{ libelle_famille(signal.famille_cpv, court=True) }}</dd></div>
       {% endif %}
       {% if signal.marches_dans_la_famille is not none %}
       <div>

@@ -175,12 +175,12 @@ precision inventee.
 n'existent qu'une fois le HTML fabrique.
 
 **Le poids.** Une page de 400 ko qui repond en 20 ms est lente pour qui la regarde. Les pages du
-site font 4,4 a 12,0 ko, soit 1,9 a 4,0 ko compressees : 16 millisecondes d'attente sur une
+site font 5,5 a 17,0 ko, soit 2,1 a 4,9 ko compressees : 20 millisecondes d'attente sur une
 connexion mobile mediocre. Aucune optimisation de poids n'est justifiee, et c'est une conclusion
 mesuree, pas une impression.
 
 **Le gain du rechargement partiel.** La meme adresse appelee avec et sans l'en-tete
-`HX-Request` : le fragment pese 34 a 72 pour cent de moins que la page. C'est ce qui justifie
+`HX-Request` : le fragment pese 35 a 72 pour cent de moins que la page. C'est ce qui justifie
 htmx, et sans la mesure ce serait une preference.
 
 **Le fonctionnement sans JavaScript.** Chaque page est demandee comme le ferait un navigateur

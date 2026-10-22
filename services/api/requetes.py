@@ -341,14 +341,33 @@ from statistiques_annuelles
 order by annee
 """
 
-# Les valeurs proposees dans les menus de filtre. Elles viennent de la base et non d'une liste
-# ecrite a la main : une famille d'achat qui disparait des donnees doit disparaitre du menu.
+# Les familles d'achat, lues dans leur table.
+#
+# Cette requete remplace un `group by famille_cpv` sur les 1 999 474 lignes, qui prenait
+# 9 420 ms avec ses trois quartiles. Elle sert trois choses a la fois : le diagramme de la page
+# d'accueil, le menu deroulant du formulaire de recherche, et la situation d'un marche dans sa
+# famille sur sa fiche.
+#
+# Ordonnee par nombre de marches : c'est l'ordre du menu et celui du diagramme, et le tri est
+# fait ici plutot qu'en Python pour que les deux ne puissent pas diverger.
 FAMILLES = """
-select famille_cpv, count(*) as marches
-from marches
-where famille_cpv is not null
-group by famille_cpv
+select
+    famille_cpv, marches, montant_total,
+    marches_avec_montant, montant_q1, montant_median, montant_q3,
+    attributions_resolues, attributions_pme, part_pme_pourcent, marches_signales
+from statistiques_familles
 order by marches desc
+"""
+
+# Une seule famille, pour situer un marche sur sa fiche. Sur une table de 44 lignes avec une cle
+# primaire, c'est une lecture d'index.
+FAMILLE = """
+select
+    famille_cpv, marches, montant_total,
+    marches_avec_montant, montant_q1, montant_median, montant_q3,
+    attributions_resolues, attributions_pme, part_pme_pourcent, marches_signales
+from statistiques_familles
+where famille_cpv = %s
 """
 
 
@@ -434,6 +453,7 @@ def prechauffage() -> list[tuple[str, sql.Composed | sql.SQL | str, tuple[Any, .
         # d'accueil, donc par le premier visiteur.
         ("comptages", STATISTIQUES, ()),
         ("serie par annee", PAR_ANNEE, ()),
+        ("familles d'achat", FAMILLES, ()),
         # Le vocabulaire, que l'assistant lit pour peser les mots rares.
         ("vocabulaire", "select count(*) from vocabulaire", ()),
     ]

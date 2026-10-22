@@ -4,7 +4,7 @@
  *
  *   Option envisagee   Avantage                     Limite                        Verdict
  *   une feuille        aucune dependance, aucun     tout est a ecrire, environ    retenu
- *   ecrite a la main   build, 12,5 Ko servis        300 lignes
+ *   ecrite a la main   build, 15,4 Ko servis        350 lignes
  *   Tailwind           tres rapide a ecrire         une chaine de compilation     ecarte
  *                                                   Node.js sur le VPS, ou 3 Mo
  *                                                   de CSS non purge
@@ -222,6 +222,37 @@ button:hover { filter: brightness(1.12); }
 .puce { display: inline-block; width: 0.9rem; height: 0.9rem; border-radius: 2px; vertical-align: -1px; margin-right: 0.3rem; }
 .puce-barre { background: var(--accent-doux); border: 1px solid var(--accent); }
 .puce-pme { background: var(--accent); }
+
+/* Le diagramme des familles d'achat : barres horizontales, parce que les libelles sont longs
+ * et qu'un texte incline se lit mal. */
+.barre-famille { fill: var(--accent); }
+.valeur-barre { fill: var(--papier); font-size: 14px; font-weight: 600; }
+.valeur-barre.valeur-dehors { fill: var(--encre-douce); font-weight: 400; }
+.figure svg a { cursor: pointer; }
+
+/* Les libelles sont dans l'image, a gauche des barres, et non dans une liste sous le
+ * diagramme : separes, rien ne disait quelle barre allait avec quelle famille. */
+.libelle-famille { fill: var(--accent); font-size: 15px; text-decoration: underline; }
+.libelle-famille:hover { fill: var(--encre); }
+
+/* La reglette qui situe un marche parmi ceux de sa famille, sur une echelle logarithmique.
+ * C'est la figure la plus utile du site : elle remplace un « ecart normalise 6,53 » que
+ * personne ne sait lire par une position que tout le monde lit. */
+/* Largeur pleine et hauteur deduite. Avec une hauteur fixe en attribut, le navigateur met la
+ * figure a l'echelle de cette hauteur et la centre : la reglette n'occupait qu'un tiers de la
+ * largeur disponible, ce qui ecrasait justement l'ecart qu'elle doit montrer. */
+.reglette { overflow: visible; width: 100%; height: auto; }
+.reglette .axe { stroke: var(--trait); stroke-width: 2; }
+.reglette .boite { fill: var(--accent-doux); stroke: var(--accent); stroke-width: 1; }
+.reglette .mediane { stroke: var(--accent); stroke-width: 2.5; }
+.reglette .repere-ici { stroke: var(--signal); stroke-width: 1; stroke-dasharray: 3 3; }
+.reglette .point-ici { fill: var(--signal); stroke: var(--papier); stroke-width: 2; }
+.reglette .etiquette { fill: var(--encre-douce); font-size: 11px; }
+.reglette .etiquette-mediane { fill: var(--accent); font-weight: 600; }
+.reglette .etiquette-ici { fill: var(--signal); font-weight: 600; font-size: 12px; }
+.puce-boite { background: var(--accent-doux); border: 1px solid var(--accent); }
+.puce-mediane { background: var(--accent); }
+.puce-ici { background: var(--signal); border-radius: 50%; }
 
 .cartes { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem; }
 .cartes li { padding: 1.25rem; border: 1px solid var(--trait); border-radius: var(--rayon); }

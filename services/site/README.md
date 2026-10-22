@@ -16,15 +16,42 @@ Mesures : `make bench-site`.
 
 | Adresse | Ce qu'elle montre | p50 mesure | Poids |
 |---|---|---|---|
-| `/` | les comptages, la courbe par annee, par ou commencer | 3 ms | 10,3 ko |
-| `/recherche` | le formulaire et les resultats | 35 ms | 11,7 ko |
-| `/fiche/{marche_id}` | un marche, ses titulaires, ses signaux | 2 ms | 4,4 ko |
-| `/a-examiner` | les marches atypiques, motifs en clair | 60 ms | 8,2 ko |
-| `/questions` | l'assistant, avec ses citations | 47 ms | 5,5 ko |
-| `/a-propos` | les sources, les limites, la methode | 1 ms | 8,7 ko |
+| `/` | les comptages, deux diagrammes, par ou commencer | 6 ms | 17,0 ko |
+| `/recherche` | le formulaire et les resultats | 25 ms | 15,5 ko |
+| `/fiche/{marche_id}` | un marche, sa position dans sa famille, ses signaux | 4 ms | 6,5 ko |
+| `/a-examiner` | les marches atypiques, motifs en clair | 67 ms | 8,4 ko |
+| `/questions` | l'assistant, avec ses citations | 55 ms | 5,5 ko |
+| `/a-propos` | les sources, les limites, la methode | 1 ms | 9,5 ko |
 
 Mesures du 22 octobre 2026, sur le Mac, base chargee de 1 999 474 lignes. Le detail, premier
 appel a froid et poids compresse compris, est dans `mesures/resultats/site-pages.csv`.
+
+## Les trois figures, et ce qu'elles remplacent
+
+Aucune bibliotheque de graphiques : les trois sont des SVG dont la geometrie est calculee en
+Python et passe par des attributs. Une bibliotheque JavaScript pese de 90 ko a 3 Mo, demande
+presque toujours `'unsafe-eval'` ou du script en ligne, et affiche une page vide si elle ne se
+charge pas.
+
+**Les attributions par annee, et la part des PME.** Repond a « la base couvre-t-elle vraiment
+onze ans ? », que le seul chiffre « 1 999 474 » ne repond pas.
+
+**Ce que l'Etat et les collectivites achetent.** Les dix premieres familles d'achat, libelles a
+gauche et cliquables. Une page d'accueil qui annonce deux millions de marches sans dire de quoi
+il s'agit ne dit presque rien.
+
+**Ou se situe ce marche dans sa famille.** C'est la figure la plus utile du site. La fiche d'un
+marche signale affichait « ecart normalise 6,53 » : c'est la bonne mesure, et personne ne sait
+la lire. La reglette montre la moitie centrale de la famille, sa mediane, et la position du
+marche, sur une echelle logarithmique, avec le rapport ecrit en toutes lettres a cote : « ce
+marche coute 7 547 fois le montant median de sa famille ». L'echelle logarithmique n'est pas un
+choix de presentation : les montants vont de quelques centaines d'euros a plusieurs centaines de
+millions, et une echelle ordinaire tasserait toute la moitie centrale contre le bord gauche.
+
+Les libelles des familles viennent de `base/reference/familles-cpv.csv`, pas de la base : une
+nomenclature officielle n'est pas une donnee collectee. Le menu de recherche est devenu un menu
+deroulant pour la meme raison : saisir « 45 » demandait de connaitre la nomenclature europeenne
+pour se servir du site.
 
 ## Les cinq decisions
 
@@ -36,7 +63,7 @@ payes pour rien. Voir l'en-tete de `pages.py`.
 
 **Jinja2 et htmx, pas une application JavaScript.** Un seul service a deployer, aucune chaine
 de compilation sur le VPS, et le HTML arrive deja rempli. htmx est versionne dans `statique/`
-(52 ko), donc le site fonctionne sans reseau : c'est le plan B de la soutenance.
+(51 ko), donc le site fonctionne sans reseau : c'est le plan B de la soutenance.
 
 **Chaque page fonctionne sans JavaScript.** Les formulaires sont de vrais formulaires, avec une
 `action` qui mene a une page complete. htmx ne fait que remplacer le rechargement complet par le
@@ -46,7 +73,7 @@ et verifie que son contenu est la : dix pages sur dix.
 **Une adresse, deux rendus.** La meme route rend la page entiere ou son seul fragment, selon
 l'en-tete `HX-Request` que htmx envoie. Une adresse reste donc partageable et citable
 (`/recherche?q=voirie&annee=2024`), le bouton « retour » fonctionne, et le fragment pese 32 a
-71 pour cent de moins que la page. L'en-tete `Vary: HX-Request` est pose en consequence : sans
+72 pour cent de moins que la page. L'en-tete `Vary: HX-Request` est pose en consequence : sans
 lui, un cache rendrait un fragment a qui demande la page.
 
 **L'API a pris le prefixe `/api`.** Une page HTML et une reponse JSON ne peuvent pas repondre a

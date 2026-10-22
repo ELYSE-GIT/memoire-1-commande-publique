@@ -118,7 +118,7 @@ migrer:
 
 ## base-vider : vide les deux tables sans toucher au schema, pour recharger proprement
 base-vider:
-	@echo 'truncate table marches, signaux, vocabulaire, statistiques restart identity;' | $(PSQL)
+	@echo 'truncate table marches, signaux, vocabulaire, statistiques, statistiques_familles restart identity;' | $(PSQL)
 	@echo "tables videes"
 
 ## psql : ouvre une console SQL sur la base (quitter avec \q)

@@ -70,6 +70,7 @@ celui de Caddy en phase 9) pourrait rendre un fragment a quelqu'un qui demande l
 from __future__ import annotations
 
 import datetime as dt
+import math
 from decimal import Decimal
 from pathlib import Path as CheminFichier
 from typing import Annotated, Any
@@ -87,13 +88,16 @@ from services.api.main import (
     TEXTE_MAXIMUM,
     chercher_des_marches,
     interroger_l_assistant,
+    lire_les_familles,
     lire_les_statistiques,
     lire_par_annee,
     lire_un_marche,
+    lire_une_famille,
     lister_les_signaux,
 )
 from services.api.modeles import PageDeMarches
 from services.assistant.lecture_question import Lexiques
+from services.site import referentiel
 
 DOSSIER = CheminFichier(__file__).parent
 GABARITS = DOSSIER / "gabarits"
@@ -287,6 +291,20 @@ gabarits.env.globals["chemin_docs"] = CHEMIN_DOCS
 # Une fonction et non un filtre : elle a besoin du nom de la colonne autant que de la
 # valeur, et `{{ cellule(nom, valeur) }}` se lit mieux que deux filtres enchaines.
 gabarits.env.globals["cellule"] = cellule
+# Les libelles des familles d'achat, pour que « CPV 45 » devienne
+# « Travaux de construction » partout ou il apparait.
+gabarits.env.globals["libelle_famille"] = referentiel.libelle_famille
+
+
+def depuis_htmx(requete: Request) -> bool:
+    """Vrai quand l'appel vient de htmx, donc quand seul un fragment sera rendu.
+
+    Une route s'en sert pour ne pas aller chercher ce que le fragment n'affiche pas. Le menu
+    des familles d'achat, par exemple, est dans le formulaire : il est rendu avec la page
+    entiere, jamais avec la liste de resultats, et le lire a chaque changement de filtre serait
+    payer pour une partie de page qu'on ne renvoie pas.
+    """
+    return requete.headers.get("HX-Request") == "true"
 
 
 def page(
@@ -302,8 +320,7 @@ def page(
     d'autre. Un visiteur qui le poserait a la main recevrait un fragment de HTML : c'est sans
     consequence, le fragment ne contient rien de plus que la page.
     """
-    depuis_htmx = requete.headers.get("HX-Request") == "true"
-    choisi = fragment if (depuis_htmx and fragment) else gabarit
+    choisi = fragment if (depuis_htmx(requete) and fragment) else gabarit
     reponse = gabarits.TemplateResponse(requete, choisi, contexte, status_code=code)
     reponse.headers["Content-Security-Policy"] = POLITIQUE_DE_CONTENU
     # Sans cela, un cache qui a garde le fragment le rendrait a la requete suivante, qui
@@ -361,6 +378,171 @@ def part(partie: int, total: int) -> float | None:
     fausse, alors que « on ne sait pas » est exact. Le gabarit affiche un tiret.
     """
     return None if not total else 100 * partie / total
+
+
+# Combien de familles d'achat le diagramme de la page d'accueil montre.
+#
+# Dix sur quarante-quatre. Les dix premieres couvrent l'essentiel des marches, et au-dela les
+# barres deviennent trop courtes pour etre comparees a l'oeil : un diagramme qu'on ne peut pas
+# lire n'informe pas, il decore.
+FAMILLES_AFFICHEES = 10
+
+
+def familles_nommees(familles: list[Any]) -> list[Any]:
+    """Ne garde que les divisions qui existent dans la nomenclature.
+
+    La colonne `famille_cpv` contient 91 valeurs distinctes pour 45 divisions reelles : les
+    46 autres (`00`, `01`, `11`, `99`...) sont des codes CPV mal saisis a la source. Elles
+    portent 0,72 pour cent des attributions, mesure du 22 octobre 2026.
+
+    Elles sont ecartees du menu de recherche et du diagramme, parce qu'une entree « Division 11 »
+    n'aide personne a chercher. Elles ne sont ni supprimees ni renommees pour autant : les
+    marches concernes restent cherchables et la page « a propos » dit ce qu'elles representent.
+    Une donnee fausse qu'on cache est une donnee fausse qu'on ne corrigera jamais.
+    """
+    return [famille for famille in familles if famille.famille_cpv in referentiel.FAMILLES]
+
+
+def figure_des_familles(familles: list[Any]) -> dict[str, Any]:
+    """Prepare le diagramme des familles d'achat, en coordonnees entieres.
+
+    Il repond a une question que les comptages ne repondent pas : **qu'achete-t-on ?** Une page
+    d'accueil qui annonce deux millions de marches sans dire de quoi il s'agit ne dit presque
+    rien.
+
+    Les barres sont horizontales et **portent leur libelle a gauche**, dans la meme image. La
+    premiere version mettait les libelles dans une liste sous le diagramme : les barres ne
+    montraient que des nombres, et rien ne disait laquelle allait avec quoi. Un diagramme dont
+    on ne peut pas lire les categories ne renseigne pas, il decore. Vu a l'ecran.
+
+    Comme pour la figure par annee, la geometrie est calculee ici et passe par des attributs
+    SVG : la politique de securite du site n'autorise aucun style en ligne.
+    """
+    retenues = familles_nommees(familles)[:FAMILLES_AFFICHEES]
+    if not retenues:
+        return {"barres": [], "largeur": 0, "hauteur": 0}
+
+    # Une colonne de libelles a gauche, les barres a droite. Les proportions sont en unites du
+    # `viewBox` : le navigateur met le tout a l'echelle de la largeur disponible.
+    colonne, piste, hauteur_barre, espace = 300, 560, 26, 10
+    maximum = max(famille.marches for famille in retenues) or 1
+    barres = []
+    for rang, famille in enumerate(retenues):
+        longueur = max(2, round(piste * famille.marches / maximum))
+        haut = rang * (hauteur_barre + espace)
+        barres.append(
+            {
+                "code": famille.famille_cpv,
+                "libelle": referentiel.libelle_famille(famille.famille_cpv, court=True),
+                "titre": referentiel.libelle_famille(famille.famille_cpv),
+                "y": haut,
+                "ligne_de_base": haut + 18,
+                "x_barre": colonne,
+                "largeur": longueur,
+                "hauteur": hauteur_barre,
+                "marches": famille.marches,
+                "montant_median": famille.montant_median,
+                # Le nombre va dans la barre si elle est assez longue, juste apres sinon. Sans
+                # ce test, il deborde du cadre sur les familles les moins frequentes.
+                "texte_x": colonne + longueur - 8 if longueur > 110 else colonne + longueur + 8,
+                "texte_dedans": longueur > 110,
+                "x_libelle": colonne - 12,
+            }
+        )
+    return {
+        "barres": barres,
+        "colonne": colonne,
+        "largeur": colonne + piste + 90,
+        "hauteur": len(retenues) * (hauteur_barre + espace) - espace,
+    }
+
+
+# La largeur, en unites SVG, de la reglette qui situe un marche dans sa famille.
+LARGEUR_REGLETTE = 640
+
+
+def situation_dans_la_famille(montant: Any, famille: Any) -> dict[str, Any] | None:
+    """Situe le montant d'un marche parmi ceux de sa famille d'achat.
+
+    C'est la visualisation la plus utile du site, et elle existe pour une raison precise : la
+    fiche d'un marche signale affichait « ecart normalise 6,53 », qui est la bonne mesure et que
+    personne ne sait lire. Ce que le lecteur veut savoir tient en une image : ou se place ce
+    marche par rapport a ses pairs.
+
+    L'echelle est **logarithmique**, et ce n'est pas un detail de presentation : les montants de
+    la commande publique s'etalent sur huit ordres de grandeur, de quelques centaines d'euros a
+    plusieurs centaines de millions. Sur une echelle lineaire, la moitie centrale d'une famille
+    se tasserait contre le bord gauche et toute la largeur servirait a un seul marche.
+
+        Option envisagee      Avantage                   Limite                      Verdict
+        echelle lineaire      se lit sans explication    la boite interquartile      ecarte
+                                                          fait un pixel de large
+        **echelle log10**     montre ensemble 10 000 €   demande une legende, et     **retenu**
+                              et 800 000 000 €            les ecarts paraissent
+                                                          plus petits qu'ils ne sont
+        afficher le rapport   un seul chiffre, exact     « 5 460 fois la mediane »   garde, mais
+        seulement                                         ne dit pas si la famille    en plus
+                                                          est dispersee ou serree
+
+    Ce qui a fait pencher : l'echelle logarithmique est deja celle de la detection, donc l'image
+    montre exactement ce que la regle calcule. Et le rapport a la mediane est affiche a cote, en
+    toutes lettres, parce qu'il repond a la question que le lecteur pose vraiment.
+
+    Rend `None` quand la famille est inconnue ou que ses quartiles manquent : mieux vaut pas de
+    figure qu'une figure fausse.
+    """
+    if montant is None or famille is None:
+        return None
+    reperes = (famille.montant_q1, famille.montant_median, famille.montant_q3)
+    if any(valeur is None or valeur <= 0 for valeur in reperes) or montant <= 0:
+        return None
+
+    q1, mediane, q3 = (float(valeur) for valeur in reperes)
+    ici = float(montant)
+    # Les bornes de l'echelle, avec une marge pour que rien ne touche le bord. Un dixieme de
+    # decade au minimum : sans ce plancher, une famille tres serree ou un marche tres proche de
+    # la mediane donnerait une largeur nulle, donc une division par zero.
+    bas, haut = math.log10(min(q1, ici)), math.log10(max(q3, ici))
+    marge = max(0.25, (haut - bas) * 0.12)
+    bas, haut = bas - marge, haut + marge
+    etendue = haut - bas
+
+    def place(valeur: float) -> int:
+        return round(LARGEUR_REGLETTE * (math.log10(valeur) - bas) / etendue)
+
+    rapport = ici / mediane
+    return {
+        "largeur": LARGEUR_REGLETTE,
+        "x_q1": place(q1),
+        "x_median": place(mediane),
+        "x_q3": place(q3),
+        "x_ici": place(ici),
+        "largeur_boite": max(2, place(q3) - place(q1)),
+        "q1": q1,
+        "mediane": mediane,
+        "q3": q3,
+        "montant": ici,
+        "rapport": rapport,
+        # Le sens de la comparaison, en francais : « 5 460 fois plus cher » se lit, « rapport
+        # 5460,2 » se dechiffre.
+        "comparaison": comparaison_a_la_mediane(rapport),
+        "au_dessus": ici > q3,
+        "au_dessous": ici < q1,
+        "marches": famille.marches_avec_montant,
+    }
+
+
+def comparaison_a_la_mediane(rapport: float) -> str:
+    """Traduit un rapport a la mediane en une phrase que l'on lit sans calculer."""
+    # Ces chaines sont lues par un visiteur : elles portent leurs accents, contrairement aux
+    # commentaires et aux noms du code.
+    if rapport >= 2:
+        return f"{nombre(round(rapport))} fois le montant médian de sa famille"
+    if rapport > 1.05:
+        return f"{pourcentage(100 * (rapport - 1))} de plus que le montant médian"
+    if rapport < 0.95:
+        return f"{pourcentage(100 * (1 - rapport))} de moins que le montant médian"
+    return "proche du montant médian de sa famille"
 
 
 def figure_par_annee(annees: list[Any]) -> dict[str, Any]:
@@ -421,6 +603,7 @@ def accueil(requete: Request, curseur_sql: Curseur) -> HTMLResponse:
     """
     comptages = lire_les_statistiques(curseur_sql)
     annees = [annee for annee in lire_par_annee(curseur_sql) if annee.annee is not None]
+    familles = lire_les_familles(curseur_sql)
     return page(
         requete,
         "accueil.html",
@@ -449,6 +632,12 @@ def accueil(requete: Request, curseur_sql: Curseur) -> HTMLResponse:
             # Les hauteurs de la figure sont calculees ici, pas dans le gabarit : une regle de
             # trois au milieu du HTML est illisible et intestable.
             "figure": figure_par_annee(annees),
+            "familles": figure_des_familles(familles),
+            # Ce que le diagramme et le menu laissent de cote, dit plutot que tu.
+            "hors_nomenclature": part(
+                sum(f.marches for f in familles if f.famille_cpv not in referentiel.FAMILLES),
+                sum(f.marches for f in familles),
+            ),
         },
     )
 
@@ -485,6 +674,14 @@ def recherche(
     plancher = decimal_ou_rien(montant_minimum)
     plafond = decimal_ou_rien(montant_maximum)
 
+    # Le menu deroulant des familles. Lu dans sa table, donc a cout constant, et affiche avec
+    # ses libelles : un champ « deux premiers chiffres du code CPV » demande de connaitre la
+    # nomenclature pour s'en servir.
+    #
+    # Pas lu quand htmx ne demande que la liste de resultats : le menu est dans le formulaire,
+    # qui n'est pas renvoye. Mesure du 22 octobre 2026 : 5 ms et 91 lignes economisees a chaque
+    # changement de filtre, soit exactement le chemin qu'un visiteur emprunte le plus souvent.
+    familles = [] if depuis_htmx(requete) else lire_les_familles(curseur_sql)
     resultats: PageDeMarches | None = None
     erreur = ""
     if plancher is not None and plafond is not None and plancher > plafond:
@@ -510,7 +707,8 @@ def recherche(
         {
             "titre": "Rechercher un marché",
             # Ce que le service a retenu, pour que la page puisse le dire.
-            "criteres": {"q": mots, "offre_unique": offre_unique},
+            "criteres": {"q": mots, "offre_unique": offre_unique, "famille": fam},
+            "familles": familles_nommees(familles),
             # Ce que le visiteur a tape, pour le reafficher tel quel dans le formulaire. Les
             # deux different quand une valeur a ete ignoree, et reafficher la valeur nettoyee
             # effacerait la frappe sans explication.
@@ -575,6 +773,8 @@ def fiche(
             },
             code=404,
         )
+    montant = somme_des_montants(detaille.lignes)
+    famille = lire_une_famille(curseur_sql, detaille.lignes[0].famille_cpv)
     return page(
         requete,
         "fiche.html",
@@ -583,7 +783,12 @@ def fiche(
             "marche_id": marche_id,
             "lignes": detaille.lignes,
             "signaux": detaille.signaux,
-            "montant_total": somme_des_montants(detaille.lignes),
+            "montant_total": montant,
+            "famille": famille,
+            # Situer le marche demande un montant unique : quand les lignes d'un groupement
+            # portent des montants differents, on ne sait pas lequel represente le marche, et
+            # placer le mauvais serait pire que ne rien placer.
+            "situation": situation_dans_la_famille(montant, famille),
         },
     )
 
