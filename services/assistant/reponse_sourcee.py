@@ -449,9 +449,16 @@ def _euros(montant: float | None) -> str:
     """Un montant en euros, lisible. Les espaces sont insecables, pour l'affichage."""
     if montant is None:
         return "montant inconnu"
+    if montant >= 1_000_000_000:
+        milliards = montant / 1_000_000_000
+        return f"{milliards:.1f} milliard{'s' if milliards >= 2 else ''} d'euros".replace(".", ",")
     if montant >= 1_000_000:
-        return f"{montant / 1_000_000:.1f} million d'euros".replace(".", ",")
-    return f"{montant:,.0f} euros".replace(",", " ")
+        # Le pluriel se decide sur le nombre affiche et non sur le montant : 1,9 million reste
+        # au singulier, 2,0 millions passe au pluriel. Vu a l'ecran, ou l'assistant annoncait
+        # « 29,9 million d'euros ».
+        millions = montant / 1_000_000
+        return f"{millions:.1f} million{'s' if millions >= 2 else ''} d'euros".replace(".", ",")
+    return f"{montant:,.0f} euros".replace(",", " ")
 
 
 def repondre(curseur: psycopg.Cursor[Any], question_posee: str, lexiques: Lexiques) -> Reponse:

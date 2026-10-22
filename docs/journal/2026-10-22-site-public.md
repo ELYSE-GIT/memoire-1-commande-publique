@@ -155,8 +155,11 @@ question par forme de reponse de l'assistant.
     /questions               1 107 a 4 000 ms       120 ms
     /recherche?q=...           794 a 1 766 ms        95 ms
 
-Le demarrage passe de 0,9 a 10,9 secondes. Le cout n'a pas disparu, il a change de place : au
-demarrage, personne n'attend. Il faudra s'en souvenir en phase 9, pour le `start_period` du
+Le demarrage passe de 0,9 a 11 secondes, et jusqu'a **27 secondes** sur une base reellement
+froide : le prechauffage ne cree pas ce cout, il le revele, puisque c'est exactement ce que le
+premier visiteur payait. Le service ne se declare pret qu'une fois chaud, ce qui est le sens
+qu'on veut donner a « pret » : repondre a un test de vie en etant incapable de servir une page
+serait un mensonge sur son etat. Il faudra s'en souvenir en phase 9, pour le `start_period` du
 healthcheck du conteneur.
 
 Et une derniere honnetete, parce qu'elle m'a coute une demi-heure : la mesure du cas froid est
@@ -172,12 +175,12 @@ precision inventee.
 n'existent qu'une fois le HTML fabrique.
 
 **Le poids.** Une page de 400 ko qui repond en 20 ms est lente pour qui la regarde. Les pages du
-site font 4,4 a 16,2 ko, soit 1,9 a 5,5 ko compressees : 22 millisecondes d'attente sur une
+site font 4,4 a 12,0 ko, soit 1,9 a 4,0 ko compressees : 16 millisecondes d'attente sur une
 connexion mobile mediocre. Aucune optimisation de poids n'est justifiee, et c'est une conclusion
 mesuree, pas une impression.
 
 **Le gain du rechargement partiel.** La meme adresse appelee avec et sans l'en-tete
-`HX-Request` : le fragment pese 32 a 71 pour cent de moins que la page. C'est ce qui justifie
+`HX-Request` : le fragment pese 34 a 72 pour cent de moins que la page. C'est ce qui justifie
 htmx, et sans la mesure ce serait une preference.
 
 **Le fonctionnement sans JavaScript.** Chaque page est demandee comme le ferait un navigateur

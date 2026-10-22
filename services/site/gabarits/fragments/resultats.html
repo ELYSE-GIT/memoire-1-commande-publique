@@ -47,7 +47,9 @@
 <ol class="marches">
   {% for marche in resultats.resultats %}
   <li>
-    <h3><a href="/fiche/{{ marche.marche_id }}">{{ marche.objet or "Objet non publié" }}</a></h3>
+    {# L'objet est coupe a 200 caracteres : le plus long de la base en fait 2 822, et il
+       prendrait six lignes a lui seul. Le texte entier est sur la fiche. #}
+    <h3><a href="/fiche/{{ marche.marche_id }}">{{ marche.objet | extrait or "Objet non publié" }}</a></h3>
     <p class="qui">
       {{ marche.acheteur_nom or "Acheteur non identifié" }}
       {%- if marche.acheteur_departement_nom %} ({{ marche.acheteur_departement_nom }}){% endif %}

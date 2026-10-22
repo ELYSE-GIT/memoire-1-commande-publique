@@ -10,7 +10,9 @@
       {% for motif in signal.motifs_de_signalement %}<li>{{ motif }}</li>{% endfor %}
     </ul>
     <p class="chiffres">
-      <span>{{ signal.signaux_forts }} signal{{ 'ux' if signal.signaux_forts > 1 else '' }} fort{{ 's' if signal.signaux_forts > 1 }}</span>
+      {# « signaux » et non « signal » + « ux » : le pluriel de signal n'est pas regulier, et
+         coller un suffixe donnait « signalux ». Vu a l'ecran, pas par un test. #}
+      <span>{{ signal.signaux_forts }} {{ 'signaux forts' if signal.signaux_forts > 1 else 'signal fort' }}</span>
       {% if signal.famille_cpv %}<span>CPV {{ signal.famille_cpv }}</span>{% endif %}
       {% if signal.marches_dans_la_famille is not none %}
       <span>comparé à {{ signal.marches_dans_la_famille | nombre }} marchés de la même famille</span>
