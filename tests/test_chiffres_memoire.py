@@ -130,7 +130,7 @@ def test_completude_des_champs_faibles() -> None:
 
 
 def test_intervalle_annonce_pour_quarante_sur_quarante() -> None:
-    """Le chapitre 11 annonce [91,2 ; 100,0] pour les 40 intentions reconnues sur 40.
+    """Le chapitre 8 annonce [91,2 ; 100,0] pour les 40 intentions reconnues sur 40.
 
     C'est le chiffre le plus souvent repris du chapitre, et le plus facile a recopier de travers :
     il est verifie contre la mesure, comme les autres.
@@ -145,7 +145,7 @@ def test_intervalle_annonce_pour_quarante_sur_quarante() -> None:
 
 
 def test_ce_que_la_fuite_ajoutait_a_la_detection() -> None:
-    """Le chapitre 11 annonce 69,3 % hors echantillon, contre 73,3 % avec la fuite."""
+    """Le chapitre 8 annonce 69,3 % hors echantillon, contre 73,3 % avec la fuite."""
     sur_le_test = {
         ligne["calibrage"]: ligne
         for ligne in agregat("stabilite-calibrage")
@@ -163,7 +163,7 @@ def test_ce_que_la_fuite_ajoutait_a_la_detection() -> None:
 
 
 def test_encadrement_de_la_part_des_pme() -> None:
-    """Le chapitre 11 annonce 60,8 % comptes, et un encadrement de 56,7 a 63,5."""
+    """Le chapitre 8 annonce 60,8 % comptes, et un encadrement de 56,7 a 63,5."""
     pme = agregat("incertitude-recensement-pme")[0]
     assert float(pme["part_pme_sur_resolus_pourcent"]) == 60.8
     assert float(pme["borne_basse_pourcent"]) == 56.7
@@ -176,7 +176,7 @@ def test_encadrement_de_la_part_des_pme() -> None:
 
 
 def test_le_decrochage_de_2023() -> None:
-    """Le chapitre 11 annonce 53,1 % en 2023, sans chevauchement avec 2022."""
+    """Le chapitre 8 annonce 53,1 % en 2023, sans chevauchement avec 2022."""
     par_annee = {ligne["annee"]: ligne for ligne in agregat("stabilite-par-annee")}
     assert float(par_annee["2023"]["precision_pourcent"]) == 53.1
     assert float(par_annee["2023"]["precision_haut"]) < float(par_annee["2022"]["precision_bas"])
@@ -213,7 +213,7 @@ def test_le_debit_annonce_pour_l_api() -> None:
 def test_ce_que_le_plafond_de_candidats_change_vraiment() -> None:
     """Le memoire affirme que l'ordre est exact sous le plafond et peut differer au-dessus.
 
-    C'est l'affirmation la plus genante de la section 10.1, donc celle qu'il faut tenir. Si une
+    C'est l'affirmation la plus genante de la section 7.1, donc celle qu'il faut tenir. Si une
     remesure la contredisait, le texte devrait changer, pas la mesure.
     """
     from services.api.requetes import PLAFOND_CANDIDATS
@@ -242,29 +242,29 @@ def test_le_gain_du_tri_aligne_sur_l_index() -> None:
     d'un `explain analyze` et non d'un banc. Ce test verifie au moins que le texte du memoire et
     celui du code racontent la meme chose, pour qu'une correction d'un cote n'oublie pas l'autre.
     """
-    memoire = (MEMOIRE / "10-mise-en-production.md").read_text(encoding="utf-8")
+    memoire = (MEMOIRE / "07-mise-en-production.md").read_text(encoding="utf-8")
     code = (RACINE / "services" / "api" / "requetes.py").read_text(encoding="utf-8")
     for duree in ("28 636", "965"):
         assert duree in memoire, f"{duree} absent du memoire"
         assert duree in code, f"{duree} absent de requetes.py"
 
 
-# --- Chapitre 7 : ingenierie des donnees ---------------------------------------
+# --- Chapitre 4 : ingenierie des donnees ---------------------------------------
 
 
 def test_les_trois_couches_citees_au_chapitre_7() -> None:
-    """Le chapitre 7 annonce 3 296 811, 2 121 908 et 1 999 474 lignes, et 94,2 % d'exploitable.
+    """Le chapitre 4 annonce 3 296 811, 2 121 908 et 1 999 474 lignes, et 94,2 % d'exploitable.
 
     Ces trois nombres sont la colonne vertebrale du chapitre : tout le reste en est un
     pourcentage. Si le jeu est retelecharge, ils bougent, et le texte doit bouger avec eux.
     """
     couches = {ligne["couche"]: ligne for ligne in agregat("nettoyage-couches")}
     attendus = {"bronze": 3296811, "argent": 2121908, "or": 1999474}
-    texte = (MEMOIRE / "07-ingenierie-des-donnees.md").read_text(encoding="utf-8")
+    texte = (MEMOIRE / "04-ingenierie-des-donnees.md").read_text(encoding="utf-8")
     for couche, lignes in attendus.items():
         assert int(couches[couche]["lignes"]) == lignes, couche
         ecrit = f"{lignes:,}".replace(",", " ")
-        assert ecrit in texte, f"« {ecrit} » absent du chapitre 7"
+        assert ecrit in texte, f"« {ecrit} » absent du chapitre 4"
 
     exploitable = int(couches["or"]["lignes"]) / int(couches["argent"]["lignes"]) * 100
     assert round(exploitable, 1) == 94.2
@@ -272,18 +272,18 @@ def test_les_trois_couches_citees_au_chapitre_7() -> None:
 
 
 def test_les_neuf_regles_de_nettoyage_et_la_plus_frequente() -> None:
-    """Le chapitre 7 publie les neuf regles, et annonce 66 984 lignes pour la plus frequente."""
+    """Le chapitre 4 publie les neuf regles, et annonce 66 984 lignes pour la plus frequente."""
     regles = agregat("nettoyage-regles")
     assert len(regles) == 9
     plus_frequente = max(regles, key=lambda ligne: int(ligne["lignes_marquees"]))
     assert plus_frequente["regle"] == "montant_renseigne"
     assert int(plus_frequente["lignes_marquees"]) == 66984
-    texte = (MEMOIRE / "07-ingenierie-des-donnees.md").read_text(encoding="utf-8")
+    texte = (MEMOIRE / "04-ingenierie-des-donnees.md").read_text(encoding="utf-8")
     assert "66 984" in texte and "3,157 %" in texte
 
 
 def test_douze_ecritures_ramenees_a_six_notions() -> None:
-    """Le chapitre 7 affirme que douze ecritures deviennent six notions.
+    """Le chapitre 4 affirme que douze ecritures deviennent six notions.
 
     C'est l'exemple qui montre que la marche la plus basse de l'escalier suffit : deux fonctions
     SQL, pas un modele. L'affirmation doit donc rester vraie.
@@ -294,7 +294,7 @@ def test_douze_ecritures_ramenees_a_six_notions() -> None:
 
 
 def test_le_seuil_de_rapprochement_sous_lequel_on_n_ajoute_que_du_faux() -> None:
-    """Le chapitre 7 annonce que les seuils 0,4 et 0,5 donnent le meme nombre de liens justes.
+    """Le chapitre 4 annonce que les seuils 0,4 et 0,5 donnent le meme nombre de liens justes.
 
     C'est le resultat le plus contre-intuitif du chapitre, donc celui qu'un lecteur verifiera.
     """
@@ -306,11 +306,11 @@ def test_le_seuil_de_rapprochement_sous_lequel_on_n_ajoute_que_du_faux() -> None
     assert float(par_seuil["0.6"]["couverture_pourcent"]) == 16.0
 
 
-# --- Chapitre 8 : detection ----------------------------------------------------
+# --- Chapitre 5 : detection ----------------------------------------------------
 
 
 def test_les_cinq_signaux_et_le_cumul_annonces_au_chapitre_8() -> None:
-    """Le chapitre 8 annonce 57 409 marches, soit 2,87 %, portant au moins un signal fort.
+    """Le chapitre 5 annonce 57 409 marches, soit 2,87 %, portant au moins un signal fort.
 
     « Au moins un signal fort » exclut les deux niveaux faibles : le test verifie l'arithmetique
     de cette definition, parce que c'est exactement ce qu'un jury demanderait.
@@ -326,7 +326,7 @@ def test_les_cinq_signaux_et_le_cumul_annonces_au_chapitre_8() -> None:
 
 
 def test_la_precision_du_signal_de_prix_et_le_signal_non_evalue() -> None:
-    """Le chapitre 8 annonce 75,8 % au seuil 4, et zero concordance sur les montants bas.
+    """Le chapitre 5 annonce 75,8 % au seuil 4, et zero concordance sur les montants bas.
 
     La seconde moitie est la plus importante : c'est elle qui justifie d'exposer un signal en le
     marquant « non evalue » plutot que de le supprimer.
@@ -345,7 +345,7 @@ def test_la_precision_du_signal_de_prix_et_le_signal_non_evalue() -> None:
 
 
 def test_la_regle_bat_le_meilleur_modele_a_budget_egal() -> None:
-    """Le chapitre 8 annonce 96,1 % pour la regle contre 65,7 % pour le modele a 1 000 alertes.
+    """Le chapitre 5 annonce 96,1 % pour la regle contre 65,7 % pour le modele a 1 000 alertes.
 
     Et, plus genant pour le modele : il reste sous le hasard sur les trois premiers budgets.
     """

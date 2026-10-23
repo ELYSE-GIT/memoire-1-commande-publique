@@ -1,11 +1,11 @@
-# Chapitre 11. Mesures, coûts et comparaison au marché
+# Chapitre 8. Mesures, coûts et comparaison au marché
 
 > Brouillon partiel. Les sections 11.1 à 11.3 sont rédigées. Les faits, chiffres et mesures sont
 > vérifiés et reproductibles ; la formulation reste à reprendre dans la voix de l'auteur.
 
 ---
 
-## 11.1 Ce que vaut un pourcentage
+## 8.1 Ce que vaut un pourcentage
 
 Les chapitres précédents annoncent des dizaines de pourcentages. Quarante intentions reconnues sur
 quarante. Quatre cent quarante-huit citations vérifiées, zéro fausse. Quatre-vingt-cinq virgule six
@@ -14,7 +14,7 @@ pour cent de rapprochements justes. Soixante pour cent de marchés attribués à
 Aucun de ces chiffres n'était accompagné d'une marge. Cette section explique pourquoi c'était un
 défaut, et pourquoi le corriger a été plus intéressant que prévu.
 
-### 11.1.1 Trois de ces chiffres ne sont pas des comptages
+### 8.1.1 Trois de ces chiffres ne sont pas des comptages
 
 Un pourcentage calculé sur l'ensemble des deux millions de marchés est un **comptage** : il n'y a
 pas de hasard du tirage, puisqu'il n'y a pas eu de tirage. Un pourcentage calculé sur un
@@ -33,7 +33,7 @@ Publier « 85,6 % de rapprochements justes » sans marge revient à affirmer que
 autres paires donnerait à peu près le même chiffre. C'est précisément ce qu'il faut mesurer plutôt
 que supposer.
 
-### 11.1.2 La formule que tout le monde connaît échoue là où ce projet mesure
+### 8.1.2 La formule que tout le monde connaît échoue là où ce projet mesure
 
 La marge d'une proportion s'écrit habituellement `p ± 1,96 racine(p(1-p)/n)`. Cette formule, dite
 de Wald, est enseignée partout. Appliquée aux mesures de ce projet, elle produit deux
@@ -64,7 +64,7 @@ légèrement plus larges, ce qui est attendu d'une méthode conservatrice.
 > au moins 91 % des cas de ce type, avec 95 % de confiance. Pas qu'elle ne se trompe jamais. La
 > différence entre les deux énoncés est la différence entre une mesure et une publicité.
 
-### 11.1.3 Quand il n'y a pas de formule : le rééchantillonnage
+### 8.1.3 Quand il n'y a pas de formule : le rééchantillonnage
 
 La justesse du rapprochement n'est pas une proportion simple. Elle est calculée sur un échantillon
 **stratifié** : douze paires relues dans chacune des cinq tranches de similarité, alors que les
@@ -88,7 +88,7 @@ La décision de seuil tient : l'intervalle du seuil 0,5 ne chevauche pas celui d
 l'écart entre les deux n'est pas du hasard. Mais la précision affichée du chiffre, 85,6 %, était
 illusoire : il vaut plus ou moins neuf points.
 
-### 11.1.4 Une méthode qui ne sait rien dire doit le dire
+### 8.1.4 Une méthode qui ne sait rien dire doit le dire
 
 La dernière ligne du tableau mérite qu'on s'y arrête, parce qu'elle a failli produire le chiffre le
 plus trompeur du mémoire.
@@ -106,7 +106,7 @@ C'est une illustration générale, et elle vaut au-delà de ce projet : un résu
 rassurant peut être le symptôme d'une méthode à bout, et seul un contrôle explicite fait la
 différence.
 
-### 11.1.5 L'incertitude qui ne vient pas du tirage
+### 8.1.5 L'incertitude qui ne vient pas du tirage
 
 Il reste un piège, et c'est celui dans lequel cette section aurait pu tomber en entier : mettre un
 intervalle de confiance sur tout.
@@ -160,12 +160,12 @@ humain. **Un chiffre absent est plus honnête qu'un chiffre inventé**, et il es
 
 ---
 
-## 11.2 Une règle calée sur le passé tient-elle sur la suite ?
+## 8.2 Une règle calée sur le passé tient-elle sur la suite ?
 
 La section précédente a été écrite pour corriger un défaut connu. En la construisant, une seconde
 faiblesse est apparue, qui n'était pas cherchée et qui coûte plus cher.
 
-### 11.2.1 Le problème : juger un marché avec une médiane qu'il a aidé à former
+### 8.2.1 Le problème : juger un marché avec une médiane qu'il a aidé à former
 
 La règle de détection de prix compare chaque marché à la médiane de sa famille d'achat, normalisée
 par l'écart interquartile de cette famille. Ces deux quantités sont des **paramètres** : elles sont
@@ -177,7 +177,7 @@ est donc comparé à une médiane qu'il a lui-même contribué à former. C'est 
 Le problème n'est pas qu'elle fausse énormément le résultat. Le problème est qu'on ne savait pas de
 combien, faute de l'avoir mesuré.
 
-### 11.2.2 Le protocole : découper par date, pas au hasard
+### 8.2.2 Le protocole : découper par date, pas au hasard
 
 | Option | Avantage | Limite | Verdict |
 |---|---|---|---|
@@ -191,7 +191,7 @@ de famille sont ceux du modèle de production, et un test automatique vérifie q
 mesurer la stabilité d'une autre règle que celle qui tourne donnerait un résultat vrai et sans
 objet.
 
-### 11.2.3 Le résultat : quatre points
+### 8.2.3 Le résultat : quatre points
 
 | Calibrage | Période évaluée | Signalés | Concordance | Intervalle | Fuite |
 |---|---|---|---|---|---|
@@ -209,7 +209,7 @@ fait mieux sur les **deux** périodes, pas seulement sur celle qu'il a vue. Disp
 de lignes pour estimer une médiane aide réellement. Une partie des quatre points vient de là,
 l'autre de la fuite, et un découpage unique ne sait pas les séparer.
 
-### 11.2.4 La règle ne vieillit pas, mais 2023 décroche
+### 8.2.4 La règle ne vieillit pas, mais 2023 décroche
 
 Si une règle calée une fois se dégradait avec le temps, la concordance baisserait année après année
 après la coupure. Ce n'est pas le cas : les trois années postérieures au calage sont même en légère
@@ -236,7 +236,7 @@ signalement cette année-là. Elle ne tient pas : la part de marchés qu'il sign
 
 ![Figure 23](figures/23-stabilite-temporelle.svg)
 
-### 11.2.5 Ce que cette mesure dit de sa propre faiblesse
+### 8.2.5 Ce que cette mesure dit de sa propre faiblesse
 
 Le résultat le plus utile de cette section n'est pas les quatre points de fuite. C'est le rapport
 entre deux nombres.
@@ -249,7 +249,7 @@ dépend de l'endroit où la coupure tombe. Une validation glissante, qui recaler
 chaque année et moyennerait les résultats, est la suite logique. Elle est inscrite au carnet plutôt
 que présentée comme faite.
 
-### 11.2.6 Un défaut de production découvert en chemin
+### 8.2.6 Un défaut de production découvert en chemin
 
 Trente et une familles d'achat sur cinquante-sept voient leur médiane de prix bouger de plus de
 26 % entre les deux périodes. Les plus mobiles sont aussi celles dont l'effectif s'effondre : la
@@ -269,14 +269,14 @@ modèle de production. Aucun des trois n'était visible sans la mesure.
 
 ---
 
-## 11.3 Ce que cela coûte, et ce que cela coûterait ailleurs
+## 8.3 Ce que cela coûte, et ce que cela coûterait ailleurs
 
 La thèse de ce mémoire tient en une phrase : une plateforme de qualité professionnelle, sécurisée
 et maintenable, pour une fraction du coût des offres gérées. Une affirmation pareille se vérifie
 ou s'effondre sur la manière dont la comparaison est posée. Cette section pose la comparaison,
 puis la chiffre, puis dit ce qu'elle ne prouve pas.
 
-### 11.3.1 Trois façons de tricher, et comment la mesure les évite
+### 8.3.1 Trois façons de tricher, et comment la mesure les évite
 
 **Comparer deux choses différentes.** « AWS contre un serveur privé virtuel » ne veut rien dire
 dans l'absolu : tout dépend de ce qu'on y met. La comparaison porte ici sur une charge précise et
@@ -302,7 +302,7 @@ intervention, un engagement contractuel de disponibilité et un interlocuteur à
 tableau ci-dessous chiffre le prix ; le paragraphe qui le suit dit ce que ce prix couvre, car un
 chiffre seul mentirait par omission.
 
-### 11.3.2 Le résultat
+### 8.3.2 Le résultat
 
 | Scénario | Fournisseur | Euros par mois, hors taxes |
 |---|---|---|
@@ -329,7 +329,7 @@ correspond ; le projet publie donc une fourchette plutôt qu'un chiffre, et la b
 celle qui avantage le fournisseur. Cette fourchette va du simple à près du double, ce qui est en
 soi une information sur la difficulté de comparer des tarifs de nuage.
 
-### 11.3.3 Ce que l'écart achète réellement
+### 8.3.3 Ce que l'écart achète réellement
 
 Les 96 euros mensuels d'écart entre le serveur privé virtuel et l'offre AWS ne sont pas une
 marge sans contrepartie. Ils achètent quatre choses que le projet devra assurer lui-même :
@@ -354,9 +354,9 @@ projet d'étude peut s'en passer ; une organisation qui dépendrait de ce servic
 aucune des deux colonnes : **le temps d'ingénierie**. Les heures consacrées à écrire la collecte,
 le nettoyage, la détection, la recherche, l'interface et leur exploitation ne disparaissent pas
 parce qu'elles ne sont pas facturées. Elles sont simplement payées en temps plutôt qu'en euros.
-Le chapitre 13 y revient, parce que c'est la limite honnête de la thèse défendue ici.
+La conclusion y revient, parce que c'est la limite honnête de la thèse défendue ici.
 
-### 11.3.4 L'échelle à laquelle ce résultat s'inverse
+### 8.3.4 L'échelle à laquelle ce résultat s'inverse
 
 Ce calcul porte sur **un** service, deux millions de lignes et une centaine de requêtes par
 seconde au plus. Trois seuils renverseraient la conclusion.
@@ -375,7 +375,7 @@ temps a tout intérêt à acheter ce qu'elle peut acheter.
 Autrement dit, le résultat de cette section ne dit pas que les offres gérées sont chères. Il dit
 qu'**à cette échelle, pour cet usage, elles ne sont pas nécessaires**, et il chiffre de combien.
 
-### 11.3.5 Trois offres que ce mémoire ne chiffre pas
+### 8.3.5 Trois offres que ce mémoire ne chiffre pas
 
 Databricks, Snowflake et OpenAI figurent dans le cahier des charges de ce mémoire parmi les
 offres auxquelles l'approche doit être comparée. Elles ne sont pas chiffrées ici, et la raison

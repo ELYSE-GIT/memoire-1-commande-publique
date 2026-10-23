@@ -1,0 +1,72 @@
+---
+title: "Rendre lisible la commande publique française"
+subtitle: |
+  Collecter, nettoyer, relier, signaler et interroger deux millions de marchés publics
+  avec des outils libres, pour 23,50 euros par mois
+author: "Elyse Rasoloarivony"
+date: today
+date-format: "D MMMM YYYY"
+lang: fr
+toc: true
+toc-title: "Sommaire"
+toc-depth: 2
+number-sections: false
+format:
+  pdf:
+    pdf-engine: xelatex
+    documentclass: scrreprt
+    papersize: a4
+    fontsize: 11pt
+    geometry:
+      - top=25mm
+      - bottom=25mm
+      - left=25mm
+      - right=25mm
+    linestretch: 1.15
+    colorlinks: true
+    linkcolor: black
+    urlcolor: RoyalBlue
+    citecolor: black
+    fig-pos: "H"
+    fig-align: center
+    fig-width: 6
+    keep-tex: false
+    include-in-header:
+      text: |
+        \usepackage{booktabs}
+        \usepackage{longtable}
+        % Les tableaux de ce memoire sont larges : on autorise une police plus petite
+        % plutot que de laisser LaTeX deborder dans la marge.
+        \AtBeginEnvironment{longtable}{\footnotesize}
+        \AtBeginEnvironment{tabular}{\footnotesize}
+        % Un tableau ou une figure ne doit pas flotter loin du texte qui l'explique.
+        \usepackage{float}
+---
+
+{{< include 00-introduction.md >}}
+
+{{< include 01-etat-des-lieux.md >}}
+
+{{< include 02-etat-de-l-art.md >}}
+
+{{< include 03-architecture.md >}}
+
+{{< include 04-ingenierie-des-donnees.md >}}
+
+{{< include 05-detection.md >}}
+
+{{< include 06-recherche-et-assistant.md >}}
+
+{{< include 07-mise-en-production.md >}}
+
+{{< include 08-mesures-et-incertitude.md >}}
+
+{{< include 09-difficultes.md >}}
+
+{{< include 10-conclusion.md >}}
+
+{{< include annexe-a-glossaire.md >}}
+
+{{< include annexe-b-histoire-des-pratiques.md >}}
+
+{{< include annexe-c-etudes-de-cas.md >}}

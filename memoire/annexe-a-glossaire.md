@@ -1,4 +1,4 @@
-# Chapitre 1. Le vocabulaire du sujet
+# Annexe A. Glossaire : le vocabulaire du sujet
 
 > Brouillon. Les faits, les chiffres et les sources sont vérifiés ; la formulation reste à
 > reprendre dans la voix de l'auteur.
@@ -13,12 +13,12 @@ repris dans le glossaire en annexe.
 
 ---
 
-## 1.1 Le vocabulaire de la commande publique
+## A.1 Le vocabulaire de la commande publique
 
 **Commande publique.** L'ensemble des contrats par lesquels l'État, les collectivités territoriales,
 les hôpitaux et leurs établissements achètent des travaux, des fournitures ou des services. Elle
 recouvre les marchés publics et les concessions. En 2024, 223 383 contrats ont été recensés, pour
-233,3 milliards d'euros [^oecp].
+233,3 milliards d'euros [^oecp-glo].
 
 **Acheteur.** La personne publique qui achète : une commune, un département, une région, un
 ministère, un hôpital, un établissement public. Le terme juridique exact est *pouvoir adjudicateur*
@@ -35,7 +35,7 @@ répondre à un besoin en travaux, fournitures ou services.
 **Accord-cadre.** Un contrat qui fixe les conditions d'achats à venir sans en arrêter d'emblée le
 volume. Les commandes réelles prennent ensuite la forme de **marchés subséquents** ou de **bons de
 commande**. Conséquence pour les données : le montant publié pour un accord-cadre est souvent un
-plafond, pas une dépense réelle. C'est l'une des sources d'incohérence mesurées au chapitre 2.
+plafond, pas une dépense réelle. C'est l'une des sources d'incohérence mesurées au chapitre 1.
 
 **Concession.** Un contrat par lequel un acheteur confie l'exploitation d'un service ou d'un ouvrage
 à une entreprise qui se rémunère sur son exploitation, et en assume le risque. La délégation de
@@ -52,14 +52,14 @@ service public en est la forme la plus connue.
 | Dialogue compétitif | l'acheteur définit la solution avec les candidats | besoins complexes |
 
 Au 21 septembre 2026, sur les quelque 8 000 avis encore ouverts au BOAMP, 7 107 relèvent de la
-procédure ouverte et 522 de la procédure adaptée [^mesure-boamp].
+procédure ouverte et 522 de la procédure adaptée [^mesure-boamp-glo].
 
 **Seuils.** Des montants qui déclenchent des obligations. Ils changent tous les deux ans. En 2026 :
 publicité obligatoire à partir de 90 000 euros hors taxes ; procédure formalisée à partir de
 140 000 euros pour l'État, 216 000 pour les collectivités et 432 000 pour les entités adjudicatrices
 en fournitures et services ; 5 404 000 euros pour les travaux et les concessions. En dessous de
 60 000 euros pour les fournitures et services, et de 100 000 euros pour les travaux, l'acheteur est
-dispensé de publicité et de mise en concurrence [^seuils].
+dispensé de publicité et de mise en concurrence [^seuils-glo].
 
 **Offre unique.** Un marché n'ayant reçu qu'une seule offre. C'est l'indicateur de risque le plus
 utilisé dans la recherche sur la commande publique, parce qu'une mise en concurrence sans
@@ -74,7 +74,7 @@ responsabilité du projet et sera rappelée dans l'interface elle-même.
 
 ---
 
-## 1.2 Les sources de données
+## A.2 Les sources de données
 
 **Données ouvertes**, ou *open data*. Des données publiées par une administration, accessibles à
 tous, gratuitement, dans un format exploitable par une machine, et réutilisables y compris à des
@@ -108,10 +108,10 @@ nomenclature rend les marchés comparables entre eux, ce qui est indispensable p
 
 ---
 
-## 1.3 Le vocabulaire technique
+## A.3 Le vocabulaire technique
 
 Les termes ci-dessous sont définis ici parce qu'ils reviennent dans tout le mémoire. Les choix
-techniques eux-mêmes, avec leurs alternatives, sont discutés au chapitre 6.
+techniques eux-mêmes, avec leurs alternatives, sont discutés au chapitre 3.
 
 **Donnée brute, donnée nettoyée.** La donnée brute est celle publiée par la source, telle quelle,
 défauts compris. La donnée nettoyée a été validée, corrigée quand c'est possible, et marquée quand
@@ -200,7 +200,7 @@ produisent des fichiers identiques au bit près.
 
 ---
 
-## 1.4 Le vocabulaire de la chaîne de traitement
+## A.4 Le vocabulaire de la chaîne de traitement
 
 Les termes de cette section décrivent la fabrique : comment la donnée passe du fichier public
 jusqu'à la table qui sert le site. Ils reviennent dans tous les chapitres techniques.
@@ -288,7 +288,7 @@ laboratoire et inutilisables en production. C'est l'erreur la plus fréquente et
 
 ---
 
-## 1.5 Le vocabulaire de la mesure et de la detection
+## A.5 Le vocabulaire de la mesure et de la detection
 
 Ces termes servent a partir du moment ou l'on cherche a reperer un marche atypique. Ils sont
 definis ici parce que plusieurs se ressemblent et se confondent facilement.
@@ -354,7 +354,7 @@ projet mesure cet effet plutot que de le supposer negligeable.
 
 ---
 
-## 1.6 Les trois unités de comptage, et pourquoi elles comptent
+## A.6 Les trois unités de comptage, et pourquoi elles comptent
 
 Une confusion suffit à fausser un pourcentage et à décrédibiliser une analyse entière. Le jeu de
 données principal de ce mémoire se compte de trois façons différentes.
@@ -377,17 +377,17 @@ faux que rien ne signale.
 
 ---
 
-[^oecp]: Observatoire économique de la commande publique, chiffres 2024 publiés le 25 novembre 2025.
+[^oecp-glo]: Observatoire économique de la commande publique, chiffres 2024 publiés le 25 novembre 2025.
 Repris par Seban Avocats, « Panorama de la commande publique : les chiffres de 2024 »,
 https://www.seban-associes.avocat.fr/panorama-de-la-commande-publique-les-chiffres-de-2024/ et par
 achat-logistique.info, « 233,2 milliards d'euros d'achats publics en 2024 », 26 novembre 2025.
 
-[^seuils]: Seuils applicables en 2026, sur la base des règlements délégués (UE) 2025/2150, 2025/2151,
+[^seuils-glo]: Seuils applicables en 2026, sur la base des règlements délégués (UE) 2025/2150, 2025/2151,
 2025/2152 du 22 octobre 2025 et 2025/2487 du 2 décembre 2025, avis NOR ECOM2600976V du 13 janvier
 2026, et du décret n° 2025-1386 du 29 décembre 2025. Synthèse : marche-public.fr, « Seuils de
 procédure formalisée 2026 ».
 
-[^mesure-boamp]: Mesure propre, API BOAMP, 21 septembre 2026. Reproductible par
+[^mesure-boamp-glo]: Mesure propre, API BOAMP, 21 septembre 2026. Reproductible par
 `analyses/04-exploration-boamp.ipynb`.
 
 [^mesure-parquet]: Mesure propre, API data.gouv.fr, fichier du 20 septembre 2026. Reproductible par

@@ -1,4 +1,4 @@
-# Chapitre 4. Étude du marché et études de cas : qui utilise quoi, et à quel prix
+# Annexe C. Étude du marché et études de cas : qui utilise quoi, et à quel prix
 
 > Brouillon. Les faits, les chiffres et les sources sont vérifiés ; la formulation reste à
 > reprendre dans la voix de l'auteur.
@@ -14,7 +14,7 @@ information pour qui doit décider de l'adopter.
 
 ---
 
-## 4.1 La méthode de l'enquête, et son échelle de fiabilité
+## C.1 La méthode de l'enquête, et son échelle de fiabilité
 
 Règle tenue d'un bout à l'autre : **aucun exemple sans source ouverte et lue.** Les cas qui n'ont
 pas pu être confirmés à la source primaire ne sont pas cités comme des cas, ils sont regroupés en
@@ -41,7 +41,7 @@ niveau de fiabilité, est dans `ressources/etudes-de-cas.md`.
 
 ---
 
-## 4.2 Les outils retenus par ce projet, et qui les utilise déjà
+## C.2 Les outils retenus par ce projet, et qui les utilise déjà
 
 | Outil du projet | Organisation | Ce qu'elle en fait | Fiabilité |
 |---|---|---|---|
@@ -65,7 +65,7 @@ plein texte d'Elasticsearch vers PostgreSQL, puis remplacé son service de voisi
 par pgvector, pour faire de la recherche hybride dans un seul moteur. Deux chiffres sont publiés :
 un modèle de données normalisé qui réduit la charge d'écriture d'un facteur dix par rapport à
 Elasticsearch, et un test A/B en production montrant **6 % de recherches sans résultat en
-moins**[^instacart]. C'est le précédent qui autorise le chapitre 9 à ne pas installer de moteur de
+moins**[^instacart]. C'est le précédent qui autorise le chapitre 6 à ne pas installer de moteur de
 recherche dédié.
 
 **BlaBlaCar, ou le choix de dbt-core plutôt que dbt Cloud.** L'équipe a adopté la version libre et
@@ -77,11 +77,11 @@ data de cinquante personnes sur 400 To.
 millions de requêtes HTTP et 66,3 millions de pages par jour, et son architecte écrivait : « We can
 run the entire Q&A network off of a single application pool on a single server », la redondance
 étant conservée par choix et non par nécessité[^stackoverflow]. Ce cas est l'argument de fond du
-chapitre 11 : pour une charge connue et modeste, la machine unique n'est pas un pis-aller.
+chapitre 8 : pour une charge connue et modeste, la machine unique n'est pas un pis-aller.
 
 ---
 
-## 4.3 Le secteur public, la référence la plus proche
+## C.3 Le secteur public, la référence la plus proche
 
 Ce projet traite de données publiques françaises ; les administrations qui construisent des
 plateformes de données sont donc ses voisins les plus directs.
@@ -131,13 +131,13 @@ publiquement le modèle le plus petit qui suffise, et l'a mesuré.
 portails de marchés et le journal officiel avec une quarantaine de typologies de risque, et envoie
 ses alertes à plus de 500 utilisateurs. En 2023, plus de 190 000 procédures analysées et
 2,08 milliards de réais annulés ou suspendus ; d'après l'OCDE, l'audit préventif passe de plus de
-400 jours à 8 jours[^alice]. Deux enseignements pour le chapitre 8 : des indicateurs de risque
+400 jours à 8 jours[^alice]. Deux enseignements pour le chapitre 5 : des indicateurs de risque
 automatiques produisent un effet mesurable, et **l'humain reste le décideur final**, l'outil ne
 faisant qu'orienter son attention.
 
 ---
 
-## 4.4 Les outils examinés puis écartés, et les cas qui ont pesé
+## C.4 Les outils examinés puis écartés, et les cas qui ont pesé
 
 Un mémoire qui ne citerait que des cas favorables à ses choix ne démontrerait rien. Quatre outils du
 catalogue de départ ont été écartés, et trois l'ont été malgré des cas d'usage solides.
@@ -147,7 +147,7 @@ en production repose sur un modèle LightGBM LambdaMART, référence que l'entre
 réseaux de neurones lors d'un test A/B en ligne de huit semaines[^otto]. Chez Airbnb, le
 remplacement d'une fonction de score écrite à la main par un modèle d'arbres de gradient a produit
 « one of the largest step improvements in homes bookings in Airbnb's history »[^airbnb-search]. Ces
-deux cas établissent que la méthode est sérieuse. Le chapitre 8 l'écarte pourtant, et pour une
+deux cas établissent que la méthode est sérieuse. Le chapitre 5 l'écarte pourtant, et pour une
 raison qui n'a rien à voir avec sa qualité : **ces deux entreprises disposent d'une étiquette**, le
 clic et la réservation. Ce projet n'en a pas, et aucune mesure ne peut remplacer une étiquette
 absente.
@@ -158,7 +158,7 @@ seul cas vérifié est celui de l'INSEE, dans le code de son interface de codifi
 confirmation publique de la date ni du périmètre de mise en production. Un cas intéressant va même
 dans l'autre sens : la fintech Wayflyer a d'abord adopté des fiches de modèle avec Evidently avant
 des outils plus lourds comme MLflow, jugés plus coûteux en infrastructure[^wayflyer]. Comme le
-chapitre 8 conclut à l'absence de modèle entraîné, la question ne se pose plus : il n'y a pas
+chapitre 5 conclut à l'absence de modèle entraîné, la question ne se pose plus : il n'y a pas
 d'expérience à suivre.
 
 **MinIO, écarté sur un risque de gouvernance, et c'est le cas le plus instructif.** Le dépôt libre
@@ -175,12 +175,12 @@ processeur[^garage].
 **La leçon a été appliquée, et elle a changé l'architecture.** Ce projet n'utilise aucun stockage
 objet : la couche brute est faite de fichiers Parquet sur disque, et la publication va directement
 vers PostgreSQL. Le besoin ne le justifiait pas, et le cas MinIO montre le risque propre aux
-logiciels dits « open core » portés par un éditeur unique. La règle retenue, écrite au chapitre 6,
+logiciels dits « open core » portés par un éditeur unique. La règle retenue, écrite au chapitre 3,
 est que la pérennité de la gouvernance d'une dépendance compte autant que ses performances.
 
 **llama.cpp, écarté faute de besoin démontré.** Aucun cas vérifiable d'usage en production dans une
 grande organisation n'a été trouvé ; les contenus disponibles sont des guides et des comparatifs
-génériques. Le chapitre 9 explique pourquoi l'assistant de ce projet ne contient aucun modèle de
+génériques. Le chapitre 6 explique pourquoi l'assistant de ce projet ne contient aucun modèle de
 langue, ce qui rend la question théorique. L'argument en faveur d'un modèle local, si le besoin
 apparaissait, est fourni par un échec : en avril 2023, des salariés de Samsung ont soumis du code
 source interne à ChatGPT, et l'entreprise a interdit les outils d'IA générative sur ses appareils et
@@ -188,7 +188,7 @@ réseaux à partir du 1er mai 2023[^samsung].
 
 ---
 
-## 4.5 Ce que l'alternative payante coûte, chiffré par ceux qui en sont sortis
+## C.5 Ce que l'alternative payante coûte, chiffré par ceux qui en sont sortis
 
 La thèse de ce mémoire porte sur l'argent. Elle n'est pas isolée : plusieurs organisations ont
 publié le chiffrage de leur sortie d'une offre gérée.
@@ -204,7 +204,7 @@ publié le chiffrage de leur sortie d'une offre gérée.
 Deux de ces lignes portent une réserve, et elle doit être lue : Definite vend un produit construit
 sur DuckDB, donc son chiffrage sert aussi son commerce ; le cas Okta n'a pu être vérifié que par des
 comptes rendus tiers, la page de la conférence d'origine renvoyant une erreur. Les citer sans ces
-réserves serait reproduire exactement le défaut que le chapitre 11 reproche aux comparateurs de
+réserves serait reproduire exactement le défaut que le chapitre 8 reproche aux comparateurs de
 prix.
 
 Le cas de 37signals est le plus détaillé. Le rapatriement a commencé par le calcul, annoncé en
@@ -216,12 +216,12 @@ d'exploitation, AWS ayant renoncé à 250 000 dollars de frais de sortie[^37sign
 **Ce que ces cas prouvent, et ce qu'ils ne prouvent pas.** Ils prouvent que le rapport de coût entre
 une offre gérée et une infrastructure possédée peut être très défavorable à la première, pour une
 charge stable et prévisible. Ils ne prouvent pas que ce soit toujours vrai : 37signals a une équipe
-d'exploitation, et le chapitre 11 montre que le temps d'ingénierie ne figure dans aucune de ces
+d'exploitation, et le chapitre 8 montre que le temps d'ingénierie ne figure dans aucune de ces
 colonnes.
 
 ---
 
-## 4.6 Ce que l'enquête n'a pas trouvé, et pourquoi c'est un résultat
+## C.6 Ce que l'enquête n'a pas trouvé, et pourquoi c'est un résultat
 
 Les éléments suivants ont été cherchés et n'ont pas été confirmés par une source primaire ouverte et
 lue. Ils sont listés ici plutôt que tus, parce qu'un lecteur qui doit décider a besoin de savoir où

@@ -1,0 +1,5 @@
+# Les sorties de rendu se refabriquent depuis les sources : rien a versionner.
+sortie/
+memoire.tex
+memoire.pdf
+.quarto/

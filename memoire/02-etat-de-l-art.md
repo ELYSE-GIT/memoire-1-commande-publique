@@ -1,4 +1,4 @@
-# Chapitre 3. État de l'art : ce qui existe déjà, et ce qui manque
+# Chapitre 2. État de l'art : ce qui existe déjà, et ce qui manque
 
 > Brouillon. Les faits, les chiffres et les sources sont vérifiés ; la formulation reste à
 > reprendre dans la voix de l'auteur.
@@ -17,11 +17,11 @@ chapitre, et elle vaut mieux qu'un jugement présenté comme un essai.
 
 ---
 
-## 3.1 Une grille de lecture, posée avant de comparer
+## 2.1 Une grille de lecture, posée avant de comparer
 
 Comparer des outils sans grille revient à préférer celui dont on a lu la page d'accueil en
 dernier. Les six fonctions ci-dessous découlent directement des trois usages empêchés identifiés à
-la fin du chapitre 2.
+la fin du chapitre 1.
 
 | # | Fonction | La question de l'utilisateur |
 |---|---|---|
@@ -37,7 +37,7 @@ F4, F5 et F6 sont, comme la suite le montre, très peu couvertes.
 
 ---
 
-## 3.2 Les outils publics : publier et mettre en concurrence
+## 2.2 Les outils publics : publier et mettre en concurrence
 
 L'État français a construit un ensemble d'outils cohérent, et il faut le dire avant d'en montrer
 les angles morts : la France publie beaucoup, gratuitement, sous licence ouverte, et depuis
@@ -61,7 +61,7 @@ secteur et par lieu[^approch]. C'est le seul outil public qui adresse franchemen
 
 **Le BOAMP**, édité par la DILA, publie les avis et les expose par une interface de programmation
 sous Licence Ouverte 2.0[^boamp]. Le volume annuel des avis parus décroît lentement : 144 480 en
-2015, 158 839 en 2019, 149 300 en 2023, 137 423 en 2025[^mesure-boamp].
+2015, 158 839 en 2019, 149 300 en 2023, 137 423 en 2025[^mesure-boamp-art].
 
 **TED et les eForms** jouent le même rôle au niveau européen, au-dessus des seuils communautaires.
 Le format eForms, établi par le règlement d'exécution (UE) 2019/1780, est obligatoire depuis
@@ -74,7 +74,7 @@ marché atypique. F2 à F6 restent ouvertes.
 
 ---
 
-## 3.3 Les projets libres et associatifs : analyser et mesurer la transparence
+## 2.3 Les projets libres et associatifs : analyser et mesurer la transparence
 
 C'est là que se trouve l'essentiel du travail d'analyse, et c'est un fait notable en soi.
 
@@ -86,7 +86,7 @@ taxes par mois ajoute les alertes et les vues partagées, et l'accès programmat
 
 C'est aussi ce projet qui documente le mieux les défauts de la source : son auteur indique
 supprimer environ un million de doublons à chaque traitement[^doublons]. Cette affirmation n'a pas
-été auditée, et le chapitre 2 a montré sur nos propres mesures que le mot « doublon » recouvre
+été auditée, et le chapitre 1 a montré sur nos propres mesures que le mot « doublon » recouvre
 trois phénomènes très différents, dont deux ne sont pas des doublons. Elle est citée ici pour ce
 qu'elle est : le constat d'un praticien, convergent avec le nôtre sur le diagnostic, pas sur le
 chiffre.
@@ -96,7 +96,7 @@ mais la transparence de ceux qui les passent, par un indice noté de A à E sur 
 Nutri-Score. Résultat : sur 4 626 collectivités soumises à l'obligation, 86,0 % publient leurs
 marchés, mais seules 26,8 % obtiennent une note de qualité A ou B, 98 % des collectivités ont un
 indice global E, et 126 seulement obtiennent A[^eclaireur]. Ces chiffres confirment de l'extérieur
-ce que le chapitre 2 a mesuré de l'intérieur : l'obligation de publier est largement respectée, la
+ce que le chapitre 1 a mesuré de l'intérieur : l'obligation de publier est largement respectée, la
 qualité de ce qui est publié ne l'est pas.
 
 **opentender.eu**, issu du projet européen DIGIWHIST mené par l'Université de Cambridge avec la
@@ -104,17 +104,17 @@ Hertie School, le Government Transparency Institute et d'autres partenaires, cou
 européennes et calcule des indicateurs d'intégrité, passés de 9 en 2024 à 11 dans la mise à jour de
 mars 2026[^opentender]. C'est le plus avancé des outils sur F5. Sa limite pour notre sujet est son
 périmètre : il s'appuie sur TED, donc sur les seuls marchés au-dessus des seuils européens. Or le
-chapitre 2 a mesuré que 63 % des marchés français sont sous le seuil de 214 000 euros applicable
+chapitre 1 a mesuré que 63 % des marchés français sont sous le seuil de 214 000 euros applicable
 aux collectivités. L'essentiel de la commande publique française échappe donc à cet outil.
 
 **L'Open Contracting Partnership** fournit la matière conceptuelle : le standard de données OCDS,
 un guide de 2024 recensant 73 signaux de risque avec leurs formules, et une bibliothèque libre,
-Cardinal, lancée le 12 juin 2024 avec 10 indicateurs[^ocp]. Le chapitre 8 reprend explicitement
+Cardinal, lancée le 12 juin 2024 avec 10 indicateurs[^ocp]. Le chapitre 5 reprend explicitement
 plusieurs de ces définitions, et dit lesquelles les DECP ne permettent pas de calculer.
 
 ---
 
-## 3.4 Les plateformes commerciales : vendre de la veille, et parfois une IA
+## 2.4 Les plateformes commerciales : vendre de la veille, et parfois une IA
 
 Le marché privé existe, il est ancien, et il est concentré sur F1.
 
@@ -141,7 +141,7 @@ marché, pas le citoyen qui veut comprendre une dépense.
 
 **Sur huit acteurs, deux publient un tarif vérifiable** pour une entreprise cliente. Cette opacité
 n'est pas anecdotique pour un mémoire dont la thèse porte sur les coûts : elle interdit la
-comparaison chiffrée que le sujet appelle. Le même phénomène se reproduira au chapitre 11 avec
+comparaison chiffrée que le sujet appelle. Le même phénomène se reproduira au chapitre 8 avec
 Databricks, Snowflake et OpenAI, qui ne publient pas davantage de tarif vérifiable sans ouverture
 de compte. Sur l'ensemble des fournisseurs examinés dans ce mémoire, qu'il s'agisse de veille ou
 d'infrastructure, **la minorité qui publie ses prix sous une forme qu'un tiers peut vérifier est
@@ -155,7 +155,7 @@ C'est exactement le problème que ce mémoire traite.
 
 ---
 
-## 3.5 La grille, remplie
+## 2.5 La grille, remplie
 
 | Fonction | Outils publics | Libres et associatifs | Commerciaux | Ce projet |
 |---|---|---|---|---|
@@ -168,7 +168,7 @@ C'est exactement le problème que ce mémoire traite.
 
 ---
 
-## 3.6 Le creux, et ce que ce mémoire prétend y mettre
+## 2.6 Le creux, et ce que ce mémoire prétend y mettre
 
 Trois fonctions sont vides ou presque, et ce sont les trois qui demandent le plus de travail
 d'ingénierie : relier deux sources sans identifiant commun, signaler sans accuser, et répondre à
@@ -185,11 +185,11 @@ mauvaise qualité des données : le Sénat, la Cour des comptes et Anticor l'ont
    rejouable par une commande. Les outils existants publient un résultat ; celui-ci publie aussi
    le coût, la latence, la précision et l'incertitude de chaque étape.
 2. **Le rapprochement du BOAMP et des DECP**, que personne ne propose, avec son taux de réussite et
-   sa justesse publiés plutôt que supposés (chapitre 7).
+   sa justesse publiés plutôt que supposés (chapitre 4).
 3. **Une détection justifiée par la mesure plutôt que par la mode**, y compris quand la mesure
-   conclut contre l'apprentissage automatique (chapitre 8).
+   conclut contre l'apprentissage automatique (chapitre 5).
 4. **Un coût d'exploitation mesuré et comparé aux offres gérées du marché**, soit 23,50 euros hors
-   taxes par mois contre 119,44 pour l'offre gérée complète la moins chère (chapitre 11).
+   taxes par mois contre 119,44 pour l'offre gérée complète la moins chère (chapitre 8).
 
 Autrement dit, l'apport n'est pas une idée neuve, c'est une démonstration : **que la chaîne
 complète tient, pour le prix d'un abonnement de veille d'entrée de gamme, avec des outils libres,
@@ -212,7 +212,7 @@ https://www.economie.gouv.fr/APProch-portail-unique-projets-achats-publics
 [^boamp]: Interface de programmation du BOAMP, plateforme Opendatasoft de la DILA,
 https://boamp-datadila.opendatasoft.com/api/explore/v2.0 ; fiche data.gouv.fr du service de données.
 
-[^mesure-boamp]: Calcul propre, interface BOAMP, comptage par année de parution, 19 septembre 2026.
+[^mesure-boamp-art]: Calcul propre, interface BOAMP, comptage par année de parution, 19 septembre 2026.
 
 [^eforms]: Office des publications de l'Union européenne, https://ted.europa.eu/en/simap/eforms ;
 règlement d'exécution (UE) 2019/1780, modifié en novembre 2022 et en décembre 2023. La date exacte

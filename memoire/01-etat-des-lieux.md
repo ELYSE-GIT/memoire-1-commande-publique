@@ -1,4 +1,4 @@
-# Chapitre 2. État des lieux : des données publiques inexploitables en l'état
+# Chapitre 1. État des lieux : des données publiques inexploitables en l'état
 
 > Brouillon. Les faits, les chiffres et les sources sont vérifiés ; la formulation reste à
 > reprendre dans la voix de l'auteur.
@@ -13,7 +13,7 @@ leur source.
 
 ---
 
-## 2.1 Un poids économique considérable, et mal connu
+## 1.1 Un poids économique considérable, et mal connu
 
 En 2024, l'Observatoire économique de la commande publique a recensé **223 383 contrats pour
 233,3 milliards d'euros**[^oecp]. À titre de comparaison, c'est environ huit fois le budget annuel
@@ -34,7 +34,7 @@ précis »[^senat]. Autrement dit, l'État lui-même reconnaît qu'il connaît m
 
 ---
 
-## 2.2 Une obligation de publication, et deux canaux distincts
+## 1.2 Une obligation de publication, et deux canaux distincts
 
 Depuis 2018, le code de la commande publique impose à tout acheteur de publier les **données
 essentielles** de ses marchés : qui achète, à qui, pour quel objet, à quel montant, pour quelle
@@ -52,7 +52,7 @@ Les deux canaux ne racontent pas la même histoire :
 | Utilité pour une PME qui cherche un marché | nulle, tout est déjà attribué | directe |
 | Utilité pour analyser les prix | directe | faible, les montants y sont rares |
 
-Cette complémentarité est la raison pour laquelle le projet exploite les deux. Le chapitre 6
+Cette complémentarité est la raison pour laquelle le projet exploite les deux. Le chapitre 3
 montrera qu'elle est aussi une difficulté, puisque rien ne les relie formellement.
 
 Les obligations dépendent de seuils, révisés tous les deux ans. En 2026, la publicité devient
@@ -63,7 +63,7 @@ selon son montant.
 
 ---
 
-## 2.3 Ce que les fichiers contiennent réellement
+## 1.3 Ce que les fichiers contiennent réellement
 
 Le jeu consolidé des DECP, publié quotidiennement sur data.gouv.fr, agrège 63 sources différentes.
 Au 20 septembre 2026, il contient **3 283 035 lignes**, qui correspondent à **1 833 468 marchés
@@ -87,7 +87,7 @@ choisi.
 
 ---
 
-## 2.4 Des défauts mesurables, et mesurés
+## 1.4 Des défauts mesurables, et mesurés
 
 ### Le total annuel est faux d'un facteur dix à vingt
 
@@ -148,7 +148,7 @@ restent séparés par un simple tiret. La marche suivante reste une règle, pas 
 
 ---
 
-## 2.5 Ce que ces données permettent, et ce qu'elles interdisent
+## 1.5 Ce que ces données permettent, et ce qu'elles interdisent
 
 Une fois ces défauts connus, la forme des données apparaît, et elle est riche.
 
@@ -189,7 +189,7 @@ communale est banale ; sur un marché à dix millions d'euros, elle l'est beauco
 
 ---
 
-## 2.6 Deux sources qui ne se rejoignent pas
+## 1.6 Deux sources qui ne se rejoignent pas
 
 Le BOAMP compte 1 707 999 avis publiés entre le 2 mars 2015 et aujourd'hui, dont 1 160 935 avis de
 marché et 465 999 résultats de marché. Au moment de la mesure, **8 014 appels d'offres étaient
@@ -210,7 +210,7 @@ publier. Le SIRET de l'acheteur, présent des deux côtés, en est le point d'an
 
 ---
 
-## 2.7 Le problème, formulé
+## 1.7 Le problème, formulé
 
 Trois usages sont aujourd'hui empêchés, chacun pour une raison mesurée.
 
@@ -241,7 +241,7 @@ achat-logistique.info, « 233,2 milliards d'euros d'achats publics en 2024 », 2
 sortie de route : piloter la commande publique au service de la souveraineté économique »,
 8 juillet 2025, https://www.senat.fr/rap/r24-830-1/r24-830-10.html
 
-[^seuils]: Seuils applicables en 2026. Voir chapitre 1, note sur les seuils.
+[^seuils]: Seuils applicables en 2026. Voir annexe A, note sur les seuils.
 
 [^mesure-volume]: Mesure propre, `make bench-decp`, fichier du 20 septembre 2026. Résultats
 complets dans `mesures/resultats/2026-09-20-decp-qualite.json`.

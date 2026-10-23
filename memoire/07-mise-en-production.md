@@ -1,9 +1,9 @@
-# 10. Mise en production et sécurité
+# Chapitre 7. Mise en production et sécurité
 
 > État : les sections 10.1 et 10.2 sont rédigées (phase 7). Les sections 10.3 à 10.6, qui portent
 > sur le VPS, les conteneurs, la supervision et les sauvegardes, seront écrites en phase 9.
 
-## 10.1 Servir les données : l'API
+## 7.1 Servir les données : l'API
 
 Jusqu'ici, tout ce que ce mémoire décrit n'existait que sous la forme de scripts lancés à la main
 sur un ordinateur portable. Deux millions de marchés nettoyés, une recherche en texte intégral,
@@ -11,7 +11,7 @@ des règles de détection et un assistant qui cite ses sources : rien de tout ce
 accessible à qui que ce soit d'autre. Cette section décrit le passage d'un traitement à un
 service, et surtout ce que ce passage a appris.
 
-### 10.1.1 Ce qu'un service change par rapport à un script
+### 7.1.1 Ce qu'un service change par rapport à un script
 
 Un script a le droit d'être lent. Il tourne une fois, on attend, on obtient un fichier. Un service
 n'a pas ce droit : quelqu'un attend devant un écran, et il n'a aucune idée de ce qui se passe.
@@ -35,7 +35,7 @@ et produire sa documentation, de sorte que le travail de typage sert deux fois.
 Ce choix n'est pas le sujet intéressant. Le sujet intéressant est ce qui s'est passé quand on a
 mesuré.
 
-### 10.1.2 Quatre défauts qu'aucun test ne pouvait trouver
+### 7.1.2 Quatre défauts qu'aucun test ne pouvait trouver
 
 À la fin de la phase 6, le dépôt comptait 195 tests, tous verts, et une chaîne d'intégration
 continue qui vérifiait le style, les types, les secrets et le comportement. La première version de
@@ -66,7 +66,7 @@ C'est la forme la plus commune du problème : non pas une erreur, mais une habit
 personne ne mesure le prix. Elle serait restée invisible aussi longtemps que la table serait
 restée petite, et elle n'aurait jamais fait échouer un test.
 
-### 10.1.3 Mesurer à froid, et pourquoi cela a changé une décision
+### 7.1.3 Mesurer à froid, et pourquoi cela a changé une décision
 
 Le troisième défaut a eu une suite instructive. Après avoir limité le classement de la recherche à
 20 000 candidats, les mesures étaient excellentes : 57 millisecondes de médiane. La décision
@@ -101,7 +101,7 @@ service ne s'effondre pas, il fait patienter. La limite vient de la réserve de 
 quatre volontairement, parce que chaque connexion PostgreSQL est un processus serveur et que la
 machine de production sera petite.
 
-### 10.1.4 Ce que l'optimisation a coûté, et pourquoi il faut l'écrire
+### 7.1.4 Ce que l'optimisation a coûté, et pourquoi il faut l'écrire
 
 Limiter le classement à 5 000 candidats n'est pas gratuit, et c'est le point le plus important de
 cette section. Au-delà de ce plafond, les dix marchés affichés ne sont plus les dix meilleurs : ce
@@ -137,10 +137,10 @@ mesurée par la corrélation de -0,96 entre l'ordre physique et l'année, et vé
 La troisième n'est pas négociable : **il faut le dire**. Chaque réponse de recherche porte un
 champ `classement_approche` et le nombre de candidats réellement classés, et l'interface l'écrit à
 l'écran. Une approximation annoncée est une limite connue ; une approximation silencieuse est un
-mensonge sur la donnée. C'est la même exigence que celle qui gouverne l'assistant au chapitre 9 :
+mensonge sur la donnée. C'est la même exigence que celle qui gouverne l'assistant au chapitre 6 :
 un résultat doit porter de quoi le vérifier.
 
-### 10.1.5 Sécurité : ce qui est refusé par construction
+### 7.1.5 Sécurité : ce qui est refusé par construction
 
 Les mesures occupent l'essentiel de cette section parce que ce sont elles qui ont changé le code.
 La sécurité, elle, n'a rien changé après coup : elle est posée dès l'écriture, et c'est précisément
@@ -161,7 +161,7 @@ qu'elle sert, quelle que soit la requête reçue.
 **Chaque requête est abandonnée au-delà de dix secondes.** Sans ce plafond, une requête
 pathologique garde indéfiniment une connexion et un fil d'exécution : le service devient
 indisponible sans être tombé, ce qui est le mode de panne le plus difficile à diagnostiquer. Ce
-même plafond est ce qui a révélé trois des quatre défauts de la section 10.1.2, en transformant une
+même plafond est ce qui a révélé trois des quatre défauts de la section 7.1.2, en transformant une
 lenteur en erreur visible.
 
 **Les messages d'erreur de la base ne sortent jamais.** Un message de l'interface PostgreSQL
@@ -181,14 +181,14 @@ servies sont publiques par nature ; l'espace d'administration, lui, en aura une,
 pour laquelle il est construit comme un ensemble de routes séparées.
 
 
-## 10.2 Montrer les données : l'interface
+## 7.2 Montrer les données : l'interface
 
 Une API sert un programme. La démonstration attendue s'adresse à un jury, puis à un visiteur
 ordinaire, et aucun des deux ne lit du JSON. Cette section décrit l'interface, les trois
 contraintes qui ont décidé de sa forme, et ce que sa construction a révélé sur l'API qu'elle
 utilise.
 
-### 10.2.1 Trois contraintes, et une forme qui en découle
+### 7.2.1 Trois contraintes, et une forme qui en découle
 
 Le choix d'une technologie d'interface est généralement présenté comme une préférence. Ici, trois
 contraintes antérieures le déterminent presque entièrement.
@@ -201,7 +201,7 @@ conteneur est un coût d'exploitation permanent, pour un site de six pages.
 d'interface depuis un réseau de diffusion de contenu est un site qui peut être blanc le jour de la
 soutenance ; un site qui n'affiche rien sans JavaScript l'est également.
 
-**La vérifiabilité.** Le chapitre 2 a montré que ces données sont lacunaires et piégeuses. Une
+**La vérifiabilité.** Le chapitre 1 a montré que ces données sont lacunaires et piégeuses. Une
 interface qui afficherait des chiffres sans leur dénominateur, leur date de calcul et leur unité de
 comptage trahirait tout ce qui précède.
 
@@ -225,7 +225,7 @@ lointaine : dès qu'une page devrait tenir un état complexe côté navigateur, 
 plusieurs étapes ou une carte interactive, un cadre JavaScript reprendrait l'avantage. Afficher une
 liste et des filtres n'en demande pas.
 
-### 10.2.2 Dégradation progressive, et pourquoi elle est mesurée
+### 7.2.2 Dégradation progressive, et pourquoi elle est mesurée
 
 Les formulaires du site sont de véritables formulaires HTML, dont l'attribut `action` mène à une
 page complète. La bibliothèque d'interface ne fait qu'intercepter l'envoi pour remplacer un
@@ -255,7 +255,7 @@ Ces chiffres justifient la bibliothèque sans l'exagérer : l'économie est rée
 spectaculaire, et elle n'aurait pas suffi à elle seule. Ce qui la rend intéressante est qu'elle ne
 coûte ni compilation, ni dépendance distante, ni perte de fonctionnement sans JavaScript.
 
-### 10.2.3 Le poids d'une page, et le refus d'optimiser sans mesure
+### 7.2.3 Le poids d'une page, et le refus d'optimiser sans mesure
 
 La latence du serveur ne dit pas ce qu'attend un lecteur. Une page qui se calcule en vingt
 millisecondes et pèse quatre cents kilo-octets est lente sur une connexion mobile. Le banc mesure
@@ -279,7 +279,7 @@ sans mesure, l'optimisation du poids d'une page est un réflexe que l'on appliqu
 qui consomme du temps au détriment de ce qui compte. Ici, ce qui compte est la requête à la base,
 pas l'octet transmis.
 
-### 10.2.4 Ce que l'interface a révélé dans l'API
+### 7.2.4 Ce que l'interface a révélé dans l'API
 
 C'est le résultat le plus utile de cette phase, et il n'était pas prévu. L'API décrite en 10.1
 avait été publiée la veille, avec 239 tests verts et un banc de mesure qui avait déjà corrigé
@@ -310,9 +310,9 @@ qu'une question. Chacun couvrait exactement ce que l'autre laissait de côté, e
 quarante produisaient une erreur depuis la mise en service. La correction porte autant sur le banc
 que sur le code : il envoie désormais une question par intention.
 
-### 10.2.5 Le premier visiteur, et un coût qui change de place
+### 7.2.5 Le premier visiteur, et un coût qui change de place
 
-La section 10.1.3 montrait déjà qu'une mesure à chaud ne dit rien du premier accès. La
+La section 7.1.3 montrait déjà qu'une mesure à chaud ne dit rien du premier accès. La
 construction de l'interface a poussé ce constat plus loin, parce qu'elle a produit la situation
 réelle : ouvrir une page sur une machine qui vient de démarrer.
 
@@ -360,7 +360,7 @@ conserve du disque de la machine virtuelle. Redémarrer la machine virtuelle ne 
 refroidir réellement. Les valeurs publiées sont donc données sous forme d'intervalles, ce qui est
 moins élégant qu'un nombre unique et plus proche de ce qui a été observé.
 
-### 10.2.6 Montrer plutôt qu'énoncer
+### 7.2.6 Montrer plutôt qu'énoncer
 
 Trois figures sont rendues par le serveur, sans aucune bibliothèque de graphiques. Ce choix
 mérite d'être justifié : une bibliothèque JavaScript de visualisation pèse de quatre-vingt-dix
@@ -407,9 +407,9 @@ portent 0,50 % des attributions. S'y ajoutent 4 539 marchés codés sous une div
 2008. Ces marchés ne sont ni supprimés ni réaffectés : ils restent cherchables, ils sont écartés
 des menus, et la page « à propos » dit ce qu'ils représentent.
 
-### 10.2.7 Afficher ce que les données ne disent pas
+### 7.2.7 Afficher ce que les données ne disent pas
 
-Le chapitre 2 a établi que ces données sont incomplètes et ambiguës. Une interface qui l'ignorerait
+Le chapitre 1 a établi que ces données sont incomplètes et ambiguës. Une interface qui l'ignorerait
 produirait des chiffres faux avec une confiance parfaite. Six mentions sont donc portées à l'écran,
 et chacune correspond à une erreur que le site aurait commise sans elle.
 
@@ -445,7 +445,7 @@ plafond de candidats est atteint, avec l'indication de ce qu'il faut faire pour 
 et le pied de chaque page cite l'adresse de l'interface de programmation qui l'a produite, car
 « vérifiable » signifie que l'on peut obtenir la même chose sans ce site.
 
-### 10.2.8 Sécurité : une politique sans exception, vérifiée dans un navigateur
+### 7.2.8 Sécurité : une politique sans exception, vérifiée dans un navigateur
 
 La politique de contenu du site interdit tout par défaut, puis autorise uniquement ce qui est
 nécessaire, et uniquement depuis le site lui-même. Aucun domaine tiers n'y figure, puisque aucun
@@ -474,7 +474,7 @@ façon inexploitable ; et l'absence totale d'authentification, assumée, parce q
 servies sont publiques par nature. L'espace d'administration, qui n'est pas dans ce périmètre, en
 aura une, et c'est la raison pour laquelle il est construit séparément.
 
-### 10.2.9 Une adresse pour les pages, une autre pour les données
+### 7.2.9 Une adresse pour les pages, une autre pour les données
 
 Une page HTML et une réponse JSON ne peuvent pas répondre à la même adresse. L'interface de
 programmation occupait les adresses les plus naturelles, et les pages en avaient besoin.
