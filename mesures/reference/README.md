@@ -48,7 +48,7 @@ ligne a part entiere, et non comme une constante cachee dans le code.
 verifiable sans ouvrir un compte : leurs pages de tarification construisent leurs tableaux dans
 le navigateur, et aucune n'expose de liste de prix publique comparable a celle d'AWS ou d'Azure.
 Verifie le 22 octobre 2026. Le projet prefere ne publier aucun chiffre plutot qu'un chiffre
-repris d'un tiers. Cette asymetrie est commentee dans la section 11.3.5 du memoire.
+repris d'un tiers. Cette asymetrie est commentee dans la section 8.3.5 du memoire.
 
 **Les remises.** Aucun engagement, aucune reservation, aucune remise de volume, aucun credit de
 depart. Ce sont les tarifs qu'une petite structure paie reellement, et c'est le cas qui

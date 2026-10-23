@@ -20,7 +20,7 @@ from pathlib import Path
 RACINE = Path(__file__).resolve().parent.parent
 RESULTATS = RACINE / "mesures" / "resultats"
 PRIX = RACINE / "mesures" / "reference" / "prix-cloud.csv"
-MEMOIRE = RACINE / "memoire" / "11-mesures-et-incertitude.md"
+MEMOIRE = RACINE / "memoire" / "08-mesures-et-incertitude.md"
 
 # Les domaines dont un tarif a le droit de venir : celui du fournisseur lui-meme, ou celui de la
 # banque centrale pour le taux de change. Un comparateur, un blog ou un article de presse n'est

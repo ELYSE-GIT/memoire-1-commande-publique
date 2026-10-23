@@ -1,9 +1,9 @@
-# Chapitre 7. Ingénierie des données : collecter, nettoyer, relier
+# Chapitre 4. Ingénierie des données : collecter, nettoyer, relier
 
 > Brouillon. Les faits, les chiffres et les mesures sont vérifiés et reproductibles ; la
 > formulation reste à reprendre dans la voix de l'auteur.
 
-Le chapitre 2 a mesuré des données inexploitables en l'état : un total annuel faux d'un facteur dix
+Le chapitre 1 a mesuré des données inexploitables en l'état : un total annuel faux d'un facteur dix
 à vingt, des dates au 1er janvier de l'an 1, un même concept écrit de douze façons, et deux sources
 qui ne se rejoignent pas. Ce chapitre décrit ce qui a été fait de ces données, et à quel prix.
 
@@ -14,7 +14,7 @@ jointes avec une fausse certitude.**
 
 ---
 
-## 7.1 Collecter sans abîmer les sources, et savoir ce qu'on a collecté
+## 4.1 Collecter sans abîmer les sources, et savoir ce qu'on a collecté
 
 Jusqu'à la phase 3, les données étaient téléchargées à la main. Trois constats ont imposé un
 service dédié.
@@ -56,7 +56,7 @@ mille enregistrements par requête, et la collecte complète devra se faire par 
 
 ---
 
-## 7.2 Trois couches, et ce que chaque passage retire
+## 4.2 Trois couches, et ce que chaque passage retire
 
 | Couche | Promesse | Lignes | Colonnes |
 |---|---|---|---|
@@ -67,7 +67,7 @@ mille enregistrements par requête, et la collecte complète devra se faire par 
 Le passage de bronze à argent retire 1 174 903 lignes, qui sont **l'historique des modifications** :
 chaque avenant ajoute une ligne, et la couche argent ne porte que l'état actuel de chaque marché. Ce
 n'est donc pas un nettoyage, c'est une sélection d'état, et c'est la raison pour laquelle le mot
-« doublon » était trompeur au chapitre 2.
+« doublon » était trompeur au chapitre 1.
 
 Le passage d'argent à or retire 122 434 lignes de plus, celles qui sont inexploitables pour une
 analyse de prix, **et qui restent consultables en argent avec le motif de leur exclusion**. Au
@@ -79,7 +79,7 @@ distincts. Chaque pourcentage de ce mémoire précise la sienne.
 
 ---
 
-## 7.3 Marquer plutôt que supprimer : la décision la plus structurante
+## 4.3 Marquer plutôt que supprimer : la décision la plus structurante
 
 Chaque ligne de la couche argent conserve ses valeurs d'origine et reçoit neuf colonnes de qualité,
 plus une colonne qui liste en clair les règles enfreintes.
@@ -104,7 +104,7 @@ plus une colonne qui liste en clair les règles enfreintes.
    lignes » appelle immédiatement « lesquelles, et pourquoi », et la réponse doit exister.
 2. **Une ligne effacée ne peut plus être corrigée par l'administration qui l'a publiée.** Le projet
    peut, à terme, signaler à un acheteur que ses données sont fautives : encore faut-il les avoir.
-   Le producteur lui-même tient ce raisonnement, puisqu'il publie ses propres rejets (chapitre 3).
+   Le producteur lui-même tient ce raisonnement, puisqu'il publie ses propres rejets (chapitre 2).
 3. **Une règle peut être mauvaise.** Le seuil d'un milliard d'euros est un choix discutable : le
    conserver comme un marquage permet de le changer et de tout rejouer, ce qu'une suppression
    interdit définitivement.
@@ -124,7 +124,7 @@ mesures qui restent à faire.
 
 ---
 
-## 7.4 La normalisation : douze écritures, six notions, deux fonctions SQL
+## 4.4 La normalisation : douze écritures, six notions, deux fonctions SQL
 
 La nature du marché s'écrit `Marché`, `MARCHE`, `MARCHÉ`, `marché` selon la source, conséquence
 directe de l'agrégation de dizaines de sources ayant chacune ses habitudes de saisie.
@@ -139,7 +139,7 @@ directe de l'agrégation de dizaines de sources ayant chacune ses habitudes de s
 | CONCESSION DE SERVICE PUBLIC | 1 | 1 |
 
 Douze écritures ramenées à six notions, par la mise en majuscules, le retrait des accents et la
-normalisation de la ponctuation. Le cas qui résistait au chapitre 2, `ACCORD-CADRE` contre
+normalisation de la ponctuation. Le cas qui résistait au chapitre 1, `ACCORD-CADRE` contre
 `ACCORD CADRE`, est résolu par cette troisième fonction. **Toujours aucun modèle, toujours du SQL**,
 et c'est la marche la plus basse de l'escalier qui suffit ici.
 
@@ -149,7 +149,7 @@ en France. Ce n'est pas la réalité, c'est une habitude de saisie.
 
 ---
 
-## 7.5 Les tests de données, et les deux défauts qu'ils ont trouvés
+## 4.5 Les tests de données, et les deux défauts qu'ils ont trouvés
 
 Dix-huit tests de données portent sur les couches argent et or, et vingt tests d'intégration
 exécutent la vraie chaîne sur un jeu fictif de quinze lignes dont chaque défaut est connu d'avance.
@@ -181,12 +181,12 @@ bloque à juste titre puisque cette couche ne contient que l'exploitable.
 
 **La sévérité d'un test doit correspondre à ce que sa couche promet.** Un test trop strict finit
 désactivé, et un test désactivé ne protège plus rien. C'est le mécanisme exact de l'échec Louvois
-décrit au chapitre 5, où environ deux cents contrôles de cohérence jugés bloquants ont été
+décrit au annexe B, où environ deux cents contrôles de cohérence jugés bloquants ont été
 neutralisés « au lieu d'améliorer la fiabilité des saisies ».
 
 ---
 
-## 7.6 dbt, le premier outil que ce projet adopte
+## 4.6 dbt, le premier outil que ce projet adopte
 
 Jusqu'à cette phase, le projet avait surtout écarté des outils. dbt est le premier retenu, et le
 raisonnement mérite d'être exposé parce qu'il est l'inverse du précédent.
@@ -208,11 +208,11 @@ complète prend environ six secondes sur le Mac, ce qui reste à remesurer sur l
 
 ---
 
-## 7.7 Relier le BOAMP et les DECP : un rapprochement, pas une jointure
+## 4.7 Relier le BOAMP et les DECP : un rapprochement, pas une jointure
 
 C'est l'apport que ce mémoire revendique comme le plus original, et c'est aussi le plus incertain.
 
-Le chapitre 2 a mesuré le problème : sur 600 avis récents portant un identifiant de dossier, **aucun
+Le chapitre 1 a mesuré le problème : sur 600 avis récents portant un identifiant de dossier, **aucun
 ne correspond à un identifiant des données essentielles**. Les deux sources désignent les mêmes
 marchés sans jamais se rencontrer, parce que l'une porte un identifiant technique produit par la
 plateforme de dématérialisation et l'autre un numéro de dossier choisi par l'acheteur.
@@ -244,7 +244,7 @@ vérification : un nombre qui n'est pas un SIRET ne correspondra à aucun achete
 Les niveaux 3 et 4 ne sont pas concurrents mais complémentaires : le niveau 4 donne une quasi
 certitude quand il aboutit, le niveau 3 couvre davantage de cas avec une confiance moindre. Le
 rapprochement produit donc un **degré de confiance** et non un booléen, exactement comme le cadre
-posé en 1969 (chapitre 5).
+posé en 1969 (annexe B).
 
 | Confiance | Règle | Usage |
 |---|---|---|
@@ -305,7 +305,7 @@ ce qui n'importe pas sur 300 avis mais importera sur plusieurs centaines de mill
 
 ---
 
-## 7.8 Enrichir par le répertoire des entreprises, et une leçon sur les échantillons
+## 4.8 Enrichir par le répertoire des entreprises, et une leçon sur les échantillons
 
 Les SIRET des titulaires sont résolus auprès de l'interface publique Recherche d'entreprises, ce qui
 donne la taille de l'entreprise, donc la part des marchés attribués à des PME. 242 745 SIRET sont à
@@ -316,11 +316,11 @@ essai portait sur les soixante **plus gros** titulaires, et donnait 5 % de PME. 
 sur le même jeu donne 59,2 %. Le premier chiffre n'était pas faux, il répondait à une autre
 question : « parmi les plus gros titulaires, combien de PME ». **Choisir un échantillon au lieu de le
 tirer revient à choisir sa réponse.** Le chiffre publié, avec son encadrement, est de 60,8 % des
-attributions résolues, encadré entre 56,7 % et 63,5 % (chapitre 11).
+attributions résolues, encadré entre 56,7 % et 63,5 % (chapitre 8).
 
 ---
 
-## 7.9 Trois pièges d'identifiant, trouvés en chemin
+## 4.9 Trois pièges d'identifiant, trouvés en chemin
 
 Ils n'étaient pas cherchés, et chacun a coûté du temps avant d'être compris.
 
@@ -328,7 +328,7 @@ Ils n'étaient pas cherchés, et chacun a coûté du temps avant d'être compris
 fois, soit 281 404 lignes en trop sur 2 054 924, et **619 identifiants portent des montants
 contradictoires** d'une ligne à l'autre. Un marché a autant de lignes que de titulaires. Ce défaut a
 été découvert indirectement, en cherchant pourquoi un calcul n'était pas reproductible
-(chapitre 8), et il est maintenant mesuré.
+(chapitre 5), et il est maintenant mesuré.
 
 **Aucune clé de ligne n'existe en couche or.** 1 999 474 lignes pour 1 738 289 numéros de marché, et
 136 lignes strictement identiques à une autre. Aucune colonne ni combinaison de colonnes n'identifie
@@ -342,7 +342,7 @@ affiché en page d'accueil, surcompté de 36,7 % par les groupements d'entrepris
 
 ---
 
-## 7.10 Ce qui reste à faire sur cette couche
+## 4.10 Ce qui reste à faire sur cette couche
 
 Six points sont ouverts, et ils sont listés pour que le jury n'ait pas à les deviner.
 

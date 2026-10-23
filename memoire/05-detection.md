@@ -1,4 +1,4 @@
-# Chapitre 8. Détecter les marchés atypiques, et refuser un modèle par la mesure
+# Chapitre 5. Détecter les marchés atypiques, et refuser un modèle par la mesure
 
 > Brouillon. Les faits, les chiffres et les mesures sont vérifiés et reproductibles ; la
 > formulation reste à reprendre dans la voix de l'auteur.
@@ -15,23 +15,23 @@ prévues.
 
 ---
 
-## 8.1 Trois contraintes, dont une qui exclut d'emblée la méthode la plus performante
+## 5.1 Trois contraintes, dont une qui exclut d'emblée la méthode la plus performante
 
 **Il n'existe aucune vérité de référence.** Personne ne publie la liste des marchés irréguliers.
 L'apprentissage supervisé est donc impossible, non par choix mais par absence d'étiquettes. C'est la
-contrainte qui sépare ce problème de ceux d'OTTO ou d'Airbnb (chapitre 4), qui disposent du clic et
+contrainte qui sépare ce problème de ceux d'OTTO ou d'Airbnb (annexe C), qui disposent du clic et
 de la réservation.
 
 **Un faux signalement coûte plus cher qu'un signalement manqué.** Le service s'adresse au public.
 Signaler à tort un marché régulier abîme la confiance et peut nuire à une entreprise nommée.
 
 **Le résultat doit s'expliquer.** Un jury, un acheteur ou un journaliste demanderont pourquoi tel
-marché est signalé. « Le modèle l'a décidé » n'est pas une réponse acceptable, et le chapitre 5 en
+marché est signalé. « Le modèle l'a décidé » n'est pas une réponse acceptable, et le annexe B en
 donne le précédent judiciaire avec l'affaire Air Canada.
 
 ---
 
-## 8.2 Des variables, pas des colonnes : un marché se juge par rapport à ses pairs
+## 5.2 Des variables, pas des colonnes : un marché se juge par rapport à ses pairs
 
 Une colonne est reçue, une variable est fabriquée. Le principe qui guide toute cette couche tient en
 une phrase : **un marché de voirie à 500 000 euros n'est ni cher ni bon marché ; il l'est par
@@ -44,7 +44,7 @@ rapport aux autres marchés de voirie.** Trois groupes de comparaison sont donc 
 | le couple acheteur et titulaire | une relation | nombre de marchés remportés ensemble |
 
 Deux choix de calcul méritent d'être défendus, car ils viennent directement des mesures du
-chapitre 2.
+chapitre 1.
 
 **L'écart est calculé sur le logarithme du montant**, parce que la distribution des montants est
 log-normale. Comparer des montants bruts donnerait un poids démesuré aux gros marchés et rendrait
@@ -52,14 +52,14 @@ tout petit marché normal par construction.
 
 **La dispersion est mesurée par l'écart interquartile plutôt que par l'écart type.** Sur des données
 où une ligne sur trente porte un montant fantaisiste, l'écart type est lui-même faussé par ces
-valeurs : une valeur extrême gonfle la dispersion et **se masque elle-même**. La section 8.8 montre
+valeurs : une valeur extrême gonfle la dispersion et **se masque elle-même**. La section 5.8 montre
 que cette précaution, pourtant justifiée, n'a pas pu être départagée par la mesure.
 
 ![Les familles d'achat les moins concurrentielles](figures/09-offre-unique-par-cpv.png)
 
 ---
 
-## 8.3 Les cinq signaux, et leurs seuils
+## 5.3 Les cinq signaux, et leurs seuils
 
 | Signal | Règle | Marchés désignés | Part des lignes de la couche or |
 |---|---|---|---|
@@ -83,7 +83,7 @@ chacun porte sa définition.
 incluant le marché examiné : le comparer à elle revient à le comparer à lui-même. C'est une fuite de
 données, discrète et réelle. Le seuil de trente marchés l'évite.
 
-**Le seuil des 214 000 euros sur l'offre unique n'est pas arbitraire.** Le chapitre 2 a mesuré que
+**Le seuil des 214 000 euros sur l'offre unique n'est pas arbitraire.** Le chapitre 1 a mesuré que
 l'offre unique est banale sur les petits marchés, 27,1 % sous 25 000 euros, et plus rare sur les
 gros, 16,2 % au-dessus de dix millions. Le signal ne se déclenche donc qu'au-dessus du seuil de
 procédure formalisée, là où une offre unique est réellement inhabituelle. **Le signal utile n'est
@@ -104,14 +104,14 @@ pas[^litterature].
 | Durée de publicité anormale (composante du CRI) | **non** | même raison |
 | Fractionnement sous les seuils (R011) | pas encore | calculable en principe, non implémenté |
 
-Ce tableau justifie à lui seul le rapprochement du chapitre 7 : **trois des six composantes de
+Ce tableau justifie à lui seul le rapprochement du chapitre 4 : **trois des six composantes de
 l'indice composite de la littérature sont des délais de procédure, que seul le bulletin d'annonces
 contient.** Relier les deux sources n'est donc pas un ornement, c'est la condition pour calculer les
 indicateurs reconnus.
 
 ---
 
-## 8.4 L'étiquette faible, et pourquoi la précision annoncée est un minorant
+## 5.4 L'étiquette faible, et pourquoi la précision annoncée est un minorant
 
 Faute de vérité de référence, l'évaluation utilise une **étiquette faible** : les montants que le
 producteur des données signale lui-même comme suspects ou aberrants.
@@ -136,7 +136,7 @@ vérifier.
 
 ---
 
-## 8.5 L'erreur la plus instructive du projet : une valeur absolue
+## 5.5 L'erreur la plus instructive du projet : une valeur absolue
 
 **Symptôme.** Une mesure d'essai donnait 75,8 % de précision. Le script écrit ensuite, censé faire
 la même chose, en donnait 23,8 %. Trois fois moins, sur les mêmes données et au même seuil.
@@ -158,7 +158,7 @@ qu'un marché à cent millions. Le signal existe donc, il est exposé, et il por
 
 ---
 
-## 8.6 Le protocole de comparaison, et les deux métriques écartées
+## 5.6 Le protocole de comparaison, et les deux métriques écartées
 
 **À budget d'alertes égal.** Pour un nombre d'alertes donné, on prend les N marchés les mieux classés
 par chaque méthode et on compare leur précision. Comparer une règle qui signale 8 331 marchés à un
@@ -179,7 +179,7 @@ pressé aurait citées, et chacune aurait permis d'annoncer un excellent résult
 
 ---
 
-## 8.7 Dix méthodes, et le résultat
+## 5.7 Dix méthodes, et le résultat
 
 Précision à budget d'alertes égal, sur les 2 053 765 marchés du jeu évalué le 29 septembre 2026.
 
@@ -217,7 +217,7 @@ secondes d'application sur deux millions de lignes[^cout-modele].
 
 ---
 
-## 8.8 Quatre choses que la mesure a apprises, et qui n'étaient pas prévues
+## 5.8 Quatre choses que la mesure a apprises, et qui n'étaient pas prévues
 
 ### 1. Un modèle sous le hasard n'est pas un mauvais modèle
 
@@ -231,7 +231,7 @@ La métrique ne mesurait donc pas la qualité du modèle, elle mesurait un désa
 Orienté du même côté que la règle, **sans qu'une seule ligne de son apprentissage ne change**, le
 modèle passe de 0 à 73 % sur les cent premières alertes.
 
-C'est la même leçon que la section 8.5, appliquée cette fois au modèle. Et c'est, au fond,
+C'est la même leçon que la section 5.5, appliquée cette fois au modèle. Et c'est, au fond,
 l'argument central de ce chapitre : **les modèles ne trouvent des valeurs extrêmes qu'une fois qu'on
 leur a dit de quel côté regarder, et cette connaissance vient du métier, pas des données.** Une
 règle la porte en clair et l'explique à l'utilisateur ; un modèle ne l'a que si on la lui impose de
@@ -271,7 +271,7 @@ Trois causes empilées, trouvées l'une après l'autre.
 1. Le moteur exécute en parallèle et ne garantit **aucun ordre** de lignes sans tri explicite.
    Isolation Forest tire ses échantillons **par position**.
 2. Trier par identifiant de marché n'a pas suffi : **cet identifiant identifie un marché, pas une
-   ligne.** C'est ainsi que le défaut de qualité décrit au chapitre 7 a été découvert, soit 140 350
+   ligne.** C'est ainsi que le défaut de qualité décrit au chapitre 4 a été découvert, soit 140 350
    identifiants répétés et 619 porteurs de montants contradictoires.
 3. Le tri porte donc désormais sur toutes les colonnes utilisées.
 
@@ -288,7 +288,7 @@ conservée dans les tableaux uniquement comme contre-exemple.
 
 ---
 
-## 8.9 Pourquoi les règles restent, et ce qui ferait changer d'avis
+## 5.9 Pourquoi les règles restent, et ce qui ferait changer d'avis
 
 | Option | Pour | Contre | Verdict |
 |---|---|---|---|
@@ -305,7 +305,7 @@ règle à budget d'alertes égal. Ce jour-là, la décision changera, et elle se
 
 ---
 
-## 8.10 Un signal n'est pas une accusation
+## 5.10 Un signal n'est pas une accusation
 
 C'est une règle de conception, et elle a des conséquences concrètes sur le code et sur l'écran.
 
@@ -323,13 +323,13 @@ rien à se reprocher. Une entente et un monopole technique produisent le même s
 « restriction injustifiée de l'accès aux contrats publics », c'est-à-dire un **risque**, et ses
 auteurs le valident contre des indices de corruption sans jamais prétendre désigner des faits.
 
-**Parce que l'exemple d'ALICE le montre** (chapitre 4) : l'outil brésilien envoie ses alertes à des
+**Parce que l'exemple d'ALICE le montre** (annexe C) : l'outil brésilien envoie ses alertes à des
 auditeurs, et c'est l'auditeur qui décide. Le gain mesuré, un audit préventif en huit jours au lieu
 de plus de quatre cents, vient de l'orientation de l'attention, pas d'un verdict automatique.
 
 ---
 
-## 8.11 Limites, et ce qui reste à mesurer
+## 5.11 Limites, et ce qui reste à mesurer
 
 **Les règles ne trouvent que ce qu'on a pensé à chercher.** C'est leur limite de principe, et c'est
 l'argument le plus sérieux en faveur d'un modèle non supervisé en complément.
@@ -361,7 +361,7 @@ sont donc à lire comme des ordres de grandeur.
 Enfin, deux mesures manquent et sont identifiées comme prioritaires : **la même comparaison sur le
 signal d'offre unique**, qui ne dépend pas du montant et n'entretient donc pas cette parenté gênante
 avec l'étiquette, et **un échantillon jugé à la main**. La validation hors échantillon de la règle de
-prix, elle, est faite : elle figure au chapitre 11, avec ce que la fuite de données ajoutait et ce
+prix, elle, est faite : elle figure au chapitre 8, avec ce que la fuite de données ajoutait et ce
 que la variation entre années interdit de conclure.
 
 ---

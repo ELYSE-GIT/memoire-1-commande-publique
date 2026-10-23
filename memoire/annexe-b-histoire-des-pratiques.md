@@ -1,4 +1,4 @@
-# Chapitre 5. Histoire des pratiques : d'où viennent ces outils, et pourquoi
+# Annexe B. Histoire des pratiques : d'où viennent ces outils, et pourquoi
 
 > Brouillon. Les faits, les dates et les sources sont vérifiés ; la formulation reste à reprendre
 > dans la voix de l'auteur.
@@ -6,7 +6,7 @@
 Un mémoire d'ingénierie peut se passer d'histoire. Celui-ci ne le peut pas, parce que sa thèse est
 un refus : refuser le cluster, refuser le service géré, refuser le grand modèle de langue. Or **on
 ne peut pas refuser sérieusement un outil sans savoir quel problème il a été créé pour résoudre.**
-Chaque marche de l'escalier décrit au chapitre 6 existe parce qu'une pratique antérieure avait
+Chaque marche de l'escalier décrit au chapitre 3 existe parce qu'une pratique antérieure avait
 rencontré une limite mesurée. Connaître cette limite est la seule façon de savoir si on l'a
 soi-même rencontrée.
 
@@ -16,7 +16,7 @@ sont signalées comme telles.
 
 ---
 
-## 5.1 Le texte : de la règle à l'attention, et ce que le projet garde de chaque étape
+## B.1 Le texte : de la règle à l'attention, et ce que le projet garde de chaque étape
 
 | Date | Étape | Le problème qu'elle résout |
 |---|---|---|
@@ -47,17 +47,17 @@ date de grep, et celle de la mise à disposition de ChatGPT[^reserves-texte].
 document. Son racineur et sa liste de mots vides prolongent la philosophie des petits outils
 d'Unix. Son assistant, lui, est un système à base de règles, et **ELIZA est la raison pour laquelle
 il refuse de feindre la compréhension** : il annonce ce qu'il a compris, cite ses sources, et répond
-« je ne sais pas » quand aucune règle ne s'applique (chapitre 9).
+« je ne sais pas » quand aucune règle ne s'applique (chapitre 6).
 
 **Ce qu'il n'a pas pris, et où en est la marche suivante.** L'extension `pgvector` est installée,
 et aucune colonne vectorielle n'est créée. La marche de 2013 à 2019, celle des plongements, est
 donc identifiée et **non franchie**, parce qu'aucune mesure n'a montré que la recherche lexicale ne
-suffisait pas. Le chapitre 9 publie le protocole qui déclenchera ce franchissement, le jour où la
+suffisait pas. Le chapitre 6 publie le protocole qui déclenchera ce franchissement, le jour où la
 mesure l'exigera.
 
 ---
 
-## 5.2 Le data engineering : un balancier, et non une progression
+## B.2 Le data engineering : un balancier, et non une progression
 
 | Date | Étape | Le problème qu'elle résout |
 |---|---|---|
@@ -91,11 +91,11 @@ processus.
 découpage en couches bronze, argent et or dont la définition de référence est publiée par
 Databricks[^medaillon], et le principe de l'ELT. **Ce qu'il refuse** : Spark, parce qu'une grappe
 pour 250 Mo coûte plus que le calcul, et un orchestrateur pour l'instant, parce que les trois
-sources sont indépendantes (chapitre 6).
+sources sont indépendantes (chapitre 3).
 
 ---
 
-## 5.3 Le ML et le MLOps : le cadre de 1969 est encore celui du projet
+## B.3 Le ML et le MLOps : le cadre de 1969 est encore celui du projet
 
 | Date | Étape | Le problème qu'elle résout |
 |---|---|---|
@@ -109,7 +109,7 @@ sources sont indépendantes (chapitre 6).
 
 **L'ancrage le plus fort de ce projet dans cette frise date de 1969.** Fellegi et Sunter n'ont pas
 proposé un classement binaire mais **trois issues**, dont une « à revoir » confiée à un humain. Le
-rapprochement du BOAMP et des DECP décrit au chapitre 7 reprend cette structure exactement : une
+rapprochement du BOAMP et des DECP décrit au chapitre 4 reprend cette structure exactement : une
 confiance haute qui s'affiche, une confiance moyenne qui s'affiche avec sa mention de doute, et une
 confiance faible qui ne s'affiche jamais. Cinquante-sept ans plus tard, la bonne réponse à un
 appariement incertain reste la même : ne pas trancher à la place du lecteur.
@@ -117,15 +117,15 @@ appariement incertain reste la même : ne pas trancher à la place du lecteur.
 La leçon de Sculley est la deuxième que le projet applique directement. Si l'essentiel du coût d'un
 système d'apprentissage se trouve autour du modèle, alors un projet qui n'a pas besoin de modèle
 économise bien plus que le temps d'entraînement : il économise la surveillance de dérive, le
-registre de modèles, le réentraînement et la reproductibilité des expériences. Le chapitre 8 montre
+registre de modèles, le réentraînement et la reproductibilité des expériences. Le chapitre 5 montre
 que cette économie a été **mesurée** et non supposée.
 
-Isolation Forest, enfin, est la méthode que le chapitre 8 compare point par point à une règle
+Isolation Forest, enfin, est la méthode que le chapitre 5 compare point par point à une règle
 écrite en SQL. Le résultat est publié, y compris dans ce qu'il a d'inattendu.
 
 ---
 
-## 5.4 Le déploiement : le même balancier, vingt ans plus tard
+## B.4 Le déploiement : le même balancier, vingt ans plus tard
 
 | Date | Étape | Le problème qu'elle résout |
 |---|---|---|
@@ -143,13 +143,13 @@ frise où l'argument est un chiffre, et c'est pour cette raison qu'il pèse.
 
 **Ce que le projet garde** : Docker, pour que l'image du Mac et celle du VPS soient la même.
 **Ce qu'il refuse** : Kubernetes, parce qu'il ordonnance des conteneurs sur une flotte et que le
-projet a une machine. Le critère qui changerait cette décision est écrit au chapitre 6, et il est
+projet a une machine. Le critère qui changerait cette décision est écrit au chapitre 3, et il est
 vérifiable : le jour où la charge mesurée dépasse ce qu'une machine encaisse, ou le jour où une
 indisponibilité devient inacceptable pour l'usage.
 
 ---
 
-## 5.5 Les échecs qui ont changé les pratiques, et ce que le projet en a tiré
+## B.5 Les échecs qui ont changé les pratiques, et ce que le projet en a tiré
 
 Les frises racontent les réussites. Les pratiques d'ingénierie, elles, sont surtout faites de
 cicatrices. Chaque ligne du tableau suivant est un échec documenté par une source primaire, et une
@@ -160,16 +160,16 @@ règle appliquée dans ce dépôt.
 | **Public Health England, 2020** | 15 841 cas positifs perdus, l'ancien format de tableur étant limité à 65 536 lignes | **aucun tableur dans la chaîne** : Parquet, DuckDB, PostgreSQL ; tests de réconciliation du nombre de lignes source et cible |
 | **GitLab.com, 2017** | base de production supprimée, et « out of five backup/replication techniques deployed none are working reliably » ; environ 6 heures de données perdues | sauvegardes copiées hors du VPS et **restauration testée**, pas seulement configurée (phase 9) |
 | **Knight Capital, 2012** | code déployé à la main sur 8 serveurs, un oublié, du code mort réactivé ; plus de 460 millions de dollars perdus en 45 minutes | **déploiement entièrement automatisé**, images versionnées, aucune étape manuelle |
-| **Louvois, 2011 à 2015** | environ 200 contrôles de cohérence jugés bloquants ont été neutralisés ; 358 millions d'euros de trop-versés | **ne jamais désactiver un contrôle pour faire passer des données** : les tests de données bloquent, et la sévérité correspond à la promesse de la couche (chapitre 7) |
+| **Louvois, 2011 à 2015** | environ 200 contrôles de cohérence jugés bloquants ont été neutralisés ; 358 millions d'euros de trop-versés | **ne jamais désactiver un contrôle pour faire passer des données** : les tests de données bloquent, et la sévérité correspond à la promesse de la couche (chapitre 4) |
 | **SIRHEN et ONP** | 378 puis plus de 400 millions d'euros pour 2 % des personnels gérés ; 346 millions pour l'ONP | **livraisons petites et incrémentales**, une phase produit du code, une section et des mesures |
-| **Zillow Offers, 2021** | fermeture de l'activité, 304 millions de dollars de dépréciation, le modèle de prix ayant surévalué les achats | **un score oriente, il ne décide pas** : « à examiner », jamais « irrégulier » (chapitre 8) |
-| **Google Flu Trends, 2014** | surestimation 100 semaines sur 108, par « big data hubris » et dérive de l'outil de mesure | **validation hors échantillon et dans le temps**, publiée avec son incertitude (chapitre 11) |
+| **Zillow Offers, 2021** | fermeture de l'activité, 304 millions de dollars de dépréciation, le modèle de prix ayant surévalué les achats | **un score oriente, il ne décide pas** : « à examiner », jamais « irrégulier » (chapitre 5) |
+| **Google Flu Trends, 2014** | surestimation 100 semaines sur 108, par « big data hubris » et dérive de l'outil de mesure | **validation hors échantillon et dans le temps**, publiée avec son incertitude (chapitre 8) |
 | **Amazon, outil de recrutement, 2018** | le modèle pénalisait les CV contenant « women's », reproduisant un biais historique | **audit des variables servant de substitut** : taille d'entreprise, région, PME contre grands groupes |
 | **Moffatt contre Air Canada, 2024** | la compagnie soutient que son agent conversationnel est « a separate legal entity responsible for its own actions » ; le tribunal répond « This is a remarkable submission » | **l'éditeur répond des réponses de son assistant** : sources citées, refus en l'absence de source, jeu d'évaluation en intégration continue |
 | **NYC MyCity, 2024** | l'agent municipal affirmait que des employeurs pouvaient prélever une part des pourboires, contrairement à la loi | domaine réglementaire : **sources officielles uniquement**, et « je ne sais pas » assumé |
 | **CrowdStrike, 2024** | 21 champs fournis contre 20 attendus, lecture mémoire hors limites ; 8,5 millions de machines touchées | **validation du schéma des entrées** et déploiement progressif, même sur une seule machine |
 | **Log4Shell, 2021 ; Codecov, 2021 ; xz-utils, 2024** | exécution de code à distance notée 10,0 ; exfiltration de secrets d'intégration continue ; porte dérobée repérée parce que les connexions passaient de 0,3 à 0,8 seconde | inventaire des dépendances, analyse automatique en intégration, versions épinglées. Et : **l'observabilité détecte aussi des anomalies de sécurité** |
-| **MinIO, 2025 à 2026** | retrait progressif de l'édition libre, dépôt archivé, édition commerciale à partir de 96 000 dollars par an | **la gouvernance d'une dépendance compte autant que ses performances** (chapitre 4) |
+| **MinIO, 2025 à 2026** | retrait progressif de l'édition libre, dépôt archivé, édition commerciale à partir de 96 000 dollars par an | **la gouvernance d'une dépendance compte autant que ses performances** (annexe C) |
 
 Sources complètes, avec les réserves de vérification, dans `ressources/histoire-sources-cas.md`,
 section 4. Deux précisions : le montant de Knight Capital est celui de l'ordonnance du régulateur
@@ -179,7 +179,7 @@ non du communiqué officiel[^reserves-echecs].
 
 ---
 
-## 5.6 Ce que l'histoire enseigne, et qui tient en une règle
+## B.6 Ce que l'histoire enseigne, et qui tient en une règle
 
 Trois constats se dégagent, et ils fondent la méthode du reste du mémoire.
 
@@ -221,7 +221,7 @@ quoi la mesure paraîtrait truquée. Voir l'ADR 0002.
 [^medaillon]: Databricks, « What is Medallion Architecture? »,
 https://www.databricks.com/blog/what-is-medallion-architecture Le terme est proposé par cet
 éditeur. Aucun retour d'expérience d'une entreprise française nommée employant explicitement ces
-trois termes n'a pu être vérifié (chapitre 4, section 4.6).
+trois termes n'a pu être vérifié (annexe C, section C.6).
 
 [^facture-37signals]: 37signals, « Our cloud spend in 2022 », 13 janvier 2023,
 https://dev.37signals.com/our-cloud-spend-in-2022/ ; David Heinemeier Hansson, « Why we're leaving

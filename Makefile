@@ -267,6 +267,27 @@ bench-couts:
 figures:
 	uv run python mesures/figures.py
 
+## memoire : fabrique le PDF du memoire depuis les sources Markdown
+## Les chiffres cites sont verifies avant le rendu : un chiffre devenu faux fait echouer un test
+## en le nommant, plutot que de sortir un PDF qui affirme quelque chose d'inexact.
+##
+## Pourquoi Quarto plutot qu'autre chose :
+##   Quarto    lit le Markdown deja ecrit, gere les notes, les tableaux et les figures  retenu
+##   Typst     plus rapide, mais il faudrait convertir les sources et reprendre les notes
+##   Word      on pourrait relire dedans, mais les corrections sortiraient du depot
+##   LaTeX nu  tout controler, pour reecrire ce que Quarto fournit deja
+memoire:
+	uv run pytest tests/test_chiffres_memoire.py tests/test_couts.py --no-cov -q
+	cd memoire && quarto render memoire.qmd --output-dir sortie
+	@echo "PDF : memoire/sortie/memoire.pdf"
+
+## memoire-pages : compte les pages du PDF rendu, pour savoir ou on en est de la cible
+memoire-pages:
+	@test -f memoire/sortie/memoire.pdf || (echo "Lancer 'make memoire' d'abord" && exit 1)
+	@uv run python -c "import re, pathlib; \
+	        donnees = pathlib.Path('memoire/sortie/memoire.pdf').read_bytes(); \
+	        print('pages :', len(re.findall(rb'/Type\\s*/Page[^s]', donnees)))"
+
 ## notebooks : rejoue les notebooks et verifie qu'aucune cellule n'est en erreur
 ## (le formatage passe avant l'execution : ruff format reecrit aussi les cellules, et le faire
 ## apres donnerait des sorties enregistrees pour un code deja modifie)

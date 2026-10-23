@@ -1,4 +1,4 @@
-# Chapitre 6. L'architecture retenue, service par service
+# Chapitre 3. L'architecture retenue, service par service
 
 > Brouillon. Les faits, les chiffres et les mesures sont vérifiés et reproductibles ; la
 > formulation reste à reprendre dans la voix de l'auteur.
@@ -13,7 +13,7 @@ architecture, c'est une habitude.
 
 ---
 
-## 6.1 Les cinq contraintes qui déterminent tout le reste
+## 3.1 Les cinq contraintes qui déterminent tout le reste
 
 Aucune de ces contraintes n'est technique à l'origine. Toutes ont des conséquences techniques
 lourdes.
@@ -24,14 +24,14 @@ lourdes.
 | **Sobre** | la machine de développement est un ordinateur portable de 16 Go, utilisé au quotidien pour autre chose | rien ne tourne en permanence, plafonds de processeur et de mémoire explicites, tout se supprime proprement |
 | **Démontrable** | la soutenance peut se faire hors ligne, écran partagé | aucune dépendance à un réseau de diffusion de contenu, les pages fonctionnent sans JavaScript, un plan B hors ligne |
 | **Une seule machine modeste en production** | un VPS, moins puissant que le Mac | pas de grappe, pas d'ordonnanceur de conteneurs, une empreinte mémoire qui tient |
-| **Coût mesuré et défendable** | c'est la thèse du mémoire | chaque brique est libre, et son coût d'exploitation est chiffré (chapitre 11) |
+| **Coût mesuré et défendable** | c'est la thèse du mémoire | chaque brique est libre, et son coût d'exploitation est chiffré (chapitre 8) |
 
 La quatrième est la plus structurante, et la moins négociable : elle écarte d'emblée toute solution
 dont le prix d'entrée est une grappe de machines.
 
 ---
 
-## 6.2 Le trajet de la donnée
+## 3.2 Le trajet de la donnée
 
 ```
    SOURCES PUBLIQUES                COLLECTE              TRANSFORMATION            SERVICE
@@ -69,7 +69,7 @@ nettoyage ou un index.
 
 ---
 
-## 6.3 Deux moteurs de base de données, et pourquoi la publication ne transforme rien
+## 3.3 Deux moteurs de base de données, et pourquoi la publication ne transforme rien
 
 C'est la décision qui surprend le plus, et celle qui se justifie le mieux par la mesure.
 
@@ -105,7 +105,7 @@ de la chaîne de transformation et celle du site, et aucun moyen de savoir laque
 
 ---
 
-## 6.4 Les six services, et le fichier à ouvrir
+## 3.4 Les six services, et le fichier à ouvrir
 
 | Service | Rôle | Où regarder | Ce qui a été écarté |
 |---|---|---|---|
@@ -123,7 +123,7 @@ résultats en CSV, dont les figures du mémoire sont tracées.
 
 ---
 
-## 6.5 Un seul processus pour le site et l'API, et pourquoi c'est un choix d'architecture
+## 3.5 Un seul processus pour le site et l'API, et pourquoi c'est un choix d'architecture
 
 Le site et l'API tournent dans le même processus, et les pages appellent les fonctions de route de
 l'API **dans le processus, jamais par HTTP**. Une page ne contient ni SQL ni calcul métier.
@@ -150,10 +150,10 @@ demande pas.
 
 ---
 
-## 6.6 Pas d'orchestrateur, et le critère précis qui le ferait entrer
+## 3.6 Pas d'orchestrateur, et le critère précis qui le ferait entrer
 
 Dagster figurait dans les outils envisagés au départ, et la Fédération Wallonie-Bruxelles en fait un
-usage proche du nôtre (chapitre 4). Il n'est pas retenu, et la raison est un raisonnement que l'on
+usage proche du nôtre (annexe C). Il n'est pas retenu, et la raison est un raisonnement que l'on
 peut contredire : **un orchestrateur résout un problème de dépendances entre étapes.** Les trois
 sources du projet sont indépendantes et se collectent en une commande chacune. L'introduire
 reviendrait à faire tourner un service de plus pour un besoin qui n'existe pas.
@@ -169,7 +169,7 @@ toute façon comprendre pour les expliquer devant un jury.
 
 ---
 
-## 6.7 Ce qui est versionné, et ce qui ne l'est pas
+## 3.7 Ce qui est versionné, et ce qui ne l'est pas
 
 C'est la question la plus fréquemment posée sur ce dépôt, et la réponse est une règle simple : **on
 versionne la preuve, pas la donnée.**
@@ -188,7 +188,7 @@ chiffre porte bien sur ce fichier-là », qui sera posée en soutenance.
 
 ---
 
-## 6.8 Les cinq principes tenus dans tout le dépôt
+## 3.8 Les cinq principes tenus dans tout le dépôt
 
 Ils reviennent partout, et les connaître dispense de lire le reste.
 
@@ -198,7 +198,7 @@ chaîne d'intégration nomme le chiffre devenu faux.
 
 **2. Marquer plutôt que supprimer.** Aucune ligne n'est jamais retirée. Une ligne fautive porte la
 liste de ses problèmes, en clair. Une ligne effacée ne peut plus être expliquée à un jury, ni
-corrigée par l'administration qui l'a publiée (chapitre 7).
+corrigée par l'administration qui l'a publiée (chapitre 4).
 
 **3. Le principe de l'escalier.** Règles et expressions régulières, puis statistique, puis
 apprentissage automatique, puis plongements lexicaux, puis grands modèles de langue. **On ne monte
@@ -221,7 +221,7 @@ franchissement.
 
 **4. Un signal n'est pas une accusation.** Tout marché signalé l'est comme une invitation à
 vérifier. Un marché très spécialisé attire peu de candidats sans que personne n'ait rien à se
-reprocher, et le service l'écrit à l'écran (chapitre 8).
+reprocher, et le service l'écrit à l'écran (chapitre 5).
 
 **5. Refuser un outil demande plus d'arguments que l'adopter.** La question n'est jamais « cet outil
 est-il bon » mais « qu'est-ce que je devrais écrire sans lui ».
@@ -236,13 +236,13 @@ est-il bon » mais « qu'est-ce que je devrais écrire sans lui ».
 | Dagster | écarté pour l'instant | résout des dépendances entre étapes, qui n'existent pas encore |
 | PySpark | écarté | une grappe pour 250 Mo coûte plus que le calcul |
 | polars | écarté | une interface de plus, alors que le SQL sert déjà dans dbt |
-| MinIO et le stockage objet | écarté | besoin non démontré, et gouvernance incertaine (chapitre 4) |
+| MinIO et le stockage objet | écarté | besoin non démontré, et gouvernance incertaine (annexe C) |
 | Un moteur de recherche dédié | écarté | un service de plus à exploiter et à sécuriser, pour un besoin non mesuré |
 | Jeux de données prêts à l'emploi | écartés | partir d'un jeu nettoyé supprimerait le problème à démontrer |
 
 ---
 
-## 6.9 Ce que cette architecture ne sait pas faire
+## 3.9 Ce que cette architecture ne sait pas faire
 
 Une architecture se juge aussi sur ce qu'elle refuse de prétendre. Six limites sont connues et
 mesurées.
@@ -251,7 +251,7 @@ mesurées.
 l'écriture est faite pour un seul processus, et aucune réplication n'est prévue.
 
 **Elle n'offre aucune garantie de disponibilité.** Une panne du VPS est une interruption de service.
-Le chiffrage du chapitre 11 retient d'ailleurs, chez les fournisseurs comparés, des configurations
+Le chiffrage du chapitre 8 retient d'ailleurs, chez les fournisseurs comparés, des configurations
 à une seule zone, précisément pour comparer à périmètre égal.
 
 **Le démarrage du service prend de 11 à 27 secondes** selon l'état des caches de la base, réserve de
@@ -273,7 +273,7 @@ attend une décision de sécurité : comment il s'authentifie.
 
 ---
 
-## 6.10 Les douze décisions, et où les lire
+## 3.10 Les douze décisions, et où les lire
 
 Chaque choix de ce chapitre est tracé dans une décision d'architecture datée, qui porte son
 contexte, ses alternatives et ses conséquences. C'est la forme sous laquelle une architecture se

@@ -1,4 +1,4 @@
-# Chapitre 9. Recherche et assistant : du mot-clé à la réponse sourcée
+# Chapitre 6. Recherche et assistant : du mot-clé à la réponse sourcée
 
 > Brouillon. Les faits, les chiffres et les mesures sont vérifiés et reproductibles ; la
 > formulation reste à reprendre dans la voix de l'auteur.
@@ -17,7 +17,7 @@ pas une limite subie.
 
 ---
 
-## 9.1 Deux besoins distincts, souvent confondus
+## 6.1 Deux besoins distincts, souvent confondus
 
 Un utilisateur arrive avec l'un ou l'autre de ces deux besoins, et ils n'appellent pas le même
 outil.
@@ -34,14 +34,14 @@ Les deux sections suivantes traitent le premier besoin, les suivantes le second.
 
 ---
 
-## 9.2 Chercher : deux moteurs, deux sémantiques, et le compromis mesuré
+## 6.2 Chercher : deux moteurs, deux sémantiques, et le compromis mesuré
 
 ### Le choix du moteur
 
 Jusqu'à cette phase, le projet n'avait aucun serveur. DuckDB est une bibliothèque chargée dans le
 processus Python : rien n'écoute sur un port, rien ne survit à la fin d'une commande. C'est la
 raison pour laquelle le projet n'avait ni conteneur ni `compose.yaml` avant ce moment, ce qui est
-expliqué au chapitre 7.
+expliqué au chapitre 4.
 
 Servir un site change cela : plusieurs visiteurs lisent en même temps, et un fichier DuckDB ouvert
 par un seul processus ne le permet pas. PostgreSQL a été retenu, avec son extension `pgvector`
@@ -52,7 +52,7 @@ que la cacher** : elle a été prise avant d'avoir mesuré que DuckDB ne suffisa
 retenu est que les latences mesurées sur PostgreSQL sont celles de la production, alors que des
 mesures faites sur DuckDB pour déployer PostgreSQL auraient produit des chiffres sans rapport avec
 le VPS. La contrepartie a été de mesurer les deux moteurs côte à côte malgré tout, pour que la
-comparaison existe au lieu d'être supposée[^adr8].
+comparaison existe au lieu d'être supposée[^adr8-rech].
 
 ### La question posée par le moteur
 
@@ -95,7 +95,7 @@ n'est pas un chiffre juste.
 
 ---
 
-## 9.3 Demander : l'escalier appliqué à la compréhension
+## 6.3 Demander : l'escalier appliqué à la compréhension
 
 Comprendre une question écrite en français est le genre de problème où l'on saute volontiers
 plusieurs marches d'un coup. L'escalier complet est le suivant.
@@ -113,7 +113,7 @@ qui donne sa valeur à la conclusion.
 
 ---
 
-## 9.4 Trois versions, dont deux fausses pistes conservées
+## 6.4 Trois versions, dont deux fausses pistes conservées
 
 ### Version 1 : zéro réponse sur sept questions
 
@@ -221,7 +221,7 @@ laissent de la marge pour les variations de vocabulaire à la prochaine collecte
 
 ---
 
-## 9.5 Un effet de bord mesuré, venu d'un choix antérieur
+## 6.5 Un effet de bord mesuré, venu d'un choix antérieur
 
 La table des fréquences a sorti deux mots vides avec des fréquences énormes, ce qui ne devrait pas
 arriver, puisqu'un mot vide n'est pas censé être indexé du tout.
@@ -254,7 +254,7 @@ antérieures parce qu'elles ont été documentées.
 
 ---
 
-## 9.6 Répondre en citant : ce que « sourcée » veut dire ici
+## 6.6 Répondre en citant : ce que « sourcée » veut dire ici
 
 Une réponse sourcée n'est pas une réponse accompagnée de liens. C'est une réponse dont **chaque
 chiffre est reproductible**. L'assistant rend trois choses ensemble :
@@ -290,7 +290,7 @@ améliorerait la forme **en retirant cette garantie**.
 
 ---
 
-## 9.7 Le refus comme fonctionnalité
+## 6.7 Le refus comme fonctionnalité
 
 Un assistant qui répond toujours invente. Trois refus sont implémentés, et c'est la partie du
 composant dont le projet est le plus sûr.
@@ -301,7 +301,7 @@ aucune mesure de la qualité d'exécution. L'assistant le dit, plutôt que de co
 plus de marchés » avec « travaille le mieux ».
 
 **L'accusation.** « Qui a fraudé sur les marchés de voirie ? » demande une qualification pénale. Le
-chapitre 8 a mesuré que **48 % des marchés signalés par la règle de prix sont des faux
+chapitre 5 a mesuré que **48 % des marchés signalés par la règle de prix sont des faux
 positifs**[^adr6]. Répondre serait diffamatoire. Le refus n'est pas une limite technique : c'est
 le comportement correct, et le message de refus donne ce chiffre pour que l'utilisateur comprenne
 pourquoi.
@@ -321,7 +321,7 @@ question est perdue.
 
 ---
 
-## 9.8 Ce que coûte la vitesse
+## 6.8 Ce que coûte la vitesse
 
 L'assistant répondait juste, et lentement : une question mesurée à **54 secondes**.
 
@@ -369,7 +369,7 @@ question est cassé, même si toutes les suivantes sont rapides.
 ### Une erreur d'attribution, corrigée par le banc d'essai
 
 Le banc rejoue **les deux versions de chaque décision**, et non la seule version retenue. Cette
-discipline, héritée du chapitre 8 où les dix méthodes de détection écartées restent mesurables, a
+discipline, héritée du chapitre 5 où les dix méthodes de détection écartées restent mesurables, a
 immédiatement servi.
 
 La première rédaction attribuait le gain du démarrage à une requête récursive qui parcourt l'index
@@ -384,7 +384,7 @@ dans un commentaire.
 
 ---
 
-## 9.9 Ce qui est mesuré, et ce qui ne l'est pas
+## 6.9 Ce qui est mesuré, et ce qui ne l'est pas
 
 | mesure | valeur |
 |---|---|
@@ -409,12 +409,12 @@ les résultats de qualité sont les trois vérifications automatiques, qui ne d�
 **La pertinence de la recherche n'est pas mesurée.** « EUROVIA ILE DE FRANCE est le premier
 titulaire » est vérifiable ; « c'est une réponse utile à la question posée » ne l'est pas. Le banc
 de recherche prépare un fichier de jugements à remplir à la main, sur le protocole utilisé au
-chapitre 7 pour le rapprochement des sources. Tant qu'il est vide, ce qui est mesuré est la
+chapitre 4 pour le rapprochement des sources. Tant qu'il est vide, ce qui est mesuré est la
 vitesse et le silence, pas la qualité.
 
 ---
 
-## 9.10 Le défaut connu, laissé en place, et pourquoi
+## 6.10 Le défaut connu, laissé en place, et pourquoi
 
 « travaux » apparaît dans 17,3 % des marchés, « les » dans 13,3 %. La fréquence ne peut donc pas
 garder l'un et écarter l'autre, et le plafond à 12 % écarte les deux. « travaux de voirie » cherche
@@ -431,7 +431,7 @@ mémoire reproche aux architectures choisies par habitude.
 
 ---
 
-## 9.11 Ce qui ferait monter d'une marche
+## 6.11 Ce qui ferait monter d'une marche
 
 Une décision n'est défendable que si l'on sait ce qui la ferait changer. Les seuils sont fixés à
 l'avance, et chiffrés[^adr9].
@@ -449,15 +449,15 @@ la vérifiabilité : tant que le chiffre vient du SQL et que le filtre est rendu
 réponse reste contrôlable par une machine, et le modèle ne fait que choisir des mots.
 
 La comparaison chiffrée avec les offres payantes (coût par millier de questions, confidentialité
-des données envoyées, dépendance à un fournisseur) est traitée au chapitre 11, avec ses sources
+des données envoyées, dépendance à un fournisseur) est traitée au chapitre 8, avec ses sources
 tarifaires datées.
 
 ---
 
-[^adr8]: Décision d'architecture n° 0008, « PostgreSQL pour servir la recherche, et DuckDB mesuré
+[^adr8-rech]: Décision d'architecture n° 0008, « PostgreSQL pour servir la recherche, et DuckDB mesuré
 contre lui », 11 octobre 2026. Voir l'annexe des décisions.
 
-[^adr6]: Décision d'architecture n° 0006, « Détection par règles », et chapitre 8.
+[^adr6]: Décision d'architecture n° 0006, « Détection par règles », et chapitre 5.
 
 [^adr9]: Décision d'architecture n° 0009, « Un assistant à gabarits, sans modèle de langue »,
 21 octobre 2026.
